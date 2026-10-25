@@ -9,19 +9,19 @@ export default defineConfig({
   site: 'https://m8-4-h8.github.io',
   base: '/math',
   markdown: {
-    // Формулы: $...$ в строке и $$...$$ отдельным блоком.
+    // Формули: $...$ у рядку та $$...$$ окремим блоком.
     processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }),
   },
   integrations: [
     starlight({
       title: 'Математика',
       defaultLocale: 'root',
-      locales: { root: { label: 'Русский', lang: 'ru' } },
+      locales: { root: { label: 'Українська', lang: 'uk' } },
       customCss: ['katex/dist/katex.min.css'],
-      // Один класс = одна папка в src/content/docs и одна строка здесь.
-      // Темы внутри класса попадают в меню автоматически: новый .md файл = новая тема.
+      // Один клас = одна папка в src/content/docs і один рядок тут.
+      // Теми всередині класу потрапляють до меню автоматично: новий .md файл = нова тема.
       sidebar: [
-        { label: '5 класс', items: [{ autogenerate: { directory: '5-klass' } }] },
+        { label: '5 клас', items: [{ autogenerate: { directory: '5-klas' } }] },
       ],
     }),
   ],
