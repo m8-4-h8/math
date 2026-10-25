@@ -1,0 +1,169 @@
+---
+// Множення в стовпчик: запис у клітинках і покрокове пояснення.
+// Кожна цифра другого множника та її неповний добуток мають свій колір.
+import Klitynky from './Klitynky.astro';
+
+interface Props {
+  a: number;
+  b: number;
+}
+const { a, b } = Astro.props;
+
+const rozriady = ['одиниці', 'десятки', 'сотні', 'тисячі', 'десятки тисяч'];
+const kolory = ['c1', 'c2', 'c3', 'c4'];
+const fill = (k: number) => `var(--ill-${(k % 4) + 1})`;
+
+const A = String(a);
+const B = String(b);
+const result = a * b;
+const R = String(result);
+
+// Неповні добутки: a × (цифра b), кожен наступний зсунутий на клітинку вліво.
+const bDigits = [...B].reverse().map(Number);
+const partials = bDigits.map((d, shift) => ({ d, shift, value: a * d }));
+const several = partials.length > 1;
+
+const numWidth = Math.max(
+  A.length,
+  B.length,
+  R.length,
+  ...partials.map((p) => String(p.value).length + p.shift),
+);
+const cols = numWidth + 3; // поля з обох боків і місце для знака
+const right = cols - 2; // остання колонка з цифрами
+const rows = (several ? 4 + partials.length : 4) + 1;
+
+type Cell = { col: number; row: number; ch: string; fill: string; ghost?: boolean; bold?: boolean };
+const cells: Cell[] = [];
+// Пише число так, щоб його остання цифра стояла в колонці endCol.
+const put = (text: string, row: number, endCol: number, color: string, extra: Partial<Cell> = {}) =>
+  [...text].forEach((ch, i) =>
+    cells.push({ col: endCol - text.length + 1 + i, row, ch, fill: color, ...extra }),
+  );
+
+put(A, 1, right, 'var(--ill-ink)');
+[...B].forEach((ch, i) => {
+  const k = B.length - 1 - i;
+  cells.push({ col: right - k, row: 2, ch, fill: fill(k), bold: true });
+});
+cells.push({ col: right - Math.max(A.length, B.length), row: 1.5, ch: '×', fill: 'var(--ill-muted)' });
+
+const lines: { row: number; from: number; to: number }[] = [];
+lines.push({ row: 3, from: right - Math.max(A.length, B.length) - 0.3, to: right + 1 });
+
+let resultRow = 3;
+if (several) {
+  partials.forEach((p, k) => {
+    put(String(p.value), 3 + k, right - p.shift, fill(k));
+    // Бліді нулі показують, що зсув — це множення на 10, 100, ...
+    for (let z = 0; z < p.shift; z++) {
+      cells.push({ col: right - z, row: 3 + k, ch: '0', fill: fill(k), ghost: true });
+    }
+  });
+  const widest = Math.max(...partials.map((p) => String(p.value).length + p.shift));
+  cells.push({ col: right - widest, row: 3.5, ch: '+', fill: 'var(--ill-muted)' });
+  resultRow = 3 + partials.length;
+  lines.push({ row: resultRow, from: right - Math.max(widest, R.length) - 0.3, to: right + 1 });
+}
+put(R, resultRow, right, 'var(--ill-accent)', { bold: true });
+
+// Пояснення по цифрах: 7 × 3 = 21, пишемо 1, 2 запам'ятовуємо...
+function digitSteps(m: number): string[] {
+  const out: string[] = [];
+  const digits = [...A].reverse().map(Number);
+  let carry = 0;
+  digits.forEach((d, i) => {
+    const prod = d * m;
+    const total = prod + carry;
+    const last = i === digits.length - 1;
+    let s = `${d} × ${m} = ${prod}`;
+    if (carry) s += `, і ще ${carry} в умі: ${prod} + ${carry} = ${total}`;
+    if (last) s += ` — пишемо ${total}.`;
+    else if (total >= 10) s += ` — пишемо ${total % 10}, а ${Math.floor(total / 10)} запам'ятовуємо.`;
+    else s += ` — пишемо ${total}.`;
+    out.push(s);
+    carry = Math.floor(total / 10);
+  });
+  return out;
+}
+
+const steps = partials.map((p, k) => {
+  const pos = rozriady[p.shift] ?? `розряд ${p.shift + 1}`;
+  const tens = 10 ** p.shift;
+  const head =
+    p.shift === 0
+      ? `Множимо ${A} на ${p.d} (${pos} числа ${B}).`
+      : `Множимо ${A} на ${p.d} (${pos}). Це насправді ${A} × ${p.d * tens} = ${(p.value * tens).toLocaleString('uk-UA')}, тому пишемо з ${p.shift === 1 ? 'другої' : p.shift === 2 ? 'третьої' : `${p.shift + 1}-ї`} клітинки справа — під ${pos}.`;
+  return { k, head, sub: digitSteps(p.d), value: p.value };
+});
+const label = `Множення в стовпчик: ${A} × ${B} = ${R}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <Klitynky cols={cols} rows={rows} label={label}>
+      {
+        lines.map((l) => (
+          <line
+            x1={l.from * 32}
+            x2={l.to * 32}
+            y1={l.row * 32 + 0.5}
+            y2={l.row * 32 + 0.5}
+            stroke="var(--ill-line)"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+        ))
+      }
+      {
+        cells.map((c) => (
+          <text
+            x={c.col * 32 + 16}
+            y={c.row * 32 + 16}
+            fill={c.fill}
+            opacity={c.ghost ? 0.35 : 1}
+            font-weight={c.bold ? 700 : 500}
+          >
+            {c.ch}
+          </text>
+        ))
+      }
+    </Klitynky>
+  </div>
+  <ol class="ill-steps">
+    {
+      steps.map((s) => (
+        <li>
+          <span class={kolory[s.k % 4]}>{s.head}</span>
+          <ul>
+            {s.sub.map((t) => (
+              <li>{t}</li>
+            ))}
+          </ul>
+          {several && (
+            <span>
+              Виходить <b class={kolory[s.k % 4]}>{s.value}</b>.
+            </span>
+          )}
+        </li>
+      ))
+    }
+    {
+      several && (
+        <li>
+          Додаємо неповні добутки (бліді нулі можна не писати):{' '}
+          {partials.map((p, k) => (
+            <>
+              {k > 0 && ' + '}
+              <b class={kolory[k % 4]}>{(p.value * 10 ** p.shift).toLocaleString('uk-UA')}</b>
+            </>
+          ))}{' '}
+          = <b>{result.toLocaleString('uk-UA')}</b>.
+        </li>
+      )
+    }
+  </ol>
+  <figcaption class="ill-caption">
+    {a.toLocaleString('uk-UA')} × {b.toLocaleString('uk-UA')} = {result.toLocaleString('uk-UA')}
+  </figcaption>
+</figure>

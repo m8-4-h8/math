@@ -17,10 +17,11 @@ export default defineConfig({
       title: 'Математика',
       defaultLocale: 'root',
       locales: { root: { label: 'Українська', lang: 'uk' } },
-      customCss: ['katex/dist/katex.min.css'],
+      customCss: ['katex/dist/katex.min.css', './src/styles/ilustratsii.css'],
       // Один клас = одна папка в src/content/docs і один рядок тут.
       // Теми всередині класу потрапляють до меню автоматично: новий .md файл = нова тема.
       sidebar: [
+        { label: '4 клас', items: [{ autogenerate: { directory: '4-klas' } }] },
         { label: '5 клас', items: [{ autogenerate: { directory: '5-klas' } }] },
       ],
     }),

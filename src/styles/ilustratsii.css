@@ -1,0 +1,91 @@
+/*
+  Спільні кольори та стилі для ілюстрацій (src/components).
+  Starlight за замовчуванням темний, тому базові значення — для темної теми,
+  а [data-theme='light'] перевизначає їх для світлої.
+*/
+:root {
+  --ill-1: #6cb4ff;
+  --ill-2: #ffa94d;
+  --ill-3: #69db7c;
+  --ill-4: #f783ac;
+  --ill-ink: var(--sl-color-white);
+  --ill-muted: var(--sl-color-gray-3);
+  --ill-line: var(--sl-color-gray-2);
+  --ill-grid: rgba(140, 180, 255, 0.14);
+  --ill-paper: var(--sl-color-gray-6);
+  --ill-accent: var(--sl-color-accent-high);
+}
+
+:root[data-theme='light'] {
+  --ill-1: #1864c4;
+  --ill-2: #d9480f;
+  --ill-3: #2b8a3e;
+  --ill-4: #c2255c;
+  --ill-grid: rgba(40, 100, 220, 0.16);
+  --ill-paper: #fbfcff;
+  --ill-accent: var(--sl-color-accent);
+}
+
+.ill {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.75rem;
+  background: var(--sl-color-bg-nav);
+  color: var(--ill-ink);
+  font-size: var(--sl-text-sm);
+  line-height: 1.6;
+}
+
+.ill svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.ill .ill-scroll {
+  overflow-x: auto;
+}
+
+.ill .ill-caption {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: var(--sl-text-base);
+  font-weight: 600;
+}
+
+.ill ol.ill-steps {
+  margin: 0.75rem 0 0;
+  padding-inline-start: 1.5rem;
+}
+
+.ill ol.ill-steps > li + li {
+  margin-top: 0.4rem;
+}
+
+.ill ol.ill-steps ul {
+  margin: 0.25rem 0 0;
+  padding-inline-start: 1.1rem;
+  color: var(--ill-muted);
+}
+
+.ill .c1 { color: var(--ill-1); }
+.ill .c2 { color: var(--ill-2); }
+.ill .c3 { color: var(--ill-3); }
+.ill .c4 { color: var(--ill-4); }
+.ill .muted { color: var(--ill-muted); }
+.ill b.num { font-variant-numeric: tabular-nums; }
+
+/* Звичайний дріб у тексті підпису: чисельник над знаменником. */
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1.1;
+  font-weight: 700;
+}
+.frac > span:first-child {
+  border-bottom: 2px solid currentColor;
+  padding: 0 0.2em;
+}

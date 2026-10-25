@@ -1,0 +1,29 @@
+---
+// Кілька ілюстрацій поруч в одній рамці (наприклад, дроби для порівняння) з підписом знизу.
+interface Props {
+  pidpys?: string;
+  stovpchyk?: boolean; // true — одна під одною
+}
+const { pidpys, stovpchyk = false } = Astro.props;
+---
+
+<figure class="ill not-content">
+  <div class:list={['ryad', { stovpchyk }]}>
+    <slot />
+  </div>
+  {pidpys && <figcaption class="ill-caption">{pidpys}</figcaption>}
+</figure>
+
+<style>
+  .ryad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem 2rem;
+  }
+  .ryad.stovpchyk {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+</style>

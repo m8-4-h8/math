@@ -1,0 +1,126 @@
+---
+// Степінь як повторне множення: кожен наступний малюнок — це `osnova` копій попереднього.
+// a¹ — ряд з a кружечків, a² — квадрат, a³ — a квадратів, a⁴ — a таких груп і так далі.
+interface Props {
+  osnova: number;
+  pokaznyk: number;
+}
+const { osnova: a, pokaznyk } = Astro.props;
+
+type Layout = { pts: { x: number; y: number; copy: number }[]; w: number; h: number };
+// Кожен рівень повторює попередній a разів: непарні рівні — вбік, парні — вниз.
+// Починаючи з третього рівня між копіями з'являється проміжок, щоб групи було видно.
+function layout(k: number): Layout {
+  if (k === 0) return { pts: [{ x: 0, y: 0, copy: 0 }], w: 1, h: 1 };
+  const prev = layout(k - 1);
+  const extra = Math.floor((k - 1) / 2);
+  const horizontal = k % 2 === 1;
+  const pts: Layout['pts'] = [];
+  for (let c = 0; c < a; c++) {
+    const dx = horizontal ? c * (prev.w + extra) : 0;
+    const dy = horizontal ? 0 : c * (prev.h + extra);
+    for (const p of prev.pts) pts.push({ x: p.x + dx, y: p.y + dy, copy: c });
+  }
+  return {
+    pts,
+    w: horizontal ? a * prev.w + (a - 1) * extra : prev.w,
+    h: horizontal ? prev.h : a * prev.h + (a - 1) * extra,
+  };
+}
+
+const sup = (k: number) =>
+  String(k)
+    .split('')
+    .map((d) => '⁰¹²³⁴⁵⁶⁷⁸⁹'[Number(d)])
+    .join('');
+const color = (i: number) => `var(--ill-${(i % 4) + 1})`;
+const panels = Array.from({ length: pokaznyk }, (_, i) => {
+  const k = i + 1;
+  const l = layout(k);
+  const value = a ** k;
+  const product = Array.from({ length: k }, () => a).join(' · ');
+  const s = l.w * l.h > 400 ? 9 : 14; // крок між кружечками
+  return { k, l, value, product, s };
+});
+---
+
+<figure class="ill not-content">
+  <div class="stepeni">
+    {
+      panels.map((p, i) => (
+        <>
+          {i > 0 && (
+            <div class="perehid" aria-hidden="true">
+              <span>· {a}</span>
+              <svg viewBox="0 0 40 16" width="40" height="16">
+                <path d="M 2 8 H 36 M 29 2 L 37 8 L 29 14" fill="none" stroke="var(--ill-line)" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+          )}
+          <div class="panel">
+            <svg
+              viewBox={`0 0 ${p.l.w * p.s} ${p.l.h * p.s}`}
+              width={p.l.w * p.s}
+              height={p.l.h * p.s}
+              role="img"
+              aria-label={`${a}${sup(p.k)} = ${p.value}`}
+            >
+              {p.l.pts.map((pt) => (
+                <circle
+                  cx={pt.x * p.s + p.s / 2}
+                  cy={pt.y * p.s + p.s / 2}
+                  r={p.s * 0.36}
+                  fill={p.k === 1 ? color(0) : color(pt.copy)}
+                />
+              ))}
+            </svg>
+            <div class="formula">
+              <b>
+                {a}
+                <sup>{p.k}</sup> = {p.value}
+              </b>
+              <span class="muted">{p.k === 1 ? `просто ${a}` : `${p.product}`}</span>
+              {p.k > 1 && (
+                <span class="muted">
+                  {a} {a < 5 ? 'групи' : 'груп'} по {a ** (p.k - 1)}
+                </span>
+              )}
+            </div>
+          </div>
+        </>
+      ))
+    }
+  </div>
+</figure>
+
+<style>
+  .stepeni {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem 0.75rem;
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .formula {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.35;
+  }
+  .formula b {
+    font-size: var(--sl-text-lg);
+  }
+  .perehid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--ill-muted);
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,66 @@
+---
+// Множення як повторне додавання: `hrupy` однакових груп по `po` кружечків.
+interface Props {
+  hrupy: number;
+  po: number;
+  ramka?: boolean;
+}
+const { hrupy, po, ramka = true } = Astro.props;
+
+const r = 7;
+const gap = 18; // крок між кружечками
+const perRow = po <= 5 ? po : Math.ceil(Math.sqrt(po));
+const rowsIn = Math.ceil(po / perRow);
+const boxW = perRow * gap + 12;
+const boxH = rowsIn * gap + 12;
+const between = 30; // місце для «+» між групами
+const W = hrupy * boxW + (hrupy - 1) * between + 4;
+const H = boxH + 4;
+const color = (i: number) => `var(--ill-${(i % 4) + 1})`;
+const sum = Array.from({ length: hrupy }, () => po).join(' + ');
+---
+
+<figure class={ramka ? 'ill not-content' : 'not-content'} style={ramka ? undefined : 'margin: 0'}>
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${sum} = ${po} · ${hrupy}`}>
+      {
+        Array.from({ length: hrupy }, (_, g) => {
+          const x0 = 2 + g * (boxW + between);
+          return (
+            <g>
+              <rect x={x0} y="2" width={boxW} height={boxH} rx="10" fill="none" stroke={color(g)} stroke-width="1.5" />
+              {Array.from({ length: po }, (_, i) => (
+                <circle
+                  cx={x0 + 6 + gap / 2 + (i % perRow) * gap}
+                  cy={2 + 6 + gap / 2 + Math.floor(i / perRow) * gap}
+                  r={r}
+                  fill={color(g)}
+                />
+              ))}
+              {g < hrupy - 1 && (
+                <text
+                  x={x0 + boxW + between / 2}
+                  y={2 + boxH / 2}
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                  font-size="20"
+                  font-weight="700"
+                  fill="var(--ill-muted)"
+                >
+                  +
+                </text>
+              )}
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  {
+    ramka && (
+      <figcaption class="ill-caption">
+        {sum} = {po} · {hrupy} = {po * hrupy}
+      </figcaption>
+    )
+  }
+</figure>

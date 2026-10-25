@@ -1,0 +1,147 @@
+---
+// Ділення як розподіл порівну: цукерки роздаємо дітям по одній по колу.
+// Колір цукерки показує, кому вона дістанеться; сірі — остача, яку поділити порівну не вийшло.
+interface Props {
+  tsukerky: number;
+  liudy: number;
+  imena?: string[];
+}
+const {
+  tsukerky,
+  liudy,
+  imena = ['Аня', 'Богдан', 'Віра', 'Гліб', 'Дана', 'Євген', 'Женя', 'Зоряна'],
+} = Astro.props;
+
+const each = Math.floor(tsukerky / liudy);
+const rem = tsukerky % liudy;
+const color = (i: number) => `var(--ill-${(i % 4) + 1})`;
+const grey = 'var(--ill-muted)';
+
+const pad = 18;
+const slot = 116;
+const perRow = 10;
+const step = 36;
+const slots = liudy + (rem > 0 ? 1 : 0);
+const pileRows = Math.ceil(tsukerky / perRow);
+const W = Math.max(slots * slot, Math.min(tsukerky, perRow) * step, 360) + 2 * pad;
+const pileTop = pad + 10;
+const pileX0 = (W - Math.min(tsukerky, perRow) * step) / 2 + step / 2;
+const arrowTop = pileTop + (pileRows - 1) * 24 + 16;
+const peopleTop = arrowTop + 44;
+const candiesTop = peopleTop + 84;
+const perCol = 3;
+const shareRows = Math.ceil(Math.max(each, rem, 1) / perCol);
+const H = candiesTop + shareRows * 24 + pad;
+const peopleX0 = (W - slots * slot) / 2;
+
+// Цукерка i з купки дістанеться дитині i % liudy (поки вистачає на всіх).
+const pile = Array.from({ length: tsukerky }, (_, i) => ({
+  x: pileX0 + (i % perRow) * step,
+  y: pileTop + Math.floor(i / perRow) * 24,
+  fill: i < each * liudy ? color(i % liudy) : grey,
+}));
+const share = (k: number, cx: number) =>
+  Array.from({ length: k }, (_, j) => ({
+    x: cx + ((j % perCol) - (Math.min(k, perCol) - 1) / 2) * 35,
+    y: candiesTop + Math.floor(j / perCol) * 24,
+  }));
+
+function tsukerok(k: number) {
+  const m10 = k % 10;
+  const m100 = k % 100;
+  if (m10 === 1 && m100 !== 11) return 'цукерка';
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return 'цукерки';
+  return 'цукерок';
+}
+const label = `${tsukerky} цукерок ділимо між ${liudy} дітьми: кожному по ${each}${rem ? `, остача ${rem}` : ''}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}>
+      <defs>
+        <g id="tsukerka">
+          <path d="M -9 0 L -16 -6 L -15 0 L -16 6 Z M 9 0 L 16 -6 L 15 0 L 16 6 Z" fill="currentColor" opacity="0.7"></path>
+          <ellipse rx="9.5" ry="7" fill="currentColor"></ellipse>
+          <ellipse cx="-3" cy="-2.5" rx="3" ry="1.6" fill="#fff" opacity="0.55"></ellipse>
+        </g>
+      </defs>
+
+      {pile.map((c) => <use href="#tsukerka" x={c.x} y={c.y} style={`color: ${c.fill}`} />)}
+
+      <g stroke="var(--ill-line)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <line x1={W / 2} y1={arrowTop + 2} x2={W / 2} y2={arrowTop + 30} />
+        <path d={`M ${W / 2 - 7} ${arrowTop + 23} L ${W / 2} ${arrowTop + 31} L ${W / 2 + 7} ${arrowTop + 23}`} />
+      </g>
+      <text x={W / 2 + 14} y={arrowTop + 20} font-size="13" fill="var(--ill-muted)">
+        роздаємо по одній по колу
+      </text>
+
+      {
+        Array.from({ length: liudy }, (_, p) => {
+          const cx = peopleX0 + p * slot + slot / 2;
+          return (
+            <g>
+              <circle cx={cx} cy={peopleTop + 13} r="11" fill={color(p)} />
+              <path
+                d={`M ${cx - 17} ${peopleTop + 54} Q ${cx - 17} ${peopleTop + 28} ${cx} ${peopleTop + 28} Q ${cx + 17} ${peopleTop + 28} ${cx + 17} ${peopleTop + 54} Z`}
+                fill={color(p)}
+              />
+              <text x={cx} y={peopleTop + 72} font-size="13" text-anchor="middle" fill="var(--ill-ink)">
+                {imena[p % imena.length]}
+              </text>
+              {share(each, cx).map((c) => (
+                <use href="#tsukerka" x={c.x} y={c.y} style={`color: ${color(p)}`} />
+              ))}
+            </g>
+          );
+        })
+      }
+
+      {
+        rem > 0 && (
+          <g>
+            <rect
+              x={peopleX0 + liudy * slot + 8}
+              y={peopleTop + 2}
+              width={slot - 16}
+              height={H - peopleTop - pad + 4}
+              rx="10"
+              fill="none"
+              stroke={grey}
+              stroke-dasharray="5 5"
+            />
+            <text
+              x={peopleX0 + liudy * slot + slot / 2}
+              y={peopleTop + 40}
+              font-size="13"
+              text-anchor="middle"
+              fill={grey}
+            >
+              остача
+            </text>
+            {share(rem, peopleX0 + liudy * slot + slot / 2).map((c) => (
+              <use href="#tsukerka" x={c.x} y={c.y} style={`color: ${grey}`} />
+            ))}
+          </g>
+        )
+      }
+    </svg>
+  </div>
+  <figcaption class="ill-caption">
+    {tsukerky} : {liudy} = {each}
+    {rem > 0 && ` (остача ${rem})`}
+  </figcaption>
+  <p class="tsukerky-text">
+    {tsukerky} {tsukerok(tsukerky)} ділимо порівну на {liudy}: кожен отримує по {each} {tsukerok(each)}
+    {rem > 0 ? `, а ${rem} ${tsukerok(rem)} залишається — на всіх уже не вистачить.` : ', і нічого не залишається.'}
+  </p>
+</figure>
+
+<style>
+  .tsukerky-text {
+    margin: 0.25rem 0 0;
+    text-align: center;
+    color: var(--ill-muted);
+  }
+</style>
