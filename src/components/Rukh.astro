@@ -1,0 +1,81 @@
+---
+// Задача на рух двох учасників, між якими `vidstan` км: назустріч один одному або в одному напрямку
+// (перший наздоганяє другого). Малює схему і розв'язує задачу через швидкість зближення.
+interface Props {
+  vidstan: number; // км між учасниками на початку
+  v1: number; // км/год, перший (лівий) учасник
+  v2: number; // км/год, другий (правий) учасник
+  napriamok: 'nazustrich' | 'navzdohin';
+}
+const { vidstan, v1, v2, napriamok } = Astro.props;
+
+const nazustrich = napriamok === 'nazustrich';
+const vz = nazustrich ? v1 + v2 : v1 - v2;
+const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/\.?0+$/, '').replace('.', ','));
+const chas = vz > 0 ? vidstan / vz : NaN;
+
+const W = 460;
+const H = 92;
+const ax = 40;
+const bx = nazustrich ? W - 40 : W - 140; // в одному напрямку праворуч від другого має вміститися стрілка
+const y = 52;
+const dovzh = (v: number) => 30 + (70 * v) / Math.max(v1, v2);
+// Стрілка зі швидкістю над точкою: напрямок 1 — праворуч, −1 — ліворуч.
+const strilka = (x: number, v: number, napr: number, kolir: string) => {
+  const x2 = x + napr * dovzh(v);
+  return { d: `M ${x} ${y - 18} H ${x2}`, h: `M ${x2 - napr * 7} ${y - 23} L ${x2} ${y - 18} L ${x2 - napr * 7} ${y - 13}`, tx: (x + x2) / 2, kolir };
+};
+const strilky = [strilka(ax, v1, 1, 'var(--ill-1)'), strilka(bx, v2, nazustrich ? -1 : 1, 'var(--ill-2)')];
+const shvydkosti = [v1, v2];
+---
+
+<figure class="ill not-content">
+  <p class="ill-caption" style="margin: 0 0 0.5rem">{nazustrich ? 'Назустріч один одному' : 'В одному напрямку'}</p>
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Відстань ${vidstan} км, швидкості ${v1} і ${v2} км/год`}>
+      <line x1="10" y1={y} x2={W - 10} y2={y} stroke="var(--ill-line)" stroke-width="2" />
+      <circle cx={ax} cy={y} r="5" fill="var(--ill-ink)" />
+      <circle cx={bx} cy={y} r="5" fill="var(--ill-ink)" />
+      {
+        strilky.map((s, i) => (
+          <g stroke={s.kolir} stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d={s.d} />
+            <path d={s.h} />
+            <text x={s.tx} y={y - 30} text-anchor="middle" font-size="12" stroke="none" fill={s.kolir}>
+              {shvydkosti[i]} км/год
+            </text>
+          </g>
+        ))
+      }
+      <text x={(ax + bx) / 2} y={y + 24} text-anchor="middle" font-size="13" fill="var(--ill-muted)">
+        {vidstan} км
+      </text>
+    </svg>
+  </div>
+  {
+    vz > 0 ? (
+      <ol class="ill-steps">
+        <li>
+          <b class="num">
+            {v1} {nazustrich ? '+' : '−'} {v2} = {vz} (км/год)
+          </b>{' '}
+          <span class="muted">— швидкість зближення</span>
+        </li>
+        <li>
+          <b class="num">
+            {vidstan} : {vz} = {fmt(chas)} (год)
+          </b>
+        </li>
+      </ol>
+    ) : (
+      <p class="muted">Перший рухається не швидше за другого, тому ніколи його не наздожене.</p>
+    )
+  }
+  {
+    vz > 0 && (
+      <p style="margin: 0.5rem 0 0">
+        <b>Відповідь:</b> {nazustrich ? 'зустрінуться' : 'наздожене'} через {fmt(chas)} год.
+      </p>
+    )
+  }
+</figure>

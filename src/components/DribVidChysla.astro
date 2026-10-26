@@ -1,0 +1,84 @@
+---
+// Дріб від числа: ціле (смужка) ділимо на `d` рівних частин і беремо `n` з них.
+// Під малюнком — обчислення: число ділимо на знаменник і множимо на чисельник.
+interface Props {
+  tsile: number; // ціле, від якого шукаємо дріб
+  n: number; // чисельник: скільки частин беремо
+  d: number; // знаменник: на скільки рівних частин ділимо
+  kolir?: 1 | 2 | 3 | 4;
+}
+const { tsile, n, d, kolir = 1 } = Astro.props;
+
+const chastyna = tsile / d;
+const vidpovid = chastyna * n;
+const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/\.?0+$/, '').replace('.', ','));
+const color = `var(--ill-${kolir})`;
+
+const pad = 8;
+const cellW = Math.min(64, Math.max(36, 400 / d));
+const barW = cellW * d;
+const barH = 40;
+const top = 34;
+const W = barW + 2 * pad;
+const H = top + barH + pad;
+const label = `${n}/${d} від ${fmt(tsile)} = ${fmt(vidpovid)}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}>
+      <path
+        d={`M ${pad} ${top - 6} v -8 h ${barW} v 8 M ${pad + barW / 2} ${top - 14} v -4`}
+        fill="none"
+        stroke="var(--ill-line)"
+        stroke-width="1.5"
+      />
+      <text x={W / 2} y="12" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">
+        {fmt(tsile)} — ціле
+      </text>
+      {
+        Array.from({ length: d }, (_, i) => (
+          <g>
+            <rect
+              x={pad + i * cellW}
+              y={top}
+              width={cellW}
+              height={barH}
+              fill={i < n ? color : 'transparent'}
+              fill-opacity="0.3"
+              stroke="var(--ill-line)"
+              stroke-width="1.5"
+            />
+            <text
+              x={pad + i * cellW + cellW / 2}
+              y={top + barH / 2}
+              text-anchor="middle"
+              dominant-baseline="central"
+              font-size="14"
+              font-weight="700"
+              fill="var(--ill-ink)"
+            >
+              {fmt(chastyna)}
+            </text>
+          </g>
+        ))
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Ділимо ціле на {d} рівних частин: <b class="num">{fmt(tsile)} : {d} = {fmt(chastyna)}</b> — одна частина.
+    </li>
+    {
+      n !== 1 && (
+        <li>
+          Беремо {n} таких частин: <b class="num">{fmt(chastyna)} · {n} = {fmt(vidpovid)}</b>.
+        </li>
+      )
+    }
+  </ol>
+  <figcaption class="ill-caption">
+    <span class="frac" style={`color: ${color}`}><span>{n}</span><span>{d}</span></span> від {fmt(tsile)} = {fmt(tsile)} : {d}
+    {n !== 1 && ` · ${n}`} = <span class="c1">{fmt(vidpovid)}</span>
+  </figcaption>
+</figure>

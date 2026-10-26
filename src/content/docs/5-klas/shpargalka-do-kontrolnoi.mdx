@@ -1,0 +1,81 @@
+---
+title: Шпаргалка до контрольної
+description: Усе головне з тем 5 класу на одній сторінці — правила, формули і короткі приклади з посиланнями на повні теми.
+sidebar:
+  order: 0
+  badge:
+    text: повторення
+    variant: note
+---
+
+import { Badge } from '@astrojs/starlight/components';
+import Pravylo from '../../../components/Pravylo.astro';
+import Kut from '../../../components/Kut.astro';
+import Trykutnyk from '../../../components/Trykutnyk.astro';
+import Ryad from '../../../components/Ryad.astro';
+
+Коротко про кожну тему. <Badge text="повторити" variant="caution" /> — теми, які варто повторити перед
+контрольною. Натисни на назву теми, щоб відкрити повне пояснення з малюнками і вправами.
+
+## 1. [Розряди і класи](/math/5-klas/rozriady-i-klasy/)
+
+<Pravylo>У кожному класі 3 розряди: сотні, десятки, одиниці. Класи рахуємо справа наліво і відділяємо пробілом.</Pravylo>
+
+$123\ 456\ 789$ — сто двадцять три **мільйони** чотириста п'ятдесят шість **тисяч** сімсот вісімдесят дев'ять.
+
+## 2. [Дроби](/math/5-klas/zvychaini-drobi/) <Badge text="повторити" variant="caution" />
+
+<Pravylo nazva="Основна властивість дробу">Чисельник і знаменник множимо на одне й те саме число — дріб не змінюється.</Pravylo>
+
+$\frac{1}{2} = \frac{1 \cdot 2}{2 \cdot 2} = \frac{2}{4}$. Знаменник (знизу) — на скільки рівних частин ділимо ціле,
+чисельник (зверху) — скільки таких частин беремо.
+
+<Pravylo nazva="Дріб від числа">Число ділимо на знаменник і множимо на чисельник.</Pravylo>
+
+$\frac{2}{5}$ від $25 = 25 : 5 \cdot 2 = 10$. [Детальніше →](/math/5-klas/drib-vid-chysla/)
+
+## 3. [Рівняння і нерівності](/math/5-klas/rivniannia-i-nerivnosti/)
+
+<Pravylo>Розв'язуємо, починаючи з останньої дії, і скасовуємо її оберненою: $+ \rightleftarrows -$, $\cdot \rightleftarrows :$</Pravylo>
+
+$3 \cdot x + 4 = 19 \Rightarrow 3 \cdot x = 15 \Rightarrow x = 5$. Перевірка: $3 \cdot 5 + 4 = 19$ ✓
+
+Невідоме ділене = частка · дільник. Невідомий дільник = ділене : частка.
+
+## 4. [Ділення з остачею](/math/5-klas/dilennia-z-ostacheiu/) <Badge text="повторити" variant="caution" />
+
+<Pravylo>Остача завжди менша за дільник.</Pravylo>
+
+$20 : 6 = 3 \text{ (ост. } 2)$, бо $6 \cdot 3 + 2 = 20$ ✓. Остача вийшла $6$ або більше — значить, частку взяли замалу.
+
+## 5. [Площа і периметр](/math/5-klas/ploshcha-i-perymetr/)
+
+| Фігура      | Площа $S$ (см²) | Периметр $P$ (см)            |
+| ----------- | --------------- | ---------------------------- |
+| прямокутник | $S = a \cdot b$ | $P = (a + b) \cdot 2$        |
+| квадрат     | $S = a \cdot a$ | $P = 4 \cdot a$              |
+
+## 6. [Види кутів](/math/5-klas/vydy-kutiv/) <Badge text="повторити" variant="caution" />
+
+<Ryad>
+  <Kut hradusy={40} ramka={false} />
+  <Kut hradusy={90} ramka={false} />
+  <Kut hradusy={130} ramka={false} />
+  <Kut hradusy={180} ramka={false} />
+</Ryad>
+
+## 7. [Види трикутників](/math/5-klas/vydy-trykutnykiv/)
+
+<Ryad>
+  <Trykutnyk vyd="priamokutnyi" ramka={false} />
+  <Trykutnyk vyd="rivnostoronnii" ramka={false} />
+  <Trykutnyk vyd="rivnobedrenyi" ramka={false} />
+</Ryad>
+
+## 8. [Задачі на рух](/math/5-klas/zadachi-na-rukh/) <Badge text="повторити" variant="caution" />
+
+$s = v \cdot t \qquad t = s : v \qquad v = s : t$
+
+<Pravylo>Назустріч — швидкості додаємо: $v_1 + v_2$. Наздоганяє — швидкості віднімаємо: $v_1 - v_2$.</Pravylo>
+
+$40$ км, $15$ і $5$ км/год: назустріч — $40 : (15 + 5) = 2$ год; навздогін — $40 : (15 - 5) = 4$ год.

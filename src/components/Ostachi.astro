@@ -1,0 +1,71 @@
+---
+// Ділення з остачею: які остачі можливі при діленні на `dilnyk` (від 0 до dilnyk − 1).
+// Якщо задано `dilene`, показує приклад ділення, позначає його остачу і робить перевірку.
+interface Props {
+  dilnyk: number;
+  dilene?: number;
+}
+const { dilnyk, dilene } = Astro.props;
+
+const chastka = dilene === undefined ? 0 : Math.floor(dilene / dilnyk);
+const ostacha = dilene === undefined ? -1 : dilene % dilnyk;
+---
+
+<figure class="ill not-content">
+  <p class="ostachi-tekst">При діленні на <b>{dilnyk}</b> остача може бути тільки:</p>
+  <div class="ostachi">
+    {
+      Array.from({ length: dilnyk + 1 }, (_, i) => (
+        <span class:list={['chip', { ni: i === dilnyk, tsia: i === ostacha }]}>{i}</span>
+      ))
+    }
+  </div>
+  <p class="ostachi-tekst muted">
+    {dilnyk} — уже не остача: з нього можна взяти ще раз по {dilnyk}.
+  </p>
+  {
+    dilene !== undefined && (
+      <>
+        <p class="ill-caption">
+          {dilene} : {dilnyk} = {chastka} (ост. {ostacha})
+        </p>
+        <p class="ostachi-tekst">
+          бо {dilnyk} · {chastka} = {dilnyk * chastka}, а {dilene} − {dilnyk * chastka} = {ostacha}. Перевірка:{' '}
+          {dilnyk} · {chastka} + {ostacha} = {dilene} <span class="c3">✓</span>
+        </p>
+      </>
+    )
+  }
+</figure>
+
+<style>
+  .ostachi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.5rem 0;
+  }
+  .chip {
+    min-width: 2.2rem;
+    padding: 0.2rem 0.5rem;
+    border: 1.5px solid var(--ill-3);
+    border-radius: 0.4rem;
+    color: var(--ill-3);
+    font-weight: 700;
+    font-size: var(--sl-text-lg);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .chip.tsia {
+    background: var(--ill-3);
+    color: var(--sl-color-black);
+  }
+  .chip.ni {
+    border-color: var(--ill-4);
+    color: var(--ill-4);
+    text-decoration: line-through;
+  }
+  .ostachi-tekst {
+    margin: 0.25rem 0;
+  }
+</style>

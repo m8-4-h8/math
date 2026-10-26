@@ -1,0 +1,113 @@
+---
+// Вид трикутника: прямокутний, рівносторонній або рівнобедрений.
+// Рівні сторони позначено рисочками, рівні кути — дугами, прямий кут — квадратиком.
+type Vyd = 'priamokutnyi' | 'rivnostoronnii' | 'rivnobedrenyi';
+interface Props {
+  vyd: Vyd;
+  ramka?: boolean;
+}
+const { vyd, ramka = true } = Astro.props;
+
+type P = [number, number];
+const VYDY: Record<Vyd, { tochky: P[]; nazva: string; opys: string; rysky: number[][]; duhy: number[]; priamyi?: number }> = {
+  priamokutnyi: {
+    tochky: [[30, 115], [30, 20], [140, 115]],
+    nazva: 'прямокутний',
+    opys: 'один кут прямий (90°)',
+    rysky: [],
+    duhy: [],
+    priamyi: 0,
+  },
+  rivnostoronnii: {
+    tochky: [[25, 115], [80, 19.7], [135, 115]],
+    nazva: 'рівносторонній',
+    opys: 'усі сторони рівні, усі кути рівні',
+    rysky: [[0, 1], [1, 2], [2, 0]],
+    duhy: [0, 1, 2],
+  },
+  rivnobedrenyi: {
+    tochky: [[45, 115], [80, 15], [115, 115]],
+    nazva: 'рівнобедрений',
+    opys: 'дві бічні сторони рівні, кути при основі рівні',
+    rysky: [[0, 1], [1, 2]],
+    duhy: [0, 2],
+  },
+};
+const { tochky, nazva, opys, rysky, duhy, priamyi } = VYDY[vyd];
+
+const unit = (a: P, b: P): P => {
+  const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  return [(b[0] - a[0]) / l, (b[1] - a[1]) / l];
+};
+const f = (x: number) => x.toFixed(2);
+
+// Рисочка посередині сторони, перпендикулярно до неї.
+function ryska([i, j]: number[]) {
+  const a = tochky[i];
+  const b = tochky[j];
+  const [ux, uy] = unit(a, b);
+  const mx = (a[0] + b[0]) / 2;
+  const my = (a[1] + b[1]) / 2;
+  return `M ${f(mx - uy * 6)} ${f(my + ux * 6)} L ${f(mx + uy * 6)} ${f(my - ux * 6)}`;
+}
+// Дуга кута при вершині i.
+function duha(i: number, r = 16) {
+  const p = tochky[i];
+  const [q1, q2] = tochky.filter((_, k) => k !== i);
+  const u = unit(p, q1);
+  const v = unit(p, q2);
+  const sweep = u[0] * v[1] - u[1] * v[0] > 0 ? 1 : 0;
+  return `M ${f(p[0] + u[0] * r)} ${f(p[1] + u[1] * r)} A ${r} ${r} 0 0 ${sweep} ${f(p[0] + v[0] * r)} ${f(p[1] + v[1] * r)}`;
+}
+function kvadratyk(i: number, s = 12) {
+  const p = tochky[i];
+  const [q1, q2] = tochky.filter((_, k) => k !== i);
+  const u = unit(p, q1);
+  const v = unit(p, q2);
+  return `M ${f(p[0] + u[0] * s)} ${f(p[1] + u[1] * s)} l ${f(v[0] * s)} ${f(v[1] * s)} l ${f(-u[0] * s)} ${f(-u[1] * s)}`;
+}
+---
+
+<figure class={ramka ? 'ill not-content trykutnyk' : 'not-content trykutnyk'}>
+  <svg viewBox="0 0 160 130" width="160" height="130" role="img" aria-label={`Трикутник ${nazva}: ${opys}`}>
+    <polygon
+      points={tochky.map((p) => p.join(',')).join(' ')}
+      fill="var(--ill-1)"
+      fill-opacity="0.15"
+      stroke="var(--ill-ink)"
+      stroke-width="2.5"
+      stroke-linejoin="round"
+    />
+    {priamyi !== undefined && <path d={kvadratyk(priamyi)} fill="none" stroke="var(--ill-2)" stroke-width="2" />}
+    {duhy.map((i) => <path d={duha(i)} fill="none" stroke="var(--ill-1)" stroke-width="2" />)}
+    {rysky.map((s) => <path d={ryska(s)} stroke="var(--ill-2)" stroke-width="2.5" stroke-linecap="round" />)}
+  </svg>
+  <figcaption>
+    <b>{nazva}</b>
+    <br />
+    <span class="muted">{opys}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .trykutnyk {
+    text-align: center;
+  }
+  .trykutnyk:not(.ill) {
+    margin: 0;
+    max-width: 14rem;
+  }
+  .trykutnyk svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+  .trykutnyk figcaption {
+    font-size: var(--sl-text-sm);
+    line-height: 1.4;
+  }
+  .trykutnyk .muted {
+    color: var(--ill-muted);
+  }
+</style>

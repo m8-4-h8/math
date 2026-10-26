@@ -1,0 +1,67 @@
+---
+// Прямокутник (або квадрат, якщо сторони рівні) зі сторонами a і b, поділений на квадратики 1×1.
+// Під малюнком — площа і периметр з підставленими числами.
+interface Props {
+  a: number; // довжина (горизонтальна сторона)
+  b?: number; // ширина (вертикальна сторона); без неї — квадрат
+  odynytsi?: string; // одиниці довжини: 'см', 'м', 'дм'…
+}
+const { a, b = a, odynytsi = 'см' } = Astro.props;
+
+const kvadrat = a === b;
+const S = a * b;
+const P = 2 * (a + b);
+const klitynky = Number.isInteger(a) && Number.isInteger(b) && a <= 20 && b <= 20;
+
+const cell = Math.min(30, 240 / Math.max(a, b));
+const w = a * cell;
+const h = b * cell;
+const padX = 64;
+const padY = 30;
+const W = w + 2 * padX;
+const H = h + 2 * padY;
+const x0 = padX;
+const y0 = padY;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${kvadrat ? 'Квадрат' : 'Прямокутник'} ${a} на ${b} ${odynytsi}`}>
+      <rect x={x0} y={y0} width={w} height={h} fill="var(--ill-1)" fill-opacity="0.15" />
+      {
+        klitynky && (
+          <g stroke="var(--ill-grid)" stroke-width="1.5">
+            {Array.from({ length: a - 1 }, (_, i) => (
+              <line x1={x0 + (i + 1) * cell} y1={y0} x2={x0 + (i + 1) * cell} y2={y0 + h} />
+            ))}
+            {Array.from({ length: b - 1 }, (_, i) => (
+              <line x1={x0} y1={y0 + (i + 1) * cell} x2={x0 + w} y2={y0 + (i + 1) * cell} />
+            ))}
+          </g>
+        )
+      }
+      <rect x={x0} y={y0} width={w} height={h} fill="none" stroke="var(--ill-ink)" stroke-width="2.5" />
+      <g font-size="14" font-style="italic" fill="var(--ill-1)" text-anchor="middle">
+        <text x={x0 + w / 2} y={y0 - 9}>a = {a} {odynytsi}</text>
+        <text x={x0 + w / 2} y={y0 + h + 21}>a</text>
+        <text x={x0 - 8} y={y0 + h / 2} text-anchor="end" dominant-baseline="central">{kvadrat ? 'a' : 'b'}</text>
+        <text x={x0 + w + 8} y={y0 + h / 2} text-anchor="start" dominant-baseline="central">
+          {kvadrat ? 'a' : `b = ${b} ${odynytsi}`}
+        </text>
+      </g>
+    </svg>
+  </div>
+  <p class="ill-caption">{kvadrat ? 'Квадрат' : 'Прямокутник'}</p>
+  <ol class="ill-steps">
+    <li>
+      Площа: <b class="num">S = {kvadrat ? `a · a = ${a} · ${a}` : `a · b = ${a} · ${b}`} = {S} {odynytsi}²</b>
+      {klitynky && <ul><li>це {S} квадратиків по 1 {odynytsi}² — їх видно на малюнку</li></ul>}
+    </li>
+    <li>
+      Периметр:{' '}
+      <b class="num">
+        {kvadrat ? `P = 4 · a = 4 · ${a}` : `P = (a + b) · 2 = (${a} + ${b}) · 2`} = {P} {odynytsi}
+      </b>
+    </li>
+  </ol>
+</figure>
