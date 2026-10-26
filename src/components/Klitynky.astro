@@ -1,0 +1,31 @@
+---
+// Аркуш у клітинку, як у зошиті. Інші ілюстрації малюють цифри всередині (через slot),
+// координати рахуються в клітинках розміром `cell` пікселів.
+interface Props {
+  cols: number;
+  rows: number;
+  cell?: number;
+  label: string;
+}
+const { cols, rows, cell = 32, label } = Astro.props;
+const w = cols * cell;
+const h = rows * cell;
+const xs = Array.from({ length: cols + 1 }, (_, i) => i * cell);
+const ys = Array.from({ length: rows + 1 }, (_, i) => i * cell);
+---
+
+<svg viewBox={`0 0 ${w} ${h}`} width={w} height={h} role="img" aria-label={label}>
+  <rect width={w} height={h} rx="6" fill="var(--ill-paper)"></rect>
+  <g stroke="var(--ill-grid)" stroke-width="1">
+    {xs.map((x) => <line x1={x} y1="0" x2={x} y2={h} />)}
+    {ys.map((y) => <line x1="0" y1={y} x2={w} y2={y} />)}
+  </g>
+  <g
+    font-family="ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Menlo, monospace"
+    font-size={cell * 0.66}
+    text-anchor="middle"
+    dominant-baseline="central"
+  >
+    <slot />
+  </g>
+</svg>

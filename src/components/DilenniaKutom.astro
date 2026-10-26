@@ -1,0 +1,208 @@
+---
+// Ділення кутом (у стовпчик): запис у клітинках і покрокове пояснення.
+// Кожен крок (неповне ділене → цифра частки → віднімання) має свій колір.
+import Klitynky from './Klitynky.astro';
+
+interface Props {
+  dividend: number;
+  divisor: number;
+}
+const { dividend, divisor } = Astro.props;
+if (divisor <= 0 || dividend < divisor) {
+  throw new Error('DilenniaKutom: потрібно ділене ≥ дільника > 0');
+}
+
+const C = 32;
+const kolory = ['c1', 'c2', 'c3', 'c4'];
+const fill = (k: number) => `var(--ill-${(k % 4) + 1})`;
+const D = String(dividend);
+const V = String(divisor);
+const digits = [...D].map(Number);
+const n = digits.length;
+// Цифра діленого з індексом i стоїть у колонці i + 2 (ліворуч поле й місце для «−»).
+const colOf = (i: number) => i + 2;
+
+type Cell = { col: number; row: number; ch: string; fill: string; bold?: boolean };
+const cells: Cell[] = [];
+const lines: { x1: number; y1: number; x2: number; y2: number; color: string; width?: number; dash?: string }[] = [];
+const put = (text: string, row: number, endIdx: number, color: string, bold = false) =>
+  [...text].forEach((ch, i) =>
+    cells.push({ col: colOf(endIdx) - text.length + 1 + i, row, ch, fill: color, bold }),
+  );
+
+type Step = { k: number; cur: number; q: number; prod: number; rem: number; first?: string; brought: number[]; zeros: number; next?: number };
+const steps: Step[] = [];
+const quotient: { d: number; k: number | null }[] = [];
+
+// Перше неповне ділене: беремо стільки цифр, щоб число було не менше за дільник.
+let idx = 0;
+let cur = digits[0];
+while (cur < divisor) cur = cur * 10 + digits[++idx];
+let row = 1;
+let remainder = 0;
+let remainderIdx = n - 1;
+let remainderRow = 0;
+
+put(D, 1, n - 1, 'var(--ill-ink)');
+for (let k = 0; ; k++) {
+  const q = Math.floor(cur / divisor);
+  const prod = q * divisor;
+  const rem = cur - prod;
+  quotient.push({ d: q, k });
+  const step: Step = { k, cur, q, prod, rem, brought: [], zeros: 0 };
+  if (k === 0 && idx > 0) step.first = D.slice(0, idx);
+  steps.push(step);
+
+  // Неповне ділене (на першому кроці це початок самого діленого).
+  if (k > 0) put(String(cur), row, idx, fill(k), true);
+  else
+    [...String(cur)].forEach((_, i) =>
+      lines.push({
+        x1: colOf(i) * C + 3, x2: colOf(i) * C + C - 3, y1: row * C + C - 3, y2: row * C + C - 3,
+        color: fill(0), width: 3,
+      }),
+    );
+  put(String(prod), row + 1, idx, fill(k));
+  const startCol = colOf(idx) - Math.max(String(cur).length, String(prod).length) + 1;
+  cells.push({ col: startCol - 1, row: row + 0.5, ch: '−', fill: 'var(--ill-muted)' });
+  lines.push({
+    x1: startCol * C - 4, x2: (colOf(idx) + 1) * C, y1: (row + 2) * C, y2: (row + 2) * C,
+    color: 'var(--ill-line)', width: 2.5,
+  });
+
+  // Зносимо наступні цифри; поки число менше за дільник — у частку йде 0.
+  let val = rem;
+  if (idx === n - 1) {
+    remainder = rem;
+    remainderIdx = idx;
+    remainderRow = row + 2;
+    break;
+  }
+  const arrow = (i: number, toRow: number, k2: number) =>
+    lines.push({
+      x1: colOf(i) * C + C / 2, x2: colOf(i) * C + C / 2, y1: 2 * C - 2, y2: toRow * C + 4,
+      color: fill(k2), width: 1.5, dash: '3 4',
+    });
+  idx++;
+  val = rem * 10 + digits[idx];
+  step.brought.push(digits[idx]);
+  arrow(idx, row + 2, k + 1);
+  while (val < divisor && idx < n - 1) {
+    quotient.push({ d: 0, k: null });
+    step.zeros++;
+    idx++;
+    val = val * 10 + digits[idx];
+    step.brought.push(digits[idx]);
+    arrow(idx, row + 2, k + 1);
+  }
+  if (val < divisor) {
+    quotient.push({ d: 0, k: null });
+    step.zeros++;
+    remainder = val;
+    remainderIdx = idx;
+    remainderRow = row + 2;
+    break;
+  }
+  step.next = val;
+  cur = val;
+  row += 2;
+}
+put(String(remainder), remainderRow, remainderIdx, 'var(--ill-ink)', true);
+
+// Кут: дільник праворуч від вертикальної риски, частка — під горизонтальною.
+const Q = quotient.map((x) => x.d).join('');
+const qStart = colOf(n - 1) + 1;
+const cornerW = Math.max(V.length, Q.length);
+put(V, 1, n - 1 + V.length, 'var(--ill-ink)', true);
+quotient.forEach((x, i) =>
+  cells.push({
+    col: qStart + i, row: 2, ch: String(x.d),
+    fill: x.k === null ? 'var(--ill-muted)' : fill(x.k), bold: true,
+  }),
+);
+lines.push({ x1: qStart * C, x2: qStart * C, y1: C + 2, y2: 3 * C - 2, color: 'var(--ill-line)', width: 2.5 });
+lines.push({ x1: qStart * C, x2: (qStart + cornerW) * C + 4, y1: 2 * C, y2: 2 * C, color: 'var(--ill-line)', width: 2.5 });
+
+const cols = qStart + cornerW + 1;
+const rows = Math.max(remainderRow, 3) + 2;
+
+const fmt = (x: number) => x.toLocaleString('uk-UA');
+const razy = (q: number) => (q === 1 ? 'раз' : q < 5 ? 'рази' : 'разів');
+const label = `Ділення кутом: ${D} : ${V} = ${Q}${remainder ? `, остача ${remainder}` : ''}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <Klitynky cols={cols} rows={rows} cell={C} label={label}>
+      {
+        lines.map((l) => (
+          <line
+            x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+            stroke={l.color}
+            stroke-width={l.width ?? 2}
+            stroke-dasharray={l.dash}
+            stroke-linecap="round"
+          />
+        ))
+      }
+      {
+        cells.map((c) => (
+          <text x={c.col * C + C / 2} y={c.row * C + C / 2} fill={c.fill} font-weight={c.bold ? 700 : 500}>
+            {c.ch}
+          </text>
+        ))
+      }
+    </Klitynky>
+  </div>
+  <ol class="ill-steps">
+    {
+      steps.map((s) => (
+        <li class={kolory[s.k % 4]}>
+          {s.first !== undefined ? (
+            <>
+              {s.first} менше за {V}, тому перше неповне ділене — <b>{s.cur}</b> (воно підкреслене).{' '}
+            </>
+          ) : s.k === 0 ? (
+            <>
+              Перше неповне ділене — <b>{s.cur}</b>.{' '}
+            </>
+          ) : (
+            <>
+              Ділимо <b>{s.cur}</b>.{' '}
+            </>
+          )}
+          Скільки разів {V} вміщується в {s.cur}? <b>{s.q}</b> {razy(s.q)}, бо {V} × {s.q} = {fmt(s.prod)}
+          {s.q < 9 && <>, а {V} × {s.q + 1} = {fmt(divisor * (s.q + 1))} — це вже забагато</>}. Пишемо{' '}
+          <b>{s.q}</b> у частку. Віднімаємо: {fmt(s.cur)} − {fmt(s.prod)} = {s.rem}.
+          {s.brought.length > 0 && (
+            <span class="muted">
+              {' '}Зносимо {s.brought[0]}
+              {s.zeros > 0 &&
+                (s.next !== undefined ? (
+                  <>
+                    : виходить число менше за {V}, тому пишемо 0 у частку і зносимо ще {s.brought.slice(1).join(', ')}
+                  </>
+                ) : (
+                  <>: виходить число менше за {V}, тому пишемо 0 у частку</>
+                ))}
+              {s.next !== undefined && <> → {s.next}</>}.
+            </span>
+          )}
+        </li>
+      ))
+    }
+    <li>
+      {remainder === 0 ? (
+        <>Остача 0 — число {fmt(dividend)} ділиться на {V} націло.</>
+      ) : (
+        <>
+          Цифри закінчилися, а {remainder} менше за {V} — це <b>остача</b>. Перевірка: {V} × {fmt(Number(Q))} +{' '}
+          {remainder} = {fmt(dividend)}.
+        </>
+      )}
+    </li>
+  </ol>
+  <figcaption class="ill-caption">
+    {fmt(dividend)} : {V} = {fmt(Number(Q))}{remainder ? ` (остача ${remainder})` : ''}
+  </figcaption>
+</figure>

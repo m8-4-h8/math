@@ -1,0 +1,138 @@
+---
+// «Драбинка» дій: множення — коротший запис однакових доданків,
+// степінь — наступна сходинка, коротший запис однакових множників.
+interface Props {
+  osnova: number;
+  raz: number;
+}
+const { osnova: a, raz: n } = Astro.props;
+const repeat = (sign: string) => Array.from({ length: n }, () => a).join(` ${sign} `);
+const rungs = [
+  {
+    name: 'Додавання',
+    long: repeat('+'),
+    value: a * n,
+    note: `однаковий доданок ${a} повторюється ${n} ${n < 5 ? 'рази' : 'разів'}`,
+  },
+  {
+    name: 'Множення',
+    long: repeat('·'),
+    value: a ** n,
+    note: `однаковий множник ${a} повторюється ${n} ${n < 5 ? 'рази' : 'разів'}`,
+  },
+];
+---
+
+<figure class="ill not-content">
+  <div class="drabyna">
+    <div class="ryadok">
+      <div class="kartka">
+        <span class="nazva">{rungs[0].name}</span>
+        <span class="vyraz c1">{rungs[0].long}</span>
+      </div>
+      <div class="strilka">
+        <span>коротше</span>
+        <svg viewBox="0 0 48 16" width="48" height="16" aria-hidden="true">
+          <path d="M 2 8 H 44 M 37 2 L 45 8 L 37 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="kartka holovna">
+        <span class="nazva">Множення</span>
+        <span class="vyraz">
+          <span class="c1">{a}</span> · <span class="c2">{n}</span> = {rungs[0].value}
+        </span>
+      </div>
+      <p class="prymitka">{rungs[0].note}</p>
+    </div>
+
+    <div class="dali" aria-hidden="true">наступна сходинка ↓</div>
+
+    <div class="ryadok">
+      <div class="kartka">
+        <span class="nazva">{rungs[1].name}</span>
+        <span class="vyraz c1">{rungs[1].long}</span>
+      </div>
+      <div class="strilka">
+        <span>коротше</span>
+        <svg viewBox="0 0 48 16" width="48" height="16" aria-hidden="true">
+          <path d="M 2 8 H 44 M 37 2 L 45 8 L 37 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="kartka holovna">
+        <span class="nazva">Степінь</span>
+        <span class="vyraz">
+          <span class="c1">{a}</span>
+          <sup class="c2">{n}</sup> = {rungs[1].value}
+        </span>
+      </div>
+      <p class="prymitka">{rungs[1].note}</p>
+    </div>
+  </div>
+  <figcaption class="ill-caption">
+    <span class="c1">{a}</span> — основа (що повторюємо), <span class="c2">{n}</span> — скільки разів
+  </figcaption>
+</figure>
+
+<style>
+  .drabyna {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .ryadok {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+  }
+  .kartka {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.6rem;
+    background: var(--ill-paper);
+    text-align: center;
+  }
+  .kartka.holovna {
+    border: 2px solid var(--ill-accent);
+  }
+  .nazva {
+    font-size: var(--sl-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ill-muted);
+  }
+  .vyraz {
+    font-size: var(--sl-text-xl);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .strilka {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--ill-muted);
+    font-size: var(--sl-text-xs);
+  }
+  .prymitka {
+    grid-column: 1 / -1;
+    margin: 0;
+    text-align: center;
+    color: var(--ill-muted);
+  }
+  .dali {
+    text-align: center;
+    font-weight: 700;
+    color: var(--ill-accent);
+  }
+  @media (max-width: 30rem) {
+    .ryadok {
+      grid-template-columns: 1fr;
+    }
+    .strilka svg {
+      transform: rotate(90deg);
+    }
+  }
+</style>

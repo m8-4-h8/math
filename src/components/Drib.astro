@@ -1,0 +1,103 @@
+---
+// Звичайний дріб як картинка: круг («піца») або смужка («шоколадка»), поділені на рівні частини.
+// Якщо чисельник більший за знаменник, малює кілька цілих.
+interface Props {
+  n: number; // чисельник: скільки частин узяли
+  d: number; // знаменник: на скільки рівних частин поділили ціле
+  vyhliad?: 'kruh' | 'smuzhka';
+  kolir?: 1 | 2 | 3 | 4;
+  pidpys?: string; // текст під малюнком
+  ramka?: boolean; // false — без власної рамки (коли кілька дробів в одному ряду)
+}
+const { n, d, vyhliad = 'kruh', kolir = 1, pidpys, ramka = true } = Astro.props;
+
+const color = `var(--ill-${kolir})`;
+const wholes = Math.max(1, Math.ceil(n / d));
+const filledIn = (w: number) => Math.max(0, Math.min(d, n - w * d));
+
+// Сектор круга від частини i до i + 1 (починаємо зверху, за годинниковою стрілкою).
+const R = 54;
+const cx = 60;
+const cy = 60;
+function sector(i: number) {
+  const a0 = (i / d) * 2 * Math.PI - Math.PI / 2;
+  const a1 = ((i + 1) / d) * 2 * Math.PI - Math.PI / 2;
+  const p = (a: number) => `${(cx + R * Math.cos(a)).toFixed(2)} ${(cy + R * Math.sin(a)).toFixed(2)}`;
+  return `M ${cx} ${cy} L ${p(a0)} A ${R} ${R} 0 ${1 / d > 0.5 ? 1 : 0} 1 ${p(a1)} Z`;
+}
+
+const barW = 320;
+const barH = 48;
+const label = `Дріб ${n}/${d}`;
+---
+
+<figure class={ramka ? 'ill not-content drib' : 'not-content drib'}>
+  <div class={`drib-row ${vyhliad}`}>
+    {
+      Array.from({ length: wholes }, (_, w) =>
+        vyhliad === 'kruh' ? (
+          <svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label={label}>
+            {d === 1 ? (
+              <circle cx={cx} cy={cy} r={R} fill={filledIn(w) ? color : 'transparent'} />
+            ) : (
+              Array.from({ length: d }, (_, i) => (
+                <path d={sector(i)} fill={i < filledIn(w) ? color : 'transparent'} fill-opacity="0.85" />
+              ))
+            )}
+            {d > 1 &&
+              Array.from({ length: d }, (_, i) => (
+                <path d={sector(i)} fill="none" stroke="var(--ill-line)" stroke-width="1.5" stroke-linejoin="round" />
+              ))}
+            <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--ill-line)" stroke-width="2.5" />
+          </svg>
+        ) : (
+          <svg viewBox={`0 0 ${barW + 4} ${barH + 4}`} width={barW + 4} height={barH + 4} role="img" aria-label={label}>
+            {Array.from({ length: d }, (_, i) => (
+              <rect
+                x={2 + (i * barW) / d}
+                y="2"
+                width={barW / d}
+                height={barH}
+                fill={i < filledIn(w) ? color : 'transparent'}
+                fill-opacity="0.85"
+                stroke="var(--ill-line)"
+                stroke-width="1.5"
+              />
+            ))}
+            <rect x="2" y="2" width={barW} height={barH} rx="3" fill="none" stroke="var(--ill-line)" stroke-width="2.5" />
+          </svg>
+        ),
+      )
+    }
+    <span class="frac" style={`color: ${color}`}>
+      <span>{n}</span>
+      <span>{d}</span>
+    </span>
+  </div>
+  {pidpys && <figcaption class="drib-caption">{pidpys}</figcaption>}
+</figure>
+
+<style>
+  .drib-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .drib-row svg {
+    max-width: 100%;
+    height: auto;
+  }
+  .frac {
+    font-size: 1.6rem;
+    margin-inline-start: 0.5rem;
+  }
+  .drib-caption {
+    margin-top: 0.5rem;
+    color: var(--ill-muted);
+    font-size: var(--sl-text-sm);
+  }
+  .drib:not(.ill) {
+    margin: 0;
+  }
+</style>
