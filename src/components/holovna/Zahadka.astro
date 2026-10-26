@@ -1,0 +1,128 @@
+---
+// «Загадка дня» на головній: щодня нова (за номером дня), відповідь — за кнопкою.
+// Нову загадку додаємо одним рядком у список нижче.
+const ZAHADKY: [string, string][] = [
+  ['У кімнаті 4 кути. У кожному куті сидить кішка. Навпроти кожної кішки сидять 3 кішки. Скільки всього кішок у кімнаті?', '4 кішки — кожна бачить трьох інших.'],
+  ['Що важче: кілограм вати чи кілограм заліза?', 'Однаково — і те, і те важить 1 кілограм.'],
+  ['Одне яйце варять 4 хвилини. Скільки хвилин варити 3 яйця?', '4 хвилини, якщо покласти їх у каструлю разом.'],
+  ['У Петрика 3 сестри, і в кожної сестри є один брат. Скільки дітей у сім\'ї?', '4 дитини: три сестри і Петрик — він і є той брат.'],
+  ['Колоду розпиляли на 5 частин. Скільки разів пиляли?', '4 рази: кожен розпил додає одну частину.'],
+  ['Скільки буде 2 + 2 · 2?', '6: спочатку множення (2 · 2 = 4), потім додавання.'],
+  ['Я задумав число, додав до нього 7 і отримав 20. Яке число я задумав?', '13, бо 20 − 7 = 13.'],
+  ['На столі лежали 3 яблука. Ти взяв 2. Скільки яблук у тебе?', '2 — ті, що ти взяв.'],
+  ['Яке число, помножене на будь-яке інше число, завжди дає саме себе?', 'Нуль: 0 · 5 = 0, 0 · 100 = 0.'],
+  ['Скільки кінців у палиці? А у двох з половиною палицях?', 'У палиці 2 кінці, а у двох з половиною — 6: у половинки теж два кінці.'],
+  ['Котра година, якщо до кінця доби залишилося вдвічі більше годин, ніж уже минуло?', '8 година ранку: минуло 8 годин, залишилося 16.'],
+  ['Сума двох чисел дорівнює 10, а різниця — 4. Що це за числа?', '7 і 3: 7 + 3 = 10, 7 − 3 = 4.'],
+  ['Гусак на одній нозі важить 3 кг. Скільки він важитиме на двох ногах?', 'Теж 3 кг — від пози вага не змінюється.'],
+  ['Скільки буде, якщо до найбільшого двоцифрового числа додати найменше двоцифрове?', '109, бо 99 + 10 = 109.'],
+];
+---
+
+<math-zahadka class="zahadka not-content" data-zahadky={JSON.stringify(ZAHADKY)}>
+  <span class="zahadka-znachok" aria-hidden="true">🤔</span>
+  <div class="zahadka-tilo">
+    <p class="zahadka-nazva">Загадка дня</p>
+    <p class="zahadka-tekst">{ZAHADKY[0][0]}</p>
+    <p class="zahadka-vidpovid" hidden>{ZAHADKY[0][1]}</p>
+    <div class="zahadka-knopky">
+      <button type="button" class="zahadka-pokazaty">Показати відповідь</button>
+      <button type="button" class="zahadka-insha">Ще загадку 🎲</button>
+    </div>
+  </div>
+</math-zahadka>
+
+<script>
+  class MathZahadka extends HTMLElement {
+    connectedCallback() {
+      const zahadky: [string, string][] = JSON.parse(this.dataset.zahadky || '[]');
+      const tekst = this.querySelector<HTMLElement>('.zahadka-tekst')!;
+      const vidpovid = this.querySelector<HTMLElement>('.zahadka-vidpovid')!;
+      const pokazaty = this.querySelector<HTMLButtonElement>('.zahadka-pokazaty')!;
+      let nomer = Math.floor(Date.now() / 86_400_000) % zahadky.length;
+      const vyvesty = () => {
+        [tekst.textContent, vidpovid.textContent] = zahadky[nomer];
+        vidpovid.hidden = true;
+        pokazaty.hidden = false;
+      };
+      pokazaty.addEventListener('click', () => {
+        vidpovid.hidden = false;
+        pokazaty.hidden = true;
+      });
+      this.querySelector('.zahadka-insha')!.addEventListener('click', () => {
+        nomer = (nomer + 1) % zahadky.length;
+        vyvesty();
+      });
+      vyvesty();
+    }
+  }
+  if (!customElements.get('math-zahadka')) customElements.define('math-zahadka', MathZahadka);
+</script>
+
+<style>
+  .zahadka {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin: 1.5rem 0;
+    padding: 1.25rem 1.4rem;
+    border: 2px dashed var(--dt-6);
+    border-radius: calc(var(--dt-radius) * 1.2);
+    background: color-mix(in srgb, var(--dt-6) 10%, var(--dt-card));
+  }
+  .zahadka-znachok {
+    font-size: 2.6rem;
+    line-height: 1;
+  }
+  .zahadka-tilo {
+    flex: 1;
+  }
+  .zahadka p {
+    margin: 0;
+  }
+  .zahadka-nazva {
+    font-weight: 800;
+    color: var(--dt-6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+  }
+  .zahadka-tekst {
+    margin-top: 0.3rem !important;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--sl-color-white);
+  }
+  .zahadka-vidpovid {
+    margin-top: 0.6rem !important;
+    padding: 0.5rem 0.8rem;
+    border-radius: 0.8rem;
+    background: var(--dt-ok-bg);
+    color: var(--dt-ok);
+    font-weight: 700;
+  }
+  .zahadka-vidpovid[hidden],
+  .zahadka-pokazaty[hidden] {
+    display: none;
+  }
+  .zahadka-knopky {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+  }
+  .zahadka button {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 700;
+    background: var(--dt-h-6);
+    color: #fff;
+  }
+  .zahadka button.zahadka-insha {
+    background: transparent;
+    color: var(--sl-color-text-accent);
+  }
+</style>

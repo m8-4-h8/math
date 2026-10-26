@@ -1,5 +1,6 @@
 ---
 title: Звичайні дроби
+ikonka: 🍕
 description: Що таке дріб — на прикладах піци та шоколадки. Чисельник і знаменник, рівні дроби, порівняння, неправильні дроби.
 sidebar:
   order: 2
@@ -8,6 +9,7 @@ sidebar:
 import Drib from '../../../components/Drib.astro';
 import Ryad from '../../../components/Ryad.astro';
 import Pravylo from '../../../components/Pravylo.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 ## Що таке дріб
 
@@ -91,6 +93,29 @@ $$
 $$
 \frac{7}{4} = 1\frac{3}{4}, \quad \text{бо} \quad 7 : 4 = 1 \text{ (остача 3)}.
 $$
+
+## Перевір себе
+
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
+
+
+<Zavdannia vidpovid="3/8" pidkazka="Знаменник — на скільки частин розрізали, чисельник — скільки з'їли.">
+  Піцу розрізали на $8$ рівних частин і з'їли $3$. Яку частину піци з'їли? Запиши дріб через риску, наприклад «1/2».
+
+  <span slot="rozviazok">$\frac{3}{8}$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="5/7" varianty={['2/7', '5/7']}>
+  Який дріб більший: $\frac{2}{7}$ чи $\frac{5}{7}$?
+
+  <span slot="rozviazok">$\frac{5}{7} > \frac{2}{7}$: частини однакові, а взяли їх більше.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="2 1/4" pidkazka="Скільки разів 4 вміщується в 9 і що залишається?">
+  Запиши $\frac{9}{4}$ мішаним числом, наприклад «1 3/4».
+
+  <span slot="rozviazok">$9 : 4 = 2$ (остача $1$), тому $\frac{9}{4} = 2\frac{1}{4}$</span>
+</Zavdannia>
 
 ## Дріб від числа
 

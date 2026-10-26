@@ -1,5 +1,6 @@
 ---
 title: Види кутів
+ikonka: 📏
 description: Гострий, прямий, тупий і розгорнутий кути — як їх розрізнити.
 sidebar:
   order: 8
@@ -8,6 +9,7 @@ sidebar:
 import Pravylo from '../../../components/Pravylo.astro';
 import Kut from '../../../components/Kut.astro';
 import Ryad from '../../../components/Ryad.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 <Pravylo>Кут 90° — **прямий**. Менше — **гострий**, більше — **тупий**, 180° — **розгорнутий**.</Pravylo>
 
@@ -34,19 +36,23 @@ import Ryad from '../../../components/Ryad.astro';
 
 ## Перевір себе
 
-Визнач вид кута:
+Визнач вид кута — натисни на правильну відповідь ⭐
 
-<Ryad>
+
+<Zavdannia vidpovid="гострий" varianty={['гострий', 'прямий', 'тупий', 'розгорнутий']}>
   <Kut hradusy={35} ramka={false} bez_nazvy />
+
+  <span slot="rozviazok">$35°$ — гострий.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="тупий" varianty={['гострий', 'прямий', 'тупий', 'розгорнутий']}>
   <Kut hradusy={145} ramka={false} bez_nazvy />
+
+  <span slot="rozviazok">$145°$ — тупий.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="гострий" varianty={['гострий', 'прямий', 'тупий', 'розгорнутий']}>
   <Kut hradusy={89} ramka={false} bez_nazvy />
-</Ryad>
 
-<details>
-<summary>Відповіді</summary>
-
-- $35°$ — гострий;
-- $145°$ — тупий;
-- $89°$ — гострий (менший за $90°$, хоч і зовсім трохи).
-
-</details>
+  <span slot="rozviazok">$89°$ — гострий (менший за $90°$, хоч і зовсім трохи).</span>
+</Zavdannia>

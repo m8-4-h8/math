@@ -1,5 +1,6 @@
 ---
 title: Ділення з остачею
+ikonka: 🧩
 description: Що таке остача, які остачі можливі і як перевірити ділення з остачею.
 sidebar:
   order: 6
@@ -8,6 +9,7 @@ sidebar:
 import Pravylo from '../../../components/Pravylo.astro';
 import Ostachi from '../../../components/Ostachi.astro';
 import Tsukerky from '../../../components/Tsukerky.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 <Pravylo>Остача завжди **менша за дільник**.</Pravylo>
 
@@ -43,17 +45,29 @@ $20 : 6 = 2 \text{ (ост. } 8)$ — неправильно, бо $8 > 6$. Зб
 
 ## Перевір себе
 
-1. $47 : 5$
-2. $30 : 7$
-3. Які остачі можуть бути при діленні на $4$?
-4. Чи правильно: $35 : 8 = 3 \text{ (ост. } 11)$?
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
 
-<details>
-<summary>Відповіді</summary>
 
-1. $9 \text{ (ост. } 2)$, бо $5 \cdot 9 + 2 = 47$
-2. $4 \text{ (ост. } 2)$, бо $7 \cdot 4 + 2 = 30$
-3. $0, 1, 2, 3$
-4. Ні: $11 > 8$. Правильно $35 : 8 = 4 \text{ (ост. } 3)$
+<Zavdannia vidpovid="9 ост 2" pidkazka="Скільки разів 5 повністю вміщується в 47? Скільки залишиться?">
+  $47 : 5$ — запиши частку й остачу, наприклад «3 ост 1».
 
-</details>
+  <span slot="rozviazok">$9 \text{ (ост. } 2)$, бо $5 \cdot 9 + 2 = 47$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="4 ост 2" pidkazka="7 · 4 = 28. Скільки ще до 30?">
+  $30 : 7$ — запиши частку й остачу.
+
+  <span slot="rozviazok">$4 \text{ (ост. } 2)$, бо $7 \cdot 4 + 2 = 30$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="0, 1, 2, 3" pidkazka="Остача завжди менша за дільник.">
+  Які остачі можуть бути при діленні на $4$? Запиши їх через кому.
+
+  <span slot="rozviazok">$0, 1, 2, 3$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="Ні" varianty={['Так', 'Ні']}>
+  Чи правильно: $35 : 8 = 3 \text{ (ост. } 11)$?
+
+  <span slot="rozviazok">Ні: $11 > 8$. Правильно $35 : 8 = 4 \text{ (ост. } 3)$</span>
+</Zavdannia>

@@ -1,0 +1,38 @@
+---
+title: Привіт! Давай вчити математику 👋
+description: Математика для школярів — теми за класами з малюнками, завдання із зірочками, тренажер і загадки.
+template: splash
+hero:
+  tagline: Правила, малюнки й приклади крок за кроком. Розв'язуй завдання, збирай зірочки ⭐ і тренуйся рахувати швидко!
+  image:
+    file: ../../assets/sova.svg
+    alt: Сова-відмінниця
+  actions:
+    - text: Обрати клас
+      link: '#klasy'
+      icon: down-arrow
+    - text: 🎮 Грати в тренажер
+      link: /math/trenazher/
+      variant: secondary
+---
+
+import KlasyITemy from '../../components/holovna/KlasyITemy.astro';
+import YakVchytysia from '../../components/holovna/YakVchytysia.astro';
+import Zahadka from '../../components/holovna/Zahadka.astro';
+import Trenazher from '../../components/Trenazher.astro';
+
+## Обери свій клас
+
+<KlasyITemy />
+
+## Як тут вчитися
+
+<YakVchytysia />
+
+<Zahadka />
+
+## Розминка: швидкий рахунок
+
+Обери дію, натисни «Почати гру» і розв'яжи 10 прикладів. Усі правильно з першої спроби — три зірки!
+
+<Trenazher />

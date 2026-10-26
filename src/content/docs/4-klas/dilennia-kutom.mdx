@@ -1,11 +1,13 @@
 ---
 title: Ділення кутом
+ikonka: 📐
 description: Як ділити багатоцифрові числа в стовпчик (кутом) — покроково, з кольоровими підказками.
 sidebar:
   order: 3
 ---
 
 import DilenniaKutom from '../../../components/DilenniaKutom.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 Ділення кутом — це той самий [розподіл порівну](/math/4-klas/dilennia-porivnu/), тільки по розрядах:
 спершу ділимо найбільші розряди, а те, що не поділилося, «зносимо» до наступного розряду.
@@ -47,3 +49,26 @@ import DilenniaKutom from '../../../components/DilenniaKutom.astro';
 :::tip[Перевірка]
 Помнож частку на дільник і додай остачу — має вийти ділене: $308 \cdot 24 = 7392$.
 :::
+
+## Перевір себе
+
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
+
+
+<Zavdannia vidpovid="21" pidkazka="8 : 4 = 2, потім 4 : 4 = 1.">
+  $84 : 4$
+
+  <span slot="rozviazok">$84 : 4 = 21$. Перевірка: $21 \cdot 4 = 84$ ✓</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="312" pidkazka="18 : 6 = 3 — почни з перших двох цифр.">
+  $1872 : 6$
+
+  <span slot="rozviazok">$1872 : 6 = 312$. Перевірка: $312 \cdot 6 = 1872$ ✓</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="603" pidkazka="Після 24 : 4 = 6 зноситься 1 — вона менша за 4, тож у частку пишемо 0.">
+  $2412 : 4$
+
+  <span slot="rozviazok">$2412 : 4 = 603$ — не забудь нуль у частці! Перевірка: $603 \cdot 4 = 2412$ ✓</span>
+</Zavdannia>

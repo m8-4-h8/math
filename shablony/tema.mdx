@@ -2,12 +2,14 @@
 # Шаблон сторінки теми. Скопіюй у src/content/docs/<N>-klas/<nazva-temy>.mdx і заміни текст.
 # Правила стилю — у README, розділ «Як писати тему».
 title: Назва теми
+ikonka: 📘
 description: Одне речення — про що тема. Його видно в пошуку.
 sidebar:
   order: 1
 ---
 
 import Pravylo from '../../../components/Pravylo.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 <Pravylo>Головне правило теми — одне-два речення, які треба запам'ятати. **Ключові слова** — жирним.</Pravylo>
 
@@ -33,15 +35,16 @@ $$
 
 ## Перевір себе
 
-1. Завдання 1.
-2. Завдання 2.
-3. Завдання 3.
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
 
-<details>
-<summary>Відповіді</summary>
+<Zavdannia vidpovid="42" pidkazka="Підказка після другої помилки.">
+  Умова завдання 1.
 
-1. Відповідь з коротким розв'язком.
-2. …
-3. …
+  <span slot="rozviazok">Короткий розв'язок: $\ldots = 42$</span>
+</Zavdannia>
 
-</details>
+<Zavdannia vidpovid="Ні" varianty={['Так', 'Ні']}>
+  Завдання з вибором відповіді.
+
+  <span slot="rozviazok">Ні, бо …</span>
+</Zavdannia>

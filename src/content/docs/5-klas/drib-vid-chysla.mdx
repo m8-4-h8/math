@@ -1,5 +1,6 @@
 ---
 title: Дріб від числа
+ikonka: 🍫
 description: Як знайти частину від числа — половину, третину, дві п'ятих — з малюнком-смужкою.
 sidebar:
   order: 3
@@ -7,6 +8,7 @@ sidebar:
 
 import Pravylo from '../../../components/Pravylo.astro';
 import DribVidChysla from '../../../components/DribVidChysla.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 <Pravylo>Щоб знайти дріб від числа, число **ділимо на знаменник** і **множимо на чисельник**.</Pravylo>
 
@@ -41,15 +43,23 @@ $25 : 5 \cdot 2 = 10$, а не $25 : 2 \cdot 5$.
 
 ## Перевір себе
 
-1. Знайди $\frac{1}{3}$ від $18$.
-2. Знайди $\frac{3}{7}$ від $42$.
-3. У книжці $120$ сторінок. Оля прочитала $\frac{2}{5}$ книжки. Скільки сторінок вона прочитала?
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
 
-<details>
-<summary>Відповіді</summary>
 
-1. $18 : 3 = 6$
-2. $42 : 7 \cdot 3 = 18$
-3. $120 : 5 \cdot 2 = 48$ сторінок
+<Zavdannia vidpovid="6" pidkazka="Поділи 18 на знаменник 3.">
+  Знайди $\frac{1}{3}$ від $18$.
 
-</details>
+  <span slot="rozviazok">$18 : 3 = 6$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="18" pidkazka="Спочатку поділи на знаменник, потім помнож на чисельник.">
+  Знайди $\frac{3}{7}$ від $42$.
+
+  <span slot="rozviazok">$42 : 7 \cdot 3 = 18$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="48" pidkazka="Одна п'ята книжки — це 120 : 5 сторінок.">
+  У книжці $120$ сторінок. Оля прочитала $\frac{2}{5}$ книжки. Скільки сторінок вона прочитала?
+
+  <span slot="rozviazok">$120 : 5 \cdot 2 = 48$ сторінок</span>
+</Zavdannia>
