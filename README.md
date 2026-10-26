@@ -53,6 +53,8 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Pravylo` | головне правило теми в рамці | `<Pravylo nazva="...">Текст</Pravylo>` |
   | `Rozriady` | таблиця розрядів і класів + число словами | `<Rozriady chyslo={123456789} />` |
   | `DribVidChysla` | дріб від числа смужкою з розв'язком | `<DribVidChysla tsile={25} n={2} d={5} />` |
+  | `ChastynaTsile` | рівняння як «частина і ціле»: що невідоме і яку дію робити | `<ChastynaTsile a={5} b={7} nevidome="a" rivniannia="x + 7 = 12" />` |
+  | `Perenos` | перенос числа через «=» зі зміною знака | `<Perenos znak="+" a={7} b={12} />` |
   | `Ostachi` | можливі остачі й приклад з перевіркою | `<Ostachi dilnyk={6} dilene={20} />` |
   | `Pryamokutnyk` | прямокутник/квадрат у клітинку, S і P | `<Pryamokutnyk a={5} b={3} />` |
   | `Kut` | кут із назвою виду | `<Kut hradusy={130} />` |

@@ -1,0 +1,69 @@
+---
+// Перенос числа через знак «=»: число переходить на інший бік і змінює знак на протилежний.
+// Малює рівняння «x {znak} a = b», стрілку переносу і новий запис «x = b {протилежний знак} a».
+interface Props {
+  znak: '+' | '−' | '·' | ':';
+  a: number; // число, яке переносимо
+  b: number; // число справа від «=»
+}
+const { znak, a, b } = Astro.props;
+
+const protylezhnyi = { '+': '−', '−': '+', '·': ':', ':': '·' } as const;
+const novyi = protylezhnyi[znak];
+const vidpovid = { '+': b - a, '−': b + a, '·': b / a, ':': b * a }[znak];
+
+// Колонки: x | знак і число | = | b | новий знак і число
+const cols = [40, 72, 40, 52, 72];
+const pad = 8;
+const xs = cols.map((_, i) => pad + cols.slice(0, i).reduce((s, w) => s + w, 0));
+const cx = (i: number) => xs[i] + cols[i] / 2;
+const W = pad * 2 + cols.reduce((s, w) => s + w, 0);
+const r1 = 34;
+const r2 = 124;
+const H = r2 + 16;
+const strilka = `strilka-${{ '+': 'p', '−': 'v', '·': 'm', ':': 'd' }[znak]}`;
+const opys = `x ${znak} ${a} = ${b}, тоді x = ${b} ${novyi} ${a} = ${vidpovid}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <defs>
+        <marker id={strilka} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ill-2)" />
+        </marker>
+      </defs>
+      <g font-size="24" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="var(--ill-ink)">
+        <text x={cx(0)} y={r1} fill="var(--ill-4)">x</text>
+        <text x={cx(1)} y={r1} fill="var(--ill-2)">{znak} {a}</text>
+        <text x={cx(2)} y={r1}>=</text>
+        <text x={cx(3)} y={r1}>{b}</text>
+
+        <text x={cx(0)} y={r2} fill="var(--ill-4)">x</text>
+        <text x={cx(2)} y={r2}>=</text>
+        <text x={cx(3)} y={r2}>{b}</text>
+        <text x={cx(4)} y={r2} fill="var(--ill-2)">{novyi} {a}</text>
+      </g>
+      <line x1={cx(2)} y1={r1 + 18} x2={cx(2)} y2={r2 - 18} stroke="var(--ill-line)" stroke-width="1.5" stroke-dasharray="3 4" />
+      <path
+        d={`M ${cx(1)} ${r1 + 18} C ${cx(1)} ${r1 + 70}, ${cx(4)} ${r1 + 30}, ${cx(4)} ${r2 - 20}`}
+        fill="none"
+        stroke="var(--ill-2)"
+        stroke-width="2"
+        marker-end={`url(#${strilka})`}
+      />
+      <text x={cx(4) - 6} y={r1 + 6} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-2)">
+        {znak} → {novyi}
+      </text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Переносимо <b class="c2">{znak} {a}</b> через знак «=» — знак змінюється на протилежний:{' '}
+      <b class="c2">{novyi} {a}</b>.
+    </li>
+    <li>
+      Обчислюємо: <b class="num">x = {b} {novyi} {a} = {vidpovid}</b>.
+    </li>
+  </ol>
+</figure>
