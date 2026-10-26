@@ -1,0 +1,56 @@
+---
+// Квадрат зі стороною 1 більша одиниця (наприклад, 1 дм), поділений на квадратики зі стороною 1 менша одиниця (1 см).
+// Показує, чому сусідні одиниці площі відрізняються в n · n разів: n рядів по n квадратиків.
+interface Props {
+  velyka: string; // більша одиниця довжини: 'дм'
+  mala: string; // менша одиниця довжини: 'см'
+  n?: number; // скільки менших одиниць у більшій (для мм, см, дм, м — 10)
+}
+const { velyka, mala, n = 10 } = Astro.props;
+
+const side = 260;
+const cell = side / n;
+const padL = 62;
+const padT = 34;
+const padR = 16;
+const padB = 16;
+const W = padL + side + padR;
+const H = padT + side + padB;
+const x0 = padL;
+const y0 = padT;
+const lines = Array.from({ length: n - 1 }, (_, i) => (i + 1) * cell);
+const N = n * n;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`1 ${velyka}² = ${N} ${mala}²`}>
+      <rect x={x0} y={y0} width={side} height={side} fill="var(--ill-paper)" />
+      <rect x={x0} y={y0} width={side} height={cell} fill="var(--ill-1)" fill-opacity="0.28" />
+      <rect x={x0} y={y0 + cell} width={cell} height={cell} fill="var(--ill-2)" fill-opacity="0.75" />
+      <g stroke="var(--ill-line)" stroke-width="1">
+        {lines.map((d) => <line x1={x0 + d} y1={y0} x2={x0 + d} y2={y0 + side} />)}
+        {lines.map((d) => <line x1={x0} y1={y0 + d} x2={x0 + side} y2={y0 + d} />)}
+      </g>
+      <rect x={x0} y={y0} width={side} height={side} fill="none" stroke="var(--ill-ink)" stroke-width="2.5" />
+      <g font-size="14" font-style="italic" fill="var(--ill-ink)" text-anchor="middle">
+        <text x={x0 + side / 2} y={y0 - 10}>1 {velyka} = {n} {mala}</text>
+        <text x={x0 - 10} y={y0 + side / 2} text-anchor="end" dominant-baseline="central">1 {velyka}</text>
+        <text x={x0 - 10} y={y0 + side / 2 + 18} text-anchor="end" dominant-baseline="central">= {n} {mala}</text>
+      </g>
+    </svg>
+  </div>
+  <p class="ill-caption">1 {velyka}² = {N} {mala}²</p>
+  <ol class="ill-steps">
+    <li>
+      Сторона квадрата <b class="num">1 {velyka} = {n} {mala}</b>. Це <b>довжина</b>, тут крок — у {n} разів.
+    </li>
+    <li>
+      Квадрат ділиться на <span class="c1">{n} рядів</span>, а в кожному ряду —{' '}
+      <b class="num">{n}</b> квадратиків по <span class="c2">1 {mala}²</span>.
+    </li>
+    <li>
+      Усього квадратиків: <b class="num">{n} · {n} = {N}</b>, тому <b class="num">1 {velyka}² = {N} {mala}²</b>.
+    </li>
+  </ol>
+</figure>
