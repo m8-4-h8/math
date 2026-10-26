@@ -1,0 +1,98 @@
+---
+// Кут заданої величини: дві сторони з вершини, дуга (а для 90° — квадратик) і назва виду кута.
+// Кілька кутів поруч: <Ryad> з <Kut ... ramka={false} /> всередині.
+interface Props {
+  hradusy: number; // від 1 до 180
+  ramka?: boolean;
+  bez_nazvy?: boolean; // true — тільки малюнок і градуси, без назви (для задачі «визнач вид кута»)
+}
+const { hradusy, ramka = true, bez_nazvy = false } = Astro.props;
+
+function vyd(g: number) {
+  if (g === 90) return ['прямий', 'дорівнює 90°'];
+  if (g === 180) return ['розгорнутий', 'дорівнює 180°'];
+  if (g < 90) return ['гострий', 'менший за 90°'];
+  return ['тупий', 'більший за 90°, але менший за 180°'];
+}
+const [nazva, opys] = vyd(hradusy);
+
+const W = 200;
+const H = 100;
+const vx = hradusy > 90 ? 105 : 40;
+const vy = 85;
+const t = (hradusy * Math.PI) / 180;
+const dovzhyna = 78;
+const px = vx + dovzhyna * Math.cos(t);
+const py = vy - dovzhyna * Math.sin(t);
+const r = 22;
+const ax = vx + r * Math.cos(t);
+const ay = vy - r * Math.sin(t);
+const kv = 12;
+---
+
+<figure class={ramka ? 'ill not-content kut' : 'not-content kut'}>
+  <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Кут ${hradusy}°: ${nazva}`}>
+    {
+      hradusy === 90 ? (
+        <path d={`M ${vx + kv} ${vy} V ${vy - kv} H ${vx}`} fill="none" stroke="var(--ill-2)" stroke-width="2" />
+      ) : (
+        <path
+          d={`M ${vx + r} ${vy} A ${r} ${r} 0 0 0 ${ax.toFixed(2)} ${ay.toFixed(2)}`}
+          fill="none"
+          stroke="var(--ill-2)"
+          stroke-width="2.5"
+        />
+      )
+    }
+    <path
+      d={`M ${px.toFixed(2)} ${py.toFixed(2)} L ${vx} ${vy} L ${vx + 90} ${vy}`}
+      fill="none"
+      stroke="var(--ill-ink)"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle cx={vx} cy={vy} r="2.5" fill="var(--ill-ink)" />
+    <text
+      x={vx + (r + 14) * Math.cos(t / 2)}
+      y={vy - (r + 14) * Math.sin(t / 2)}
+      font-size="12"
+      text-anchor="middle"
+      dominant-baseline="central"
+      fill="var(--ill-2)"
+    >
+      {hradusy}°
+    </text>
+  </svg>
+  {
+    !bez_nazvy && (
+      <figcaption>
+        <b>{nazva}</b>
+        <br />
+        <span class="muted">{opys}</span>
+      </figcaption>
+    )
+  }
+</figure>
+
+<style>
+  .kut {
+    text-align: center;
+  }
+  .kut:not(.ill) {
+    margin: 0;
+  }
+  .kut svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+  .kut figcaption {
+    font-size: var(--sl-text-sm);
+    line-height: 1.4;
+  }
+  .kut .muted {
+    color: var(--ill-muted);
+  }
+</style>

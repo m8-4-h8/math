@@ -1,0 +1,138 @@
+---
+// Таблиця розрядів і класів: куди потрапляє кожна цифра числа, і як це число прочитати.
+// Класи — одиниці, тисячі, мільйони, мільярди; у кожному по три розряди (сотні, десятки, одиниці).
+interface Props {
+  chyslo: number; // ціле число від 0 до 999 999 999 999
+  klasy?: number; // скільки класів показати (за замовчуванням 4, але не менше, ніж потрібно числу)
+}
+const { chyslo, klasy = 4 } = Astro.props;
+
+const KLASY = ['одиниці', 'тисячі', 'мільйони', 'мільярди'];
+const digits = String(Math.trunc(Math.abs(chyslo))).split('').map(Number);
+const potribno = Math.ceil(digits.length / 3);
+const n = Math.min(KLASY.length, Math.max(klasy, potribno));
+
+// Цифри по класах, від старшого до молодшого; порожні розряди — null.
+const padded: (number | null)[] = [...Array(n * 3 - digits.length).fill(null), ...digits];
+const groups = Array.from({ length: n }, (_, k) => ({
+  nazva: KLASY[n - 1 - k],
+  tsyfry: padded.slice(k * 3, k * 3 + 3),
+}));
+
+// Число словами.
+const ODYN = ['', 'один', 'два', 'три', 'чотири', "п'ять", 'шість', 'сім', 'вісім', "дев'ять"];
+const ODYN_Z = ['', 'одна', 'дві', ...ODYN.slice(3)]; // для «тисяча» (жіночий рід)
+const NADTSIAT = ['десять', 'одинадцять', 'дванадцять', 'тринадцять', 'чотирнадцять', "п'ятнадцять",
+  'шістнадцять', 'сімнадцять', 'вісімнадцять', "дев'ятнадцять"];
+const DESIATKY = ['', '', 'двадцять', 'тридцять', 'сорок', "п'ятдесят", 'шістдесят', 'сімдесят', 'вісімдесят',
+  "дев'яносто"];
+const SOTNI = ['', 'сто', 'двісті', 'триста', 'чотириста', "п'ятсот", 'шістсот', 'сімсот', 'вісімсот', "дев'ятсот"];
+const NAZVY = [null, ['тисяча', 'тисячі', 'тисяч'], ['мільйон', 'мільйони', 'мільйонів'], ['мільярд', 'мільярди', 'мільярдів']];
+
+function tryTsyfry(x: number, zhin: boolean) {
+  const s = Math.floor(x / 100);
+  const d = Math.floor(x / 10) % 10;
+  const o = x % 10;
+  const slova = [SOTNI[s]];
+  if (d === 1) slova.push(NADTSIAT[o]);
+  else slova.push(DESIATKY[d], (zhin ? ODYN_Z : ODYN)[o]);
+  return slova.filter(Boolean);
+}
+function forma(x: number, f: string[]) {
+  const o = x % 10;
+  const dd = x % 100;
+  if (o === 1 && dd !== 11) return f[0];
+  if (o >= 2 && o <= 4 && (dd < 12 || dd > 14)) return f[1];
+  return f[2];
+}
+const slova: { tekst: string; klas?: boolean }[] = [];
+groups.forEach((g, k) => {
+  const riven = n - 1 - k;
+  const x = g.tsyfry.reduce<number>((a, t) => a * 10 + (t ?? 0), 0);
+  if (x === 0) return;
+  slova.push({ tekst: tryTsyfry(x, riven === 1).join(' ') });
+  const f = NAZVY[riven];
+  if (f) slova.push({ tekst: forma(x, f), klas: true });
+});
+if (slova.length === 0) slova.push({ tekst: 'нуль' });
+
+const zapys = String(Math.trunc(Math.abs(chyslo))).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const ROZRIADY = ['III', 'II', 'I'];
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <table class="rozriady">
+      <thead>
+        <tr>
+          <th></th>
+          {groups.map((g, k) => <th colspan="3" class:list={['klas', { temnyi: k % 2 === 1 }]}>{g.nazva}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="muted">
+          <th>розряд</th>
+          {groups.map((g) => ROZRIADY.map((r, i) => <td class:list={{ mezha: i === 0 }}>{r}</td>))}
+        </tr>
+        <tr>
+          <th class="muted">число</th>
+          {
+            groups.map((g) =>
+              g.tsyfry.map((t, i) => (
+                <td class:list={['tsyfra', { mezha: i === 0, porozhnia: t === null }]}>{t ?? '·'}</td>
+              )),
+            )
+          }
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <figcaption class="rozriady-chytannia">
+    <b class="num">{zapys}</b> — {slova.map((s) => (s.klas ? <b>{s.tekst} </b> : <span>{s.tekst} </span>))}
+  </figcaption>
+</figure>
+
+<style>
+  .rozriady {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .rozriady th,
+  .rozriady td {
+    padding: 0.3rem 0.4rem;
+    border: none;
+  }
+  .rozriady tbody th {
+    text-align: start;
+    font-weight: 400;
+    font-size: var(--sl-text-xs);
+  }
+  .rozriady .klas {
+    background: var(--sl-color-gray-5);
+    font-weight: 600;
+  }
+  .rozriady .klas.temnyi {
+    background: var(--sl-color-gray-4);
+  }
+  .rozriady .mezha {
+    border-inline-start: 2px solid var(--sl-color-gray-5);
+  }
+  .rozriady .tsyfra {
+    color: var(--ill-1);
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .rozriady .tsyfra.porozhnia {
+    color: var(--ill-muted);
+    font-weight: 400;
+  }
+  .rozriady-chytannia {
+    margin-top: 0.75rem;
+    color: var(--ill-muted);
+  }
+  .rozriady-chytannia b {
+    color: var(--ill-ink);
+  }
+</style>

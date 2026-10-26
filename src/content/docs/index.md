@@ -9,7 +9,7 @@ hero:
       link: /math/4-klas/mnozhennia-v-stovpchyk/
       icon: right-arrow
     - text: 5 клас
-      link: /math/5-klas/naturalni-chysla/
+      link: /math/5-klas/shpargalka-do-kontrolnoi/
       icon: right-arrow
       variant: minimal
 ---
