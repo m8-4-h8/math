@@ -1,0 +1,135 @@
+---
+// Задача на частини: кожному учаснику — кілька однакових клітинок («частин»).
+// Відомо, скільки всього (`razom`) або на скільки в одного більше, ніж в іншого (`riznytsia`).
+interface Props {
+  chastyny: number[]; // скільки частин у кожного, наприклад [1, 3]
+  imena: string[];
+  razom?: number; // скільки всього
+  riznytsia?: number; // на скільки в другого більше, ніж у першого (лише для двох)
+  shcho?: string;
+}
+const { chastyny, imena, razom, riznytsia, shcho = '' } = Astro.props;
+
+const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/\.?0+$/, '').replace('.', ','));
+const od = shcho ? ` ${shcho}` : '';
+const vsohoChastyn = chastyny.reduce((s, k) => s + k, 0);
+const poRiznytsi = riznytsia !== undefined && chastyny.length === 2;
+const riznChastyn = poRiznytsi ? chastyny[1] - chastyny[0] : 0;
+const odna = poRiznytsi ? riznytsia! / riznChastyn : (razom ?? 0) / vsohoChastyn;
+
+const maks = Math.max(...chastyny);
+const cell = Math.min(46, 340 / maks);
+const xL = 90;
+const bh = 34;
+const krok = bh + 18;
+const top = 10;
+const yN = (i: number) => top + i * krok;
+const yNyz = yN(chastyny.length - 1) + bh;
+const xMax = xL + maks * cell;
+const W = xMax + 90;
+const H = yNyz + (poRiznytsi ? 46 : 12);
+const vDuzhka = (x: number, a1: number, a2: number) => {
+  const m = (a1 + a2) / 2;
+  return `M ${x} ${a1} Q ${x + 8} ${a1} ${x + 8} ${a1 + 8} V ${m - 8} Q ${x + 8} ${m} ${x + 16} ${m} Q ${x + 8} ${m} ${x + 8} ${m + 8} V ${a2 - 8} Q ${x + 8} ${a2} ${x} ${a2}`;
+};
+const duzhka = (a: number, b: number, y: number) => {
+  const m = (a + b) / 2;
+  return `M ${a} ${y} Q ${a} ${y + 8} ${a + 8} ${y + 8} H ${m - 8} Q ${m} ${y + 8} ${m} ${y + 16} Q ${m} ${y + 8} ${m + 8} ${y + 8} H ${b - 8} Q ${b} ${y + 8} ${b} ${y}`;
+};
+const xR = xL + chastyny[0] * cell;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Частини: ${chastyny.join(' і ')}`}>
+      {
+        chastyny.map((k, r) => (
+          <g>
+            <text x={xL - 10} y={yN(r) + bh / 2} text-anchor="end" dominant-baseline="central" font-size="13" fill="var(--ill-ink)">
+              {imena[r]}
+            </text>
+            {Array.from({ length: k }, (_, i) => (
+              <rect
+                x={xL + i * cell + 1}
+                y={yN(r)}
+                width={cell - 2}
+                height={bh}
+                rx="5"
+                fill={`var(--ill-${(r % 4) + 1})`}
+                fill-opacity={poRiznytsi && r === 1 && i >= chastyny[0] ? '0.7' : '0.3'}
+                stroke={`var(--ill-${(r % 4) + 1})`}
+                stroke-width="1.5"
+              />
+            ))}
+          </g>
+        ))
+      }
+      <text x={xL + cell / 2} y={yN(0) + bh / 2} text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="700" fill="var(--ill-ink)">
+        ?
+      </text>
+      {
+        razom !== undefined && !poRiznytsi && (
+          <>
+            <path d={vDuzhka(xMax + 8, yN(0), yNyz)} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+            <text x={xMax + 30} y={(yN(0) + yNyz) / 2} dominant-baseline="central" font-size="14" font-weight="700" fill="var(--ill-ink)">
+              {fmt(razom)}
+              {od}
+            </text>
+          </>
+        )
+      }
+      {
+        poRiznytsi && riznChastyn > 0 && (
+          <>
+            <line x1={xR} y1={yN(0) + bh} x2={xR} y2={yNyz} stroke="var(--ill-muted)" stroke-width="1" stroke-dasharray="4 3" />
+            <path d={duzhka(xR, xL + chastyny[1] * cell, yNyz + 4)} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+            <text x={(xR + xL + chastyny[1] * cell) / 2} y={yNyz + 36} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">
+              {fmt(riznytsia!)}
+              {od}
+            </text>
+          </>
+        )
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    {
+      poRiznytsi ? (
+        <li>
+          <b class="num">
+            {chastyny[1]} − {chastyny[0]} = {riznChastyn}
+          </b>{' '}
+          <span class="muted">
+            — на стільки частин більше; це і є {fmt(riznytsia!)}
+            {od}
+          </span>
+        </li>
+      ) : (
+        <li>
+          <b class="num">
+            {chastyny.join(' + ')} = {vsohoChastyn}
+          </b>{' '}
+          <span class="muted">— стільки однакових частин усього</span>
+        </li>
+      )
+    }
+    <li>
+      <b class="num">
+        {fmt(poRiznytsi ? riznytsia! : razom ?? 0)} : {poRiznytsi ? riznChastyn : vsohoChastyn} = {fmt(odna)}
+        {od}
+      </b>{' '}
+      <span class="muted">— одна частина (одна клітинка)</span>
+    </li>
+    {
+      chastyny.map((k, r) => (
+        <li>
+          {imena[r]}:{' '}
+          <b class="num">
+            {k === 1 ? fmt(odna) : `${fmt(odna)} · ${k} = ${fmt(odna * k)}`}
+            {od}
+          </b>
+        </li>
+      ))
+    }
+  </ol>
+</figure>

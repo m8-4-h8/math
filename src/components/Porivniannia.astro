@@ -1,0 +1,118 @@
+---
+// Задача на порівняння: дві смужки одна під одною. «На … більше/менше» — до першої смужки
+// додаємо (або відрізаємо) шматок; «у … разів більше» — другу складаємо з кількох перших.
+interface Props {
+  a: number; // перше (відоме) число
+  na?: number; // на скільки друге більше (від'ємне — менше)
+  razy?: number; // у скільки разів друге більше
+  imena?: [string, string];
+  shukaty?: 'druhe' | 'razom'; // знайти друге число або обидва разом
+  shcho?: string; // одиниці, наприклад «грн» або «марок»
+}
+const { a, na, razy, imena = ['Перший', 'Другий'], shukaty = 'druhe', shcho = '' } = Astro.props;
+
+const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/\.?0+$/, '').replace('.', ','));
+const od = shcho ? ` ${shcho}` : '';
+const uRazy = razy !== undefined;
+const b = uRazy ? a * razy : a + (na ?? 0);
+const dovzh = uRazy ? a * razy : Math.max(a, b);
+const u = Math.min(30, 330 / dovzh);
+const xL = 90;
+const bh = 30;
+const y1 = 30;
+const y2 = y1 + bh + 34;
+const xA = xL + a * u;
+const xB = xL + b * u;
+const xMax = xL + dovzh * u;
+const W = xMax + (shukaty === 'razom' ? 70 : 50);
+const H = y2 + bh + 12;
+const slovoRaz = (k: number) => (k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 10 || k % 100 >= 20) ? 'рази' : 'разів');
+const shmatok = !uRazy && na !== undefined && na !== 0;
+const pidpysShmatka = shmatok ? (na! > 0 ? `на ${fmt(na!)} більше` : `на ${fmt(-na!)} менше`) : '';
+const vDuzhka = (x: number, a1: number, a2: number) => {
+  const m = (a1 + a2) / 2;
+  return `M ${x} ${a1} Q ${x + 8} ${a1} ${x + 8} ${a1 + 8} V ${m - 8} Q ${x + 8} ${m} ${x + 16} ${m} Q ${x + 8} ${m} ${x + 8} ${m + 8} V ${a2 - 8} Q ${x + 8} ${a2} ${x} ${a2}`;
+};
+const textProps = { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': '14', 'font-weight': '700', fill: 'var(--ill-ink)' };
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${imena[0]}: ${fmt(a)}, ${imena[1]}: ?`}>
+      <text x={xL - 10} y={y1 + bh / 2} text-anchor="end" dominant-baseline="central" font-size="13" fill="var(--ill-ink)">{imena[0]}</text>
+      <text x={xL - 10} y={y2 + bh / 2} text-anchor="end" dominant-baseline="central" font-size="13" fill="var(--ill-ink)">{imena[1]}</text>
+      <rect x={xL} y={y1} width={a * u} height={bh} rx="5" fill="var(--ill-1)" fill-opacity="0.35" stroke="var(--ill-1)" stroke-width="1.5" />
+      <text x={xL + (a * u) / 2} y={y1 + bh / 2} {...textProps}>{fmt(a)}</text>
+      <line x1={xA} y1={y1 + bh} x2={xA} y2={y2 + bh} stroke="var(--ill-muted)" stroke-width="1" stroke-dasharray="4 3" />
+      {
+        uRazy ? (
+          <>
+            {Array.from({ length: razy! }, (_, i) => (
+              <g>
+                <rect x={xL + i * a * u} y={y2} width={a * u} height={bh} rx="5" fill="var(--ill-2)" fill-opacity="0.35" stroke="var(--ill-2)" stroke-width="1.5" />
+                <text x={xL + i * a * u + (a * u) / 2} y={y2 + bh / 2} {...textProps}>{fmt(a)}</text>
+              </g>
+            ))}
+            <text x={(xL + xMax) / 2} y={y2 - 12} text-anchor="middle" font-size="12" fill="var(--ill-2)">
+              у {razy} {slovoRaz(razy!)} більше
+            </text>
+          </>
+        ) : (
+          <>
+            <rect x={xL} y={y2} width={b * u} height={bh} rx="5" fill="var(--ill-2)" fill-opacity="0.35" stroke="var(--ill-2)" stroke-width="1.5" />
+            {na !== undefined && na > 0 && (
+              <>
+                <rect x={xA} y={y2} width={na * u} height={bh} rx="5" fill="var(--ill-3)" fill-opacity="0.45" stroke="var(--ill-3)" stroke-width="1.5" />
+                <text x={xL + (a * u) / 2} y={y2 + bh / 2} {...textProps}>{fmt(a)}</text>
+                <text x={xA + (na * u) / 2} y={y2 + bh / 2} {...textProps}>{fmt(na)}</text>
+              </>
+            )}
+            {na !== undefined && na < 0 && (
+              <>
+                <rect x={xB} y={y2} width={-na * u} height={bh} rx="5" fill="none" stroke="var(--ill-4)" stroke-width="1.5" stroke-dasharray="5 4" />
+                <text x={xB + (-na * u) / 2} y={y2 + bh / 2} {...textProps} fill="var(--ill-4)">−{fmt(-na)}</text>
+              </>
+            )}
+            {shmatok && (
+              <text x={(xA + xB) / 2} y={y2 - 12} text-anchor="middle" font-size="12" fill={na! > 0 ? 'var(--ill-3)' : 'var(--ill-4)'}>
+                {pidpysShmatka}
+              </text>
+            )}
+          </>
+        )
+      }
+      {
+        shukaty === 'druhe' ? (
+          <text x={xMax + 12} y={y2 + bh / 2} dominant-baseline="central" font-size="16" font-weight="700" fill="var(--ill-ink)">?</text>
+        ) : (
+          <>
+            <path d={vDuzhka(xMax + 8, y1, y2 + bh)} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+            <text x={xMax + 30} y={(y1 + y2 + bh) / 2} dominant-baseline="central" font-size="16" font-weight="700" fill="var(--ill-ink)">?</text>
+          </>
+        )
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      {imena[1]}:{' '}
+      <b class="num">
+        {uRazy ? `${fmt(a)} · ${razy}` : na! >= 0 ? `${fmt(a)} + ${fmt(na!)}` : `${fmt(a)} − ${fmt(-na!)}`} = {fmt(b)}{od}
+      </b>{' '}
+      <span class="muted">
+        — {uRazy ? `у ${razy} ${slovoRaz(razy!)} більше — множимо` : na! >= 0 ? 'на … більше — додаємо' : 'на … менше — віднімаємо'}
+      </span>
+    </li>
+    {
+      shukaty === 'razom' && (
+        <li>
+          Разом:{' '}
+          <b class="num">
+            {fmt(a)} + {fmt(b)} = {fmt(a + b)}
+            {od}
+          </b>
+        </li>
+      )
+    }
+  </ol>
+</figure>
