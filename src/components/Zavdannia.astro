@@ -1,0 +1,318 @@
+---
+// Інтерактивне завдання для розділу «Перевір себе»: дитина вводить відповідь (або обирає варіант),
+// одразу бачить, чи правильно, і отримує зірочку. Розв'язок відкривається після правильної відповіді
+// або за кнопкою «Показати відповідь».
+//
+//   <Zavdannia vidpovid="6">Знайди $\frac{1}{3}$ від $18$.</Zavdannia>
+//   <Zavdannia vidpovid="гострий" varianty={['гострий', 'прямий', 'тупий']}>Який це кут?</Zavdannia>
+//   <Zavdannia vidpovid={['9 ост 2', '9 (ост. 2)']} pidkazka="Яке найбільше число п'ятірок влізе в 47?">
+//     $47 : 5$
+//
+//     <span slot="rozviazok">$9 \text{ (ост. } 2)$, бо $5 \cdot 9 + 2 = 47$</span>
+//   </Zavdannia>
+//
+// Порожній рядок перед <span slot="rozviazok"> обов'язковий, інакше розв'язок потрапить у текст умови.
+//
+// Відповідь порівнюємо без урахування пробілів, великих літер і розділових знаків. Якщо у правильній
+// відповіді є числа, достатньо ввести ті самі числа: «36 км» і «36» — обидві правильні.
+interface Props {
+  vidpovid: string | number | (string | number)[]; // правильна відповідь (або кілька варіантів запису)
+  varianty?: string[]; // якщо задано — кнопки вибору замість поля
+  pidkazka?: string; // з'являється після другої помилки
+}
+const { vidpovid, varianty, pidkazka } = Astro.props;
+const vidpovidi = (Array.isArray(vidpovid) ? vidpovid : [vidpovid]).map(String);
+const maRozviazok = Astro.slots.has('rozviazok');
+---
+
+<math-zavdannia
+  class="zavd not-content"
+  data-vidpovidi={JSON.stringify(vidpovidi)}
+  data-pidkazka={pidkazka}
+>
+  <div class="zavd-verh">
+    <span class="zavd-nomer" aria-hidden="true"></span>
+    <div class="zavd-tekst"><slot /></div>
+    <span class="zavd-zirka" title="Зірочка за правильну відповідь" aria-hidden="true">⭐</span>
+  </div>
+  {
+    varianty ? (
+      <div class="zavd-varianty" role="group" aria-label="Варіанти відповіді">
+        {varianty.map((v) => (
+          <button type="button" class="zavd-variant" data-variant={v}>
+            {v}
+          </button>
+        ))}
+      </div>
+    ) : (
+      <form class="zavd-forma" autocomplete="off">
+        <input class="zavd-pole" type="text" inputmode="text" placeholder="Твоя відповідь" aria-label="Твоя відповідь" />
+        <button type="submit" class="zavd-knopka">Перевірити</button>
+      </form>
+    )
+  }
+  <p class="zavd-vidhuk" aria-live="polite"></p>
+  <div class="zavd-rozviazok" hidden>
+    <span class="zavd-rozv-nazva">Відповідь:</span>
+    {maRozviazok ? <slot name="rozviazok" /> : <span>{vidpovidi[0]}</span>}
+  </div>
+  <button type="button" class="zavd-pokazaty">Показати відповідь</button>
+</math-zavdannia>
+
+<script>
+  import { dodatyZirku, pokhvala, salut, zirkyStorinky } from '../scripts/zirky';
+
+  // «9 (ост. 2)» → ['9', 'ост', '2']; «3 200 005» → ['3200005'].
+  // Кома буває і десятковою («3,5» → ['3.5']), і роздільником («0,1,2» → ['0', '1', '2']) — пробуємо обидва.
+  function slova(tekst: string, desiatkova: boolean) {
+    const t = tekst
+      .toLowerCase()
+      .replace(/’|ʼ/g, "'")
+      .replace(/(\d)\s+(?=\d{3}(?!\d))/g, '$1')
+      .replace(/(мм|см|дм|км|м)\s*[23²³]/g, '$1'); // «см2» і «см²» — це одиниця, а не число 2
+    const chyslo = desiatkova ? /\d+(?:[.,]\d+)?|[\p{L}']+/gu : /\d+(?:\.\d+)?|[\p{L}']+/gu;
+    return t.match(chyslo)?.map((s) => s.replace(',', '.')) || [];
+  }
+  const chysla = (s: string[]) => s.filter((x) => /^\d/.test(x)).join(' ');
+
+  function pravylno(vvid: string, vidpovidi: string[]) {
+    return [true, false].some((desiatkova) => {
+      const v = slova(vvid, desiatkova);
+      if (!v.length) return false;
+      return vidpovidi.some((pr) => {
+        const p = slova(pr, desiatkova);
+        if (v.join(' ') === p.join(' ')) return true;
+        // У відповіді є числа — одиниці виміру й слова на кшталт «ост.» можна не писати.
+        return chysla(p) !== '' && chysla(v) === chysla(p);
+      });
+    });
+  }
+
+  class MathZavdannia extends HTMLElement {
+    connectedCallback() {
+      const vsi = [...document.querySelectorAll('math-zavdannia')];
+      const nomer = vsi.indexOf(this);
+      const vidpovidi: string[] = JSON.parse(this.dataset.vidpovidi || '[]');
+      const pidkazka = this.dataset.pidkazka;
+      const vidhuk = this.querySelector<HTMLElement>('.zavd-vidhuk')!;
+      const rozviazok = this.querySelector<HTMLElement>('.zavd-rozviazok')!;
+      const pokazaty = this.querySelector<HTMLButtonElement>('.zavd-pokazaty')!;
+      const pole = this.querySelector<HTMLInputElement>('.zavd-pole');
+      let pomylky = 0;
+
+      this.querySelector<HTMLElement>('.zavd-nomer')!.textContent = String(nomer + 1);
+
+      const vidkryty = () => {
+        rozviazok.hidden = false;
+        pokazaty.hidden = true;
+      };
+      const rozviazano = (zberehty: boolean) => {
+        this.classList.add('rozviazano');
+        this.classList.remove('pomylka');
+        this.querySelectorAll<HTMLButtonElement>('button, input').forEach((el) => {
+          if (el !== pokazaty) el.disabled = true;
+        });
+        vidkryty();
+        if (zberehty) {
+          vidhuk.textContent = '⭐ ' + pokhvala();
+          dodatyZirku(nomer);
+          salut(this.querySelector('.zavd-zirka')!);
+        } else {
+          vidhuk.textContent = '⭐ Це завдання вже розв\'язане. Молодець!';
+        }
+      };
+      const ne = () => {
+        pomylky++;
+        this.classList.remove('pomylka');
+        void this.offsetWidth; // перезапуск анімації «похитування»
+        this.classList.add('pomylka');
+        vidhuk.textContent =
+          pomylky >= 2 && pidkazka ? `💡 Підказка: ${pidkazka}` : 'Поки що ні. Спробуй ще раз! 💪';
+      };
+
+      if (zirkyStorinky().includes(nomer)) rozviazano(false);
+
+      this.querySelector('form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!pole || !pole.value.trim()) return;
+        pravylno(pole.value, vidpovidi) ? rozviazano(true) : ne();
+      });
+      this.querySelectorAll<HTMLButtonElement>('.zavd-variant').forEach((b) =>
+        b.addEventListener('click', () => {
+          if (pravylno(b.dataset.variant || '', vidpovidi)) {
+            b.classList.add('virno');
+            rozviazano(true);
+          } else {
+            b.classList.add('nevirno');
+            b.disabled = true;
+            ne();
+          }
+        }),
+      );
+      pokazaty.addEventListener('click', () => {
+        vidkryty();
+        vidhuk.textContent = 'Розбери розв\'язок і спробуй наступне завдання 🙂';
+      });
+    }
+  }
+  if (!customElements.get('math-zavdannia')) customElements.define('math-zavdannia', MathZavdannia);
+</script>
+
+<style>
+  .zavd {
+    display: block;
+    margin: 1rem 0;
+    padding: 1rem 1.1rem;
+    border: 2px solid var(--dt-card-border);
+    border-radius: var(--dt-radius);
+    background: var(--dt-card);
+    box-shadow: var(--dt-shadow);
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .zavd.rozviazano {
+    border-color: var(--dt-ok);
+    background: var(--dt-ok-bg);
+  }
+  .zavd.pomylka {
+    border-color: var(--dt-err);
+    animation: zavd-khytannia 0.35s ease;
+  }
+  @keyframes zavd-khytannia {
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-3px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .zavd.pomylka { animation: none; }
+  }
+  .zavd-verh {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+  .zavd-nomer {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--dt-h-1);
+    color: #fff;
+    font-weight: 800;
+  }
+  .zavd-tekst {
+    flex: 1;
+    padding-top: 0.2rem;
+    font-size: 1.05rem;
+  }
+  .zavd-tekst :global(p) {
+    margin: 0;
+  }
+  .zavd-zirka {
+    flex: none;
+    font-size: 1.6rem;
+    line-height: 1;
+    filter: grayscale(1);
+    opacity: 0.3;
+    transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
+  }
+  .rozviazano .zavd-zirka {
+    filter: none;
+    opacity: 1;
+    transform: scale(1.2) rotate(-10deg);
+  }
+  .zavd-forma,
+  .zavd-varianty {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+  }
+  .zavd-pole {
+    flex: 1 1 10rem;
+    min-width: 0;
+    padding: 0.6rem 0.9rem;
+    border: 2px solid var(--dt-card-border);
+    border-radius: 999px;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-white);
+    font: inherit;
+    font-size: 1.05rem;
+  }
+  .zavd-pole:focus {
+    outline: none;
+    border-color: var(--sl-color-accent);
+  }
+  .zavd button {
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+  }
+  .zavd-knopka,
+  .zavd-variant {
+    padding: 0.6rem 1.1rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--dt-h-1);
+    color: #fff;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--dt-h-1) 60%, #000);
+  }
+  .zavd-variant {
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-text-accent);
+    box-shadow: 0 3px 0 var(--dt-card-border);
+  }
+  .zavd-knopka:active,
+  .zavd-variant:active {
+    transform: translateY(2px);
+    box-shadow: none;
+  }
+  .zavd-variant.nevirno {
+    background: var(--dt-err-bg);
+    color: var(--dt-err);
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  .zavd-variant.virno {
+    background: var(--dt-h-3);
+    color: #fff;
+  }
+  .zavd button:disabled {
+    cursor: default;
+  }
+  .zavd-vidhuk {
+    min-height: 1.5em;
+    margin: 0.6rem 0 0;
+    font-weight: 700;
+  }
+  .rozviazano .zavd-vidhuk {
+    color: var(--dt-ok);
+  }
+  .pomylka .zavd-vidhuk {
+    color: var(--dt-err);
+  }
+  .zavd-rozviazok {
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    border-radius: 0.9rem;
+    background: var(--sl-color-accent-low);
+  }
+  .zavd-rozv-nazva {
+    font-weight: 800;
+    margin-inline-end: 0.35rem;
+  }
+  .zavd-pokazaty {
+    margin-top: 0.5rem;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--sl-color-gray-3);
+    text-decoration: underline dotted;
+    font-weight: 600 !important;
+    font-size: 0.9rem;
+  }
+  .zavd-pokazaty[hidden] {
+    display: none;
+  }
+</style>

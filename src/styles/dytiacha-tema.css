@@ -1,0 +1,123 @@
+/*
+  Дитяча тема сайту: округлий шрифт, яскраві кольори, великі кнопки й заокруглені рамки.
+  Базові значення — для темної теми Starlight, [data-theme='light'] перевизначає їх для світлої.
+*/
+:root {
+  --sl-font: 'Nunito Variable', 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --sl-color-accent-low: hsl(262, 45%, 22%);
+  --sl-color-accent: hsl(262, 90%, 68%);
+  --sl-color-accent-high: hsl(262, 100%, 88%);
+
+  /* Яскраві кольори для карток, кнопок і зірочок. */
+  --dt-1: #a78bfa;
+  --dt-2: #fb923c;
+  --dt-3: #34d399;
+  --dt-4: #f472b6;
+  --dt-5: #60a5fa;
+  --dt-6: #facc15;
+  /* Насичені кольори під білий текст (шапки карток) — однакові в обох темах. */
+  --dt-h-1: #7c3aed;
+  --dt-h-2: #ea580c;
+  --dt-h-3: #059669;
+  --dt-h-4: #db2777;
+  --dt-h-5: #2563eb;
+  --dt-h-6: #b45309;
+  --dt-star: #fbbf24;
+  --dt-ok: #34d399;
+  --dt-ok-bg: rgba(52, 211, 153, 0.14);
+  --dt-err: #fb7185;
+  --dt-err-bg: rgba(251, 113, 133, 0.14);
+  --dt-card: var(--sl-color-gray-6);
+  --dt-card-border: var(--sl-color-gray-5);
+  --dt-radius: 1.25rem;
+  --dt-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: hsl(262, 95%, 94%);
+  --sl-color-accent: hsl(262, 80%, 56%);
+  --sl-color-accent-high: hsl(262, 70%, 32%);
+  --sl-color-bg: #fffdf7;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #fff9ec;
+
+  --dt-1: #7c3aed;
+  --dt-2: #ea580c;
+  --dt-3: #059669;
+  --dt-4: #db2777;
+  --dt-5: #2563eb;
+  --dt-6: #ca8a04;
+  --dt-star: #f59e0b;
+  --dt-ok: #059669;
+  --dt-ok-bg: #ecfdf5;
+  --dt-err: #e11d48;
+  --dt-err-bg: #fff1f2;
+  --dt-card: #ffffff;
+  --dt-card-border: #ece6f8;
+  --dt-shadow: 0 6px 0 rgba(124, 58, 237, 0.12);
+}
+
+/* Трохи більший текст — дітям так легше читати. */
+.sl-markdown-content {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.sl-markdown-content h2 {
+  display: inline-block;
+  padding-bottom: 0.15em;
+  background: linear-gradient(90deg, var(--dt-1), var(--dt-4)) left bottom / 100% 0.18em no-repeat;
+}
+
+h1#_top {
+  font-weight: 800;
+}
+
+/* Кнопки й поля — великі та круглі. */
+.sl-link-button,
+.sl-markdown-content details,
+.sl-markdown-content .starlight-aside,
+.sl-markdown-content table {
+  border-radius: var(--dt-radius);
+}
+
+.sl-link-button {
+  font-weight: 700;
+}
+
+.sl-markdown-content .starlight-aside {
+  border-inline-start-width: 0.35rem;
+}
+
+/* «Відповіді» та інші сховані блоки — як картка, яку можна відкрити. */
+.sl-markdown-content details {
+  padding: 0.75rem 1rem;
+  border: 2px dashed var(--dt-card-border);
+  background: var(--dt-card);
+}
+
+.sl-markdown-content details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--sl-color-text-accent);
+}
+
+/* Логотип-сова в заголовку сайту. */
+.site-title img {
+  height: 2.4rem;
+  width: auto;
+}
+
+.site-title {
+  font-weight: 800;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sl-link-button {
+    transition: transform 0.15s ease;
+  }
+  .sl-link-button:hover {
+    transform: translateY(-2px) scale(1.03);
+  }
+}
