@@ -1,0 +1,172 @@
+---
+// Рівняння як «частина і ціле»: смужка-ціле зверху, під нею — частини.
+// dija '+': ціле = a + b (дві частини різного розміру).
+// dija '·': ціле = a · b (b однакових частин, кожна по a).
+// nevidome — що шукаємо: частину a, частину b (для '·' — кількість частин) або ціле.
+// Під малюнком — чим шукати: ціле → додаємо / множимо, частину → віднімаємо / ділимо.
+interface Props {
+  a: number;
+  b: number;
+  dija?: '+' | '·';
+  nevidome: 'a' | 'b' | 'tsile';
+  rivniannia?: string; // як записане рівняння, наприклад «x − 7 = 12»
+}
+const { a, b, dija = '+', nevidome, rivniannia } = Astro.props;
+
+const tsile = dija === '+' ? a + b : a * b;
+const vidpovid = nevidome === 'tsile' ? tsile : nevidome === 'a' ? a : b;
+const label = (v: 'a' | 'b' | 'tsile', n: number) => (nevidome === v ? 'x' : String(n));
+
+const pad = 8;
+const barW = 420;
+const barH = 40;
+const top = 40;
+const W = barW + 2 * pad;
+const H = top + barH + (dija === '·' ? 40 : pad);
+
+// Клітинки під цілим: [x, ширина, підпис, чи невідома]
+type Cell = { x: number; w: number; text: string; nevidoma: boolean; kolir: number };
+let cells: Cell[] = [];
+if (dija === '+') {
+  const wa = Math.min(barW - 70, Math.max(70, (barW * a) / tsile));
+  cells = [
+    { x: pad, w: wa, text: label('a', a), nevidoma: nevidome === 'a', kolir: 1 },
+    { x: pad + wa, w: barW - wa, text: label('b', b), nevidoma: nevidome === 'b', kolir: 2 },
+  ];
+} else {
+  const w = barW / b;
+  cells = Array.from({ length: b }, (_, i) => ({
+    x: pad + i * w,
+    w,
+    text: label('a', a),
+    nevidoma: nevidome === 'a',
+    kolir: 1,
+  }));
+}
+const tsileNevidome = nevidome === 'tsile';
+const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <path
+        d={`M ${pad} ${top - 6} v -8 h ${barW} v 8 M ${pad + barW / 2} ${top - 14} v -4`}
+        fill="none"
+        stroke={tsileNevidome ? 'var(--ill-4)' : 'var(--ill-line)'}
+        stroke-width="1.5"
+      />
+      <text
+        x={W / 2}
+        y="14"
+        text-anchor="middle"
+        font-size="14"
+        font-weight="700"
+        fill={tsileNevidome ? 'var(--ill-4)' : 'var(--ill-ink)'}
+      >
+        ціле: {label('tsile', tsile)}
+      </text>
+      {
+        cells.map((c) => (
+          <g>
+            <rect
+              x={c.x}
+              y={top}
+              width={c.w}
+              height={barH}
+              fill={c.nevidoma ? 'transparent' : `var(--ill-${c.kolir})`}
+              fill-opacity="0.3"
+              stroke={c.nevidoma ? 'var(--ill-4)' : 'var(--ill-line)'}
+              stroke-dasharray={c.nevidoma ? '5 4' : undefined}
+              stroke-width={c.nevidoma ? 2 : 1.5}
+            />
+            <text
+              x={c.x + c.w / 2}
+              y={top + barH / 2}
+              text-anchor="middle"
+              dominant-baseline="central"
+              font-size="15"
+              font-weight="700"
+              fill={c.nevidoma ? 'var(--ill-4)' : 'var(--ill-ink)'}
+            >
+              {c.text}
+            </text>
+          </g>
+        ))
+      }
+      {
+        dija === '·' && (
+          <g>
+            <path
+              d={`M ${pad} ${top + barH + 6} v 8 h ${barW} v -8`}
+              fill="none"
+              stroke={nevidome === 'b' ? 'var(--ill-4)' : 'var(--ill-line)'}
+              stroke-width="1.5"
+            />
+            <text
+              x={W / 2}
+              y={top + barH + 32}
+              text-anchor="middle"
+              font-size="14"
+              font-weight="700"
+              fill={nevidome === 'b' ? 'var(--ill-4)' : 'var(--ill-ink)'}
+            >
+              однакових частин: {label('b', b)}
+            </text>
+          </g>
+        )
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    {
+      dija === '+' && tsileNevidome && (
+        <li>
+          Невідоме — <b class="c4">ціле</b>. Щоб знайти ціле, частини <b>додаємо</b>:{' '}
+          <b class="num">x = {a} + {b} = {tsile}</b>
+        </li>
+      )
+    }
+    {
+      dija === '+' && !tsileNevidome && (
+        <li>
+          Невідоме — <b class="c4">частина</b>. Щоб знайти частину, від цілого <b>віднімаємо</b> іншу частину:{' '}
+          <b class="num">
+            x = {tsile} − {nevidome === 'a' ? b : a} = {vidpovid}
+          </b>
+        </li>
+      )
+    }
+    {
+      dija === '·' && tsileNevidome && (
+        <li>
+          Невідоме — <b class="c4">ціле</b>. Щоб знайти ціле, однакові частини <b>множимо</b>:{' '}
+          <b class="num">x = {a} · {b} = {tsile}</b>
+        </li>
+      )
+    }
+    {
+      dija === '·' && nevidome === 'a' && (
+        <li>
+          Невідоме — <b class="c4">одна частина</b>. Ціле <b>ділимо</b> на кількість частин:{' '}
+          <b class="num">x = {tsile} : {b} = {a}</b>
+        </li>
+      )
+    }
+    {
+      dija === '·' && nevidome === 'b' && (
+        <li>
+          Невідоме — <b class="c4">кількість частин</b>. Ціле <b>ділимо</b> на одну частину:{' '}
+          <b class="num">x = {tsile} : {a} = {b}</b>
+        </li>
+      )
+    }
+  </ol>
+  {
+    rivniannia && (
+      <figcaption class="ill-caption">
+        {rivniannia} &nbsp;→&nbsp; <span class="c4">x = {vidpovid}</span>
+      </figcaption>
+    )
+  }
+</figure>
