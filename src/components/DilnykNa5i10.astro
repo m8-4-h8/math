@@ -1,0 +1,93 @@
+---
+// Як швидко підібрати цифру частки: множимо дільник на 5 і на 10 і дивимося, куди потрапляє
+// (неповне) ділене — у першу половину (цифра 1–4) чи в другу (цифра 5–9).
+//   <DilnykNa5i10 dilene={47} dilnyk={6} />
+interface Props {
+  dilene: number; // ділене або неповне ділене
+  dilnyk: number;
+}
+const { dilene, dilnyk } = Astro.props;
+
+const p5 = dilnyk * 5;
+const p10 = dilnyk * 10;
+const q = Math.floor(dilene / dilnyk);
+const ost = dilene - q * dilnyk;
+const fmt = (x: number) => x.toLocaleString('uk-UA').replace(/\s/g, ' ');
+
+const xL = 64;
+const krok = 50;
+const W = xL * 2 + krok * 10;
+const yL = 64;
+const H = 126;
+const x = (k: number) => xL + k * krok; // k — скільки дільників
+const xD = x(Math.min(dilene / dilnyk, 10.4));
+const persha = dilene < p5;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Де ${dilene} між ${dilnyk} · 5 і ${dilnyk} · 10`}>
+      <rect x={x(0)} y={yL - 10} width={krok * 5} height="20" rx="4" fill="var(--ill-1)" fill-opacity={persha ? '0.45' : '0.15'} />
+      <rect x={x(5)} y={yL - 10} width={krok * 5} height="20" rx="4" fill="var(--ill-2)" fill-opacity={persha ? '0.15' : '0.45'} />
+      <text x={x(2.5)} y={yL + 28} text-anchor="middle" font-size="12" fill="var(--ill-muted)">цифра 1–4</text>
+      <text x={x(7.5)} y={yL + 28} text-anchor="middle" font-size="12" fill="var(--ill-muted)">цифра 5–9</text>
+      {
+        Array.from({ length: 11 }, (_, k) => (
+          <line x1={x(k)} y1={yL - (k % 5 === 0 ? 14 : 6)} x2={x(k)} y2={yL + (k % 5 === 0 ? 14 : 6)} stroke="var(--ill-line)" stroke-width={k % 5 === 0 ? 2 : 1} />
+        ))
+      }
+      {[0, 5, 10].map((k) => (
+        <text x={x(k)} y={yL + 54} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">
+          {k === 0 ? '0' : `${dilnyk} · ${k} = ${fmt(dilnyk * k)}`}
+        </text>
+      ))}
+      <path d={`M ${xD} ${yL - 12} l -7 -12 h 14 z`} fill="var(--ill-4)" />
+      <text x={xD} y={yL - 32} text-anchor="middle" font-size="15" font-weight="700" fill="var(--ill-4)">
+        {fmt(dilene)}
+      </text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Множимо дільник на 5 і на 10: <b class="num">{dilnyk} · 5 = {fmt(p5)}</b>, <b class="num">{dilnyk} · 10 = {fmt(p10)}</b>
+    </li>
+    <li>
+      {
+        dilene < dilnyk ? (
+          <span>
+            <b class="num">{fmt(dilene)}</b> менше за {dilnyk} — у частці <b>0</b>.
+          </span>
+        ) : dilene >= p10 ? (
+          <span>
+            <b class="num">{fmt(dilene)}</b> більше за {fmt(p10)} — у частці щонайменше 10.
+          </span>
+        ) : persha ? (
+          <span>
+            <b class="num">{fmt(dilene)} &lt; {fmt(p5)}</b> — цифра частки <b class="c1">від 1 до 4</b>.
+          </span>
+        ) : (
+          <span>
+            <b class="num">{fmt(dilene)} ≥ {fmt(p5)}</b> — цифра частки <b class="c2">від 5 до 9</b>.
+          </span>
+        )
+      }
+    </li>
+    {
+      dilene >= dilnyk && (
+        <li>
+          Уточнюємо: <b class="num">{dilnyk} · {q} = {fmt(dilnyk * q)}</b> — підходить, а{' '}
+          <span class="muted">
+            {dilnyk} · {q + 1} = {fmt(dilnyk * (q + 1))}
+          </span>{' '}
+          — вже більше за {fmt(dilene)}.
+        </li>
+      )
+    }
+    <li>
+      Відповідь: <b class="num">
+        {fmt(dilene)} : {dilnyk} = {q}
+        {ost > 0 && ` (ост. ${ost})`}
+      </b>
+    </li>
+  </ol>
+</figure>

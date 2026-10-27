@@ -68,6 +68,8 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Koshyky` | робота як кошики (одна година — кошик), можна вдвох | `<Koshyky za_hodynu={7} druhyi={5} hodyn={4} shcho="деталей" shukaty="chas" />` |
   | `Porivniannia` | дві смужки: «на … більше/менше» або «у … разів» | `<Porivniannia a={7} na={4} imena={['Петро', 'Марійка']} />` |
   | `Chastyny` | задача на частини однаковими клітинками | `<Chastyny chastyny={[1, 3]} imena={['Брат', 'Сестра']} razom={24} />` |
+  | `RozkladMnozhennia` | зручне множення: число на круглі частини | `<RozkladMnozhennia a={563} b={3} />` |
+  | `DilnykNa5i10` | цифра частки через дільник · 5 і · 10 | `<DilnykNa5i10 dilene={47} dilnyk={6} />` |
   | `Zavdannia` | інтерактивне завдання: поле або кнопки, підказка, зірочка ⭐ | `<Zavdannia vidpovid="6" pidkazka="...">Умова</Zavdannia>` |
   | `Trenazher` | гра «Швидкий рахунок» (10 прикладів, рекорд) | `<Trenazher dii={['×']} riven="seredno" />` |
 
