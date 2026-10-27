@@ -1,0 +1,139 @@
+---
+// Задача на роботу: кожна година — окремий кошик з однаковою кількістю (продуктивність).
+// Якщо працюють двоє (`druhyi`), у кожному кошику — внесок обох двома кольорами.
+interface Props {
+  za_hodynu: number; // продуктивність першого: скільки робить за одиницю часу
+  hodyn: number; // скільки кошиків (ціле число)
+  druhyi?: number; // продуктивність другого, якщо працюють разом
+  shukaty?: 'vsoho' | 'chas' | 'za_hodynu'; // що невідоме
+  shcho?: string; // що збирають/роблять, наприклад «кг» або «деталей»
+  chas?: string; // одиниця часу
+}
+const { za_hodynu, hodyn, druhyi, shukaty = 'vsoho', shcho = 'шт.', chas = 'год' } = Astro.props;
+
+const razom = druhyi !== undefined;
+const p = za_hodynu + (druhyi ?? 0);
+const vsoho = p * hodyn;
+const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/\.?0+$/, '').replace('.', ','));
+
+const bw = 64;
+const bh = 44;
+const gap = 18;
+const x0 = 12;
+const top = 52;
+const W = x0 * 2 + hodyn * bw + (hodyn - 1) * gap;
+const xEnd = x0 + hodyn * bw + (hodyn - 1) * gap;
+const yBrace = top + bh + 28;
+const H = yBrace + 44;
+const kruzhechky = p <= 10 && shukaty !== 'za_hodynu';
+const krapky = Array.from({ length: p }, (_, i) => ({
+  dx: 10 + (i % 5) * 11,
+  dy: 13 + Math.floor(i / 5) * 14,
+  kolir: i < za_hodynu ? 'var(--ill-2)' : 'var(--ill-3)',
+}));
+const duzhka = (a: number, b: number, y: number) => {
+  const m = (a + b) / 2;
+  return `M ${a} ${y} Q ${a} ${y + 8} ${a + 8} ${y + 8} H ${m - 8} Q ${m} ${y + 8} ${m} ${y + 16} Q ${m} ${y + 8} ${m + 8} ${y + 8} H ${b - 8} Q ${b} ${y + 8} ${b} ${y}`;
+};
+const nadKoshykom = shukaty === 'za_hodynu' ? '?' : razom ? `${fmt(za_hodynu)} + ${fmt(druhyi!)}` : fmt(p);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${hodyn} кошиків по ${fmt(p)} ${shcho}`}>
+      {
+        Array.from({ length: hodyn }, (_, i) => {
+          const x = x0 + i * (bw + gap);
+          return (
+            <g>
+              <path
+                d={`M ${x + 12} ${top} A ${bw / 2 - 12} 20 0 0 1 ${x + bw - 12} ${top}`}
+                fill="none"
+                stroke="var(--ill-1)"
+                stroke-width="2"
+              />
+              <path
+                d={`M ${x} ${top} H ${x + bw} L ${x + bw - 8} ${top + bh} H ${x + 8} Z`}
+                fill="var(--ill-1)"
+                fill-opacity="0.15"
+                stroke="var(--ill-1)"
+                stroke-width="2"
+                stroke-linejoin="round"
+              />
+              {kruzhechky ? (
+                krapky.map((k) => <circle cx={x + k.dx} cy={top + k.dy} r="4.5" fill={k.kolir} />)
+              ) : (
+                <text x={x + bw / 2} y={top + bh / 2 + 1} text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="700" fill="var(--ill-ink)">
+                  {shukaty === 'za_hodynu' ? '?' : fmt(p)}
+                </text>
+              )}
+              <text x={x + bw / 2} y={top - 30} text-anchor="middle" font-size="12" fill="var(--ill-muted)">
+                {nadKoshykom}
+              </text>
+              {shukaty !== 'chas' && (
+                <text x={x + bw / 2} y={top + bh + 16} text-anchor="middle" font-size="11" fill="var(--ill-muted)">
+                  {i + 1}-{chas === 'год' ? 'ша' : 'й'} {chas}
+                </text>
+              )}
+            </g>
+          );
+        })
+      }
+      <path d={duzhka(x0, xEnd, yBrace)} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+      <text x={(x0 + xEnd) / 2} y={yBrace + 34} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-ink)">
+        {shukaty === 'vsoho' ? `? ${shcho}` : `${fmt(vsoho)} ${shcho}`}
+        {shukaty === 'chas' ? ` — скільки кошиків?` : ''}
+      </text>
+    </svg>
+  </div>
+  {
+    razom && kruzhechky && (
+      <p class="muted" style="margin: 0.25rem 0 0">
+        <span class="c2">●</span> перший робить {fmt(za_hodynu)} {shcho}, <span class="c3">●</span> другий — {fmt(druhyi!)} {shcho} за 1 {chas}.
+      </p>
+    )
+  }
+  <ol class="ill-steps">
+    {
+      razom && shukaty !== 'za_hodynu' && (
+        <li>
+          <b class="num">
+            {fmt(za_hodynu)} + {fmt(druhyi!)} = {fmt(p)} ({shcho})
+          </b>{' '}
+          <span class="muted">— стільки вдвох роблять за 1 {chas} (один кошик)</span>
+        </li>
+      )
+    }
+    {
+      shukaty === 'vsoho' && (
+        <li>
+          <b class="num">
+            {fmt(p)} · {hodyn} = {fmt(vsoho)} ({shcho})
+          </b>{' '}
+          <span class="muted">— робота = продуктивність · час</span>
+        </li>
+      )
+    }
+    {
+      shukaty === 'chas' && (
+        <li>
+          <b class="num">
+            {fmt(vsoho)} : {fmt(p)} = {hodyn} ({chas})
+          </b>{' '}
+          <span class="muted">— час = робота : продуктивність</span>
+        </li>
+      )
+    }
+    {
+      shukaty === 'za_hodynu' && (
+        <li>
+          {fmt(vsoho)} {shcho} розкладаємо порівну в {hodyn} кошиків:{' '}
+          <b class="num">
+            {fmt(vsoho)} : {hodyn} = {fmt(p)} ({shcho} за 1 {chas})
+          </b>{' '}
+          <span class="muted">— продуктивність = робота : час</span>
+        </li>
+      )
+    }
+  </ol>
+</figure>

@@ -33,6 +33,7 @@ export default defineConfig({
           label: `${znachokKlasu(nomer)} ${nomer} клас`,
           items: [{ autogenerate: { directory: papka } }],
         })),
+        { label: '✏️ Як намалювати задачу', items: [{ autogenerate: { directory: 'vizualizatsiia-zadach' } }] },
       ],
     }),
   ],

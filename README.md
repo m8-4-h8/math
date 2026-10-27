@@ -20,6 +20,7 @@ src/content/docs/
     dilennia-kutom.mdx     одна тема = один файл (.md або .mdx з ілюстраціями)
   5-klas/
     rozriady-i-klasy.mdx
+  vizualizatsiia-zadach/   розділ «Як намалювати задачу» (для всіх класів)
 shablony/tema.mdx          шаблон нової теми (копіюй звідси)
 ```
 
@@ -60,6 +61,10 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Kut` | кут із назвою виду | `<Kut hradusy={130} />` |
   | `Trykutnyk` | вид трикутника | `<Trykutnyk vyd="rivnobedrenyi" />` |
   | `Rukh` | задача на рух назустріч / навздогін | `<Rukh vidstan={40} v1={15} v2={5} napriamok="nazustrich" />` |
+  | `Doroha` | рух як лінія: шматочок на кожну годину, «?» — s, v або t | `<Doroha v={60} t={4} shukaty="s" />` |
+  | `Koshyky` | робота як кошики (одна година — кошик), можна вдвох | `<Koshyky za_hodynu={7} druhyi={5} hodyn={4} shcho="деталей" shukaty="chas" />` |
+  | `Porivniannia` | дві смужки: «на … більше/менше» або «у … разів» | `<Porivniannia a={7} na={4} imena={['Петро', 'Марійка']} />` |
+  | `Chastyny` | задача на частини однаковими клітинками | `<Chastyny chastyny={[1, 3]} imena={['Брат', 'Сестра']} razom={24} />` |
   | `Zavdannia` | інтерактивне завдання: поле або кнопки, підказка, зірочка ⭐ | `<Zavdannia vidpovid="6" pidkazka="...">Умова</Zavdannia>` |
   | `Trenazher` | гра «Швидкий рахунок» (10 прикладів, рекорд) | `<Trenazher dii={['×']} riven="seredno" />` |
 
