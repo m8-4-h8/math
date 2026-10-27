@@ -1,0 +1,191 @@
+---
+// Картки класів на головній сторінці. Класи й теми беремо прямо з src/content/docs,
+// тож нова тема чи новий клас з'являються тут самі. Значок теми — поле `ikonka` на початку файлу.
+import { getCollection } from 'astro:content';
+import { znachokKlasu } from '../../klasy.mjs';
+
+const baza = import.meta.env.BASE_URL.replace(/\/$/, '');
+const storinky = await getCollection('docs', ({ id }) => /^\d+-klas\//.test(id));
+
+const klasy = new Map<number, typeof storinky>();
+for (const s of storinky) {
+  const nomer = parseInt(s.id, 10);
+  klasy.set(nomer, [...(klasy.get(nomer) || []), s]);
+}
+
+const sortuvaty = (a: (typeof storinky)[number], b: (typeof storinky)[number]) =>
+  (a.data.sidebar.order ?? Infinity) - (b.data.sidebar.order ?? Infinity) || a.data.title.localeCompare(b.data.title, 'uk');
+
+const spysok = [...klasy.entries()]
+  .sort(([a], [b]) => a - b)
+  .map(([nomer, temy]) => ({
+    nomer,
+    znachok: znachokKlasu(nomer),
+    kolir: ((nomer - 1) % 6) + 1,
+    temy: temy.sort(sortuvaty).map((t) => ({
+      nazva: t.data.title,
+      ikonka: t.data.ikonka || '📘',
+      shliakh: `${baza}/${t.id}/`,
+      zavdan: (t.body?.match(/<Zavdannia\b/g) || []).length,
+    })),
+  }));
+
+function temy(n: number) {
+  const ost10 = n % 10;
+  const ost100 = n % 100;
+  if (ost10 === 1 && ost100 !== 11) return `${n} тема`;
+  if (ost10 >= 2 && ost10 <= 4 && (ost100 < 12 || ost100 > 14)) return `${n} теми`;
+  return `${n} тем`;
+}
+---
+
+<div class="klasy not-content" id="klasy">
+  {
+    spysok.map((klas) => (
+      <section class="klas" style={`--kolir: var(--dt-${klas.kolir}); --shapka: var(--dt-h-${klas.kolir})`}>
+        <a class="klas-shapka" href={klas.temy[0]?.shliakh}>
+          <span class="klas-znachok" aria-hidden="true">
+            {klas.znachok}
+          </span>
+          <span class="klas-nazva">
+            <span class="klas-nomer">{klas.nomer}</span> клас
+          </span>
+          <span class="klas-kilkist">{temy(klas.temy.length)}</span>
+        </a>
+        <ul class="klas-temy">
+          {klas.temy.map((t) => (
+            <li>
+              <a href={t.shliakh} data-shliakh={t.shliakh} data-zavdan={t.zavdan}>
+                <span class="tema-ikonka" aria-hidden="true">
+                  {t.ikonka}
+                </span>
+                <span class="tema-nazva">{t.nazva}</span>
+                <span class="tema-zirky" hidden />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  }
+</div>
+
+<script>
+  import { usiZirky } from '../../scripts/zirky';
+
+  // Показуємо біля теми, скільки зірочок дитина вже зібрала в «Перевір себе».
+  const zirky = usiZirky();
+  document.querySelectorAll<HTMLAnchorElement>('.klas-temy a[data-zavdan]').forEach((a) => {
+    const vsoho = Number(a.dataset.zavdan);
+    const zibrano = (zirky[a.dataset.shliakh || ''] || []).length;
+    const mitka = a.querySelector<HTMLElement>('.tema-zirky');
+    if (!mitka || !vsoho || !zibrano) return;
+    mitka.hidden = false;
+    mitka.textContent = `⭐ ${Math.min(zibrano, vsoho)}/${vsoho}`;
+    mitka.title = `Розв'язано завдань: ${Math.min(zibrano, vsoho)} з ${vsoho}`;
+    if (zibrano >= vsoho) mitka.classList.add('vsi');
+  });
+</script>
+
+<style>
+  .klasy {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    gap: 1.5rem;
+    align-items: start;
+    margin: 1rem 0 2rem;
+  }
+  .klas {
+    border: 2px solid color-mix(in srgb, var(--kolir) 35%, var(--dt-card-border));
+    border-radius: calc(var(--dt-radius) * 1.2);
+    background: var(--dt-card);
+    box-shadow: 0 6px 0 color-mix(in srgb, var(--kolir) 30%, transparent);
+    overflow: hidden;
+  }
+  .klas-shapka {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 0.9rem;
+    align-items: center;
+    padding: 1.1rem 1.25rem;
+    background: linear-gradient(135deg, var(--shapka), color-mix(in srgb, var(--shapka) 75%, #fff));
+    color: #fff;
+    text-decoration: none;
+  }
+  .klas-znachok {
+    grid-row: span 2;
+    display: grid;
+    place-items: center;
+    width: 3.6rem;
+    height: 3.6rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    font-size: 2.1rem;
+  }
+  .klas-nazva {
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  .klas-nomer {
+    font-size: 2rem;
+  }
+  .klas-kilkist {
+    font-weight: 700;
+    opacity: 0.95;
+  }
+  .klas-temy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0.85rem;
+    list-style: none;
+  }
+  .klas-temy a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 0.9rem;
+    color: var(--sl-color-white);
+    text-decoration: none;
+    font-weight: 700;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .klas-temy a:hover,
+  .klas-temy a:focus-visible {
+    background: color-mix(in srgb, var(--kolir) 16%, transparent);
+    transform: translateX(4px);
+  }
+  .tema-ikonka {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--kolir) 18%, transparent);
+    font-size: 1.3rem;
+  }
+  .tema-nazva {
+    flex: 1;
+  }
+  .tema-zirky {
+    flex: none;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dt-star) 20%, transparent);
+    font-size: 0.85rem;
+    font-weight: 800;
+  }
+  .tema-zirky.vsi {
+    background: var(--dt-star);
+    color: #fff;
+  }
+  .tema-zirky[hidden] {
+    display: none;
+  }
+</style>

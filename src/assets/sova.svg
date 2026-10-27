@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Сова-відмінниця">
+  <ellipse cx="100" cy="190" rx="58" ry="7" fill="#000" opacity="0.12"/>
+  <ellipse cx="38" cy="125" rx="16" ry="36" transform="rotate(18 38 125)" fill="#6d28d9"/>
+  <ellipse cx="162" cy="125" rx="16" ry="36" transform="rotate(-18 162 125)" fill="#6d28d9"/>
+  <ellipse cx="100" cy="115" rx="66" ry="72" fill="#8b5cf6"/>
+  <ellipse cx="100" cy="140" rx="42" ry="44" fill="#ede9fe"/>
+  <text x="100" y="158" text-anchor="middle" font-family="Nunito, Arial, sans-serif" font-size="24" font-weight="800" fill="#7c3aed">1+2</text>
+  <circle cx="72" cy="88" r="25" fill="#fff"/>
+  <circle cx="128" cy="88" r="25" fill="#fff"/>
+  <circle cx="76" cy="91" r="12" fill="#1e1b4b"/>
+  <circle cx="124" cy="91" r="12" fill="#1e1b4b"/>
+  <circle cx="80" cy="86" r="4" fill="#fff"/>
+  <circle cx="128" cy="86" r="4" fill="#fff"/>
+  <path d="M90 110 L110 110 L100 124 Z" fill="#f59e0b" stroke="#d97706" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="52" cy="112" r="7" fill="#f472b6" opacity="0.55"/>
+  <circle cx="148" cy="112" r="7" fill="#f472b6" opacity="0.55"/>
+  <ellipse cx="80" cy="186" rx="13" ry="6" fill="#f59e0b"/>
+  <ellipse cx="120" cy="186" rx="13" ry="6" fill="#f59e0b"/>
+  <path d="M100 18 L156 38 L100 58 L44 38 Z" fill="#1e1b4b"/>
+  <rect x="78" y="44" width="44" height="12" rx="3" fill="#1e1b4b"/>
+  <path d="M156 38 L158 66" stroke="#f59e0b" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="158" cy="68" r="5" fill="#f59e0b"/>
+</svg>

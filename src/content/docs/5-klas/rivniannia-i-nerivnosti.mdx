@@ -1,11 +1,13 @@
 ---
 title: Рівняння і нерівності
+ikonka: ⚖️
 description: Як розв'язати рівняння оберненими діями, як знайти невідоме ділене чи дільник і що таке розв'язок нерівності.
 sidebar:
   order: 5
 ---
 
 import Pravylo from '../../../components/Pravylo.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 <Pravylo>Розв'язуємо рівняння, починаючи з **останньої дії**, і скасовуємо її **оберненою** дією.</Pravylo>
 
@@ -64,17 +66,29 @@ import Pravylo from '../../../components/Pravylo.astro';
 
 ## Перевір себе
 
-1. $5 \cdot x - 7 = 18$
-2. $x : 4 = 9$
-3. $48 : x = 6$
-4. Знайди всі розв'язки нерівності $x + 9 < 13$.
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
 
-<details>
-<summary>Відповіді</summary>
 
-1. Остання дія «$- 7$»: $5 \cdot x = 25$, тоді $x = 25 : 5 = 5$. Перевірка: $5 \cdot 5 - 7 = 18$ ✓
-2. $x = 9 \cdot 4 = 36$
-3. $x = 48 : 6 = 8$
-4. $x < 4$: $0, 1, 2, 3$
+<Zavdannia vidpovid="5" pidkazka="Остання дія — «− 7». Спочатку знайди, чому дорівнює 5 · x.">
+  $5 \cdot x - 7 = 18$. Знайди $x$.
 
-</details>
+  <span slot="rozviazok">Остання дія «$- 7$»: $5 \cdot x = 25$, тоді $x = 25 : 5 = 5$. Перевірка: $5 \cdot 5 - 7 = 18$ ✓</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="36" pidkazka="Невідоме ділене = частка · дільник.">
+  $x : 4 = 9$. Знайди $x$.
+
+  <span slot="rozviazok">$x = 9 \cdot 4 = 36$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="8" pidkazka="Невідомий дільник = ділене : частка.">
+  $48 : x = 6$. Знайди $x$.
+
+  <span slot="rozviazok">$x = 48 : 6 = 8$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="0, 1, 2, 3" pidkazka="Яке число треба додати до 9, щоб вийшло рівно 13? Розв'язки — менші за нього.">
+  Знайди всі розв'язки нерівності $x + 9 < 13$ серед чисел $0, 1, 2, 3, \ldots$ Запиши їх через кому.
+
+  <span slot="rozviazok">$x < 4$: $0, 1, 2, 3$</span>
+</Zavdannia>

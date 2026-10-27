@@ -1,0 +1,63 @@
+---
+// Чотири кроки «як тут вчитися» на головній сторінці.
+const KROKY = [
+  { znachok: '📚', nazva: 'Обери клас', tekst: 'і тему, яку проходите в школі.' },
+  { znachok: '🖼️', nazva: 'Читай і дивись', tekst: 'правило, малюнки й приклад крок за кроком.' },
+  { znachok: '⭐', nazva: 'Перевір себе', tekst: 'розв\'язуй завдання і збирай зірочки.' },
+  { znachok: '🎮', nazva: 'Грай', tekst: 'у тренажер, щоб рахувати швидко.' },
+];
+---
+
+<ol class="kroky not-content">
+  {
+    KROKY.map((k, i) => (
+      <li style={`--kolir: var(--dt-${i + 1})`}>
+        <span class="krok-znachok" aria-hidden="true">
+          {k.znachok}
+        </span>
+        <b>{k.nazva}</b> {k.tekst}
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .kroky {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: 1rem;
+    margin: 1rem 0 2rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: krok;
+  }
+  .kroky li {
+    position: relative;
+    margin: 0;
+    padding: 1.1rem 1rem 1rem;
+    border-radius: var(--dt-radius);
+    background: color-mix(in srgb, var(--kolir) 12%, var(--dt-card));
+    border: 2px solid color-mix(in srgb, var(--kolir) 35%, transparent);
+    text-align: center;
+    line-height: 1.45;
+    counter-increment: krok;
+  }
+  .kroky li::before {
+    content: counter(krok);
+    position: absolute;
+    top: 0.6rem;
+    left: 0.8rem;
+    font-weight: 800;
+    color: var(--kolir);
+  }
+  .kroky b {
+    display: block;
+    color: var(--sl-color-white);
+    font-size: 1.1rem;
+  }
+  .krok-znachok {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 2.3rem;
+  }
+</style>

@@ -1,0 +1,414 @@
+---
+// Гра-тренажер «Швидкий рахунок»: 10 прикладів на обрані дії, серія правильних відповідей,
+// у кінці — від 1 до 3 зірок. Найкращий результат запам'ятовується в браузері.
+//   <Trenazher />                         — дитина сама обирає дії та рівень
+//   <Trenazher dii={['×']} riven="seredno" /> — одразу таблиця множення
+interface Props {
+  dii?: ('+' | '−' | '×' | ':')[];
+  riven?: 'lehko' | 'seredno' | 'skladno';
+}
+const { dii = ['+', '−'], riven = 'lehko' } = Astro.props;
+const VSI_DII = [
+  { znak: '+', nazva: 'Додавання' },
+  { znak: '−', nazva: 'Віднімання' },
+  { znak: '×', nazva: 'Множення' },
+  { znak: ':', nazva: 'Ділення' },
+];
+const RIVNI = [
+  { kod: 'lehko', nazva: '🐣 Легко' },
+  { kod: 'seredno', nazva: '🦊 Середньо' },
+  { kod: 'skladno', nazva: '🦁 Складно' },
+];
+---
+
+<math-trenazher class="tren not-content" data-riven={riven}>
+  <div class="tren-ekran tren-start">
+    <p class="tren-pidpys">Що будемо рахувати?</p>
+    <div class="tren-vybir" role="group" aria-label="Дії">
+      {
+        VSI_DII.map(({ znak, nazva }) => (
+          <button type="button" class="tren-dia" data-znak={znak} aria-pressed={dii.includes(znak as never) ? 'true' : 'false'} title={nazva}>
+            {znak}
+          </button>
+        ))
+      }
+    </div>
+    <p class="tren-pidpys">Рівень</p>
+    <div class="tren-vybir" role="group" aria-label="Рівень">
+      {
+        RIVNI.map(({ kod, nazva }) => (
+          <button type="button" class="tren-riven" data-kod={kod} aria-pressed={kod === riven ? 'true' : 'false'}>
+            {nazva}
+          </button>
+        ))
+      }
+    </div>
+    <button type="button" class="tren-hraty">▶ Почати гру</button>
+    <p class="tren-rekord" hidden></p>
+  </div>
+
+  <div class="tren-ekran tren-hra" hidden>
+    <div class="tren-verh">
+      <ol class="tren-krapky" aria-label="Прогрес"></ol>
+      <span class="tren-seriia" title="Правильних підряд"></span>
+    </div>
+    <form class="tren-forma" autocomplete="off">
+      <label class="tren-pryklad" for=""></label>
+      <input class="tren-pole" type="text" inputmode="numeric" pattern="[0-9]*" aria-label="Відповідь" />
+      <button type="submit" class="tren-ok">OK</button>
+    </form>
+    <p class="tren-vidhuk" aria-live="polite"></p>
+  </div>
+
+  <div class="tren-ekran tren-kinets" hidden>
+    <p class="tren-zirky" aria-hidden="true"></p>
+    <p class="tren-rezultat"></p>
+    <button type="button" class="tren-znovu">🔄 Ще раз</button>
+    <button type="button" class="tren-nalashtuvannia">⚙️ Інші приклади</button>
+  </div>
+</math-trenazher>
+
+<script>
+  import { salut } from '../scripts/zirky';
+
+  const KILKIST = 10;
+  const vypadk = (vid: number, do_: number) => vid + Math.floor(Math.random() * (do_ - vid + 1));
+
+  // Приклад: текст і відповідь. Межі залежать від рівня, відповідь завжди ціла й невід'ємна.
+  function pryklad(znak: string, riven: string): [string, number] {
+    const mezha = { lehko: 20, seredno: 100, skladno: 1000 }[riven] ?? 20;
+    if (znak === '+') {
+      const a = vypadk(1, mezha - 1);
+      const b = vypadk(1, mezha - a);
+      return [`${a} + ${b}`, a + b];
+    }
+    if (znak === '−') {
+      const a = vypadk(2, mezha);
+      const b = vypadk(1, a);
+      return [`${a} − ${b}`, a - b];
+    }
+    const [a, b] =
+      riven === 'lehko'
+        ? [vypadk(1, 5), vypadk(1, 10)]
+        : riven === 'seredno'
+          ? [vypadk(2, 10), vypadk(2, 10)]
+          : [vypadk(11, 99), vypadk(2, 9)];
+    if (znak === '×') return Math.random() < 0.5 ? [`${a} × ${b}`, a * b] : [`${b} × ${a}`, a * b];
+    return [`${a * b} : ${b}`, a];
+  }
+
+  function chytaty(kluch: string) {
+    try {
+      return Number(localStorage.getItem(kluch)) || 0;
+    } catch {
+      return 0;
+    }
+  }
+  function zapysaty(kluch: string, znachennia: number) {
+    try {
+      localStorage.setItem(kluch, String(znachennia));
+    } catch {
+      // Без сховища рекорд просто не збережеться.
+    }
+  }
+
+  class MathTrenazher extends HTMLElement {
+    connectedCallback() {
+      const $ = <T extends HTMLElement>(s: string) => this.querySelector<T>(s)!;
+      const ekrany = { start: $('.tren-start'), hra: $('.tren-hra'), kinets: $('.tren-kinets') };
+      const pokazaty = (nazva: keyof typeof ekrany) =>
+        Object.entries(ekrany).forEach(([k, el]) => (el.hidden = k !== nazva));
+      const dii = [...this.querySelectorAll<HTMLButtonElement>('.tren-dia')];
+      const rivni = [...this.querySelectorAll<HTMLButtonElement>('.tren-riven')];
+      const krapky = $('.tren-krapky');
+      const prykladEl = $('.tren-pryklad');
+      const pole = $<HTMLInputElement>('.tren-pole');
+      const vidhuk = $('.tren-vidhuk');
+      const seriiaEl = $('.tren-seriia');
+      const rekordEl = $('.tren-rekord');
+
+      const id = 'tren-' + Math.random().toString(36).slice(2);
+      pole.id = id;
+      prykladEl.setAttribute('for', id);
+
+      let pryklady: [string, number][] = [];
+      let krok = 0;
+      let virno = 0;
+      let seriia = 0;
+      let pershaSproba = true;
+
+      const obrani = () => dii.filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.znak!);
+      const riven = () => rivni.find((b) => b.getAttribute('aria-pressed') === 'true')?.dataset.kod || 'lehko';
+      const kluchRekordu = () => `math-trenazher:${obrani().join('')}:${riven()}`;
+      const onovytyRekord = () => {
+        const r = chytaty(kluchRekordu());
+        rekordEl.hidden = !r;
+        rekordEl.textContent = `🏆 Твій рекорд тут: ${r} з ${KILKIST}`;
+      };
+
+      dii.forEach((b) =>
+        b.addEventListener('click', () => {
+          const uvimk = b.getAttribute('aria-pressed') === 'true';
+          if (uvimk && obrani().length === 1) return; // хоча б одна дія має лишитися
+          b.setAttribute('aria-pressed', String(!uvimk));
+          onovytyRekord();
+        }),
+      );
+      rivni.forEach((b) =>
+        b.addEventListener('click', () => {
+          rivni.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+          onovytyRekord();
+        }),
+      );
+
+      const nastupnyi = () => {
+        if (krok >= KILKIST) return kinets();
+        prykladEl.textContent = pryklady[krok][0] + ' =';
+        pole.value = '';
+        pershaSproba = true;
+        krapky.children[krok].classList.add('zaraz');
+        pole.focus({ preventScroll: true });
+      };
+
+      const pochaty = () => {
+        const znaky = obrani();
+        pryklady = Array.from({ length: KILKIST }, () => pryklad(znaky[vypadk(0, znaky.length - 1)], riven()));
+        krok = virno = seriia = 0;
+        krapky.innerHTML = '<li></li>'.repeat(KILKIST);
+        seriiaEl.textContent = '';
+        vidhuk.textContent = '';
+        pokazaty('hra');
+        nastupnyi();
+      };
+
+      const kinets = () => {
+        const zirok = virno === KILKIST ? 3 : virno >= 7 ? 2 : virno >= 4 ? 1 : 0;
+        $('.tren-zirky').textContent = '⭐'.repeat(zirok) + '☆'.repeat(3 - zirok);
+        const stary = chytaty(kluchRekordu());
+        const tekst =
+          virno === KILKIST
+            ? 'Усі приклади правильно з першої спроби! Ти чемпіон! 🏆'
+            : virno >= 7
+              ? 'Дуже добре! Ще трішки — і буде ідеально.'
+              : virno >= 4
+                ? 'Непогано! Зіграй ще раз, і вийде краще.'
+                : 'Не здавайся! Спробуй рівень легше або зіграй ще раз 💪';
+        $('.tren-rezultat').textContent =
+          `Правильно з першої спроби: ${virno} з ${KILKIST}. ${tekst}` + (virno > stary && stary ? ' Новий рекорд!' : '');
+        if (virno > stary) zapysaty(kluchRekordu(), virno);
+        pokazaty('kinets');
+        if (zirok === 3) salut($('.tren-zirky'));
+      };
+
+      $('.tren-forma').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const vvid = pole.value.replace(/\s/g, '');
+        if (!vvid) return;
+        const [, pravylna] = pryklady[krok];
+        const krapka = krapky.children[krok];
+        if (Number(vvid) === pravylna) {
+          if (pershaSproba) {
+            virno++;
+            seriia++;
+            krapka.classList.add('tak');
+          } else {
+            krapka.classList.add('maizhe');
+          }
+          krapka.classList.remove('zaraz');
+          vidhuk.textContent = pershaSproba ? '✅ Так!' : '✅ Тепер правильно!';
+          vidhuk.className = 'tren-vidhuk dobre';
+          seriiaEl.textContent = seriia >= 3 ? `🔥 ${seriia} підряд` : '';
+          krok++;
+          setTimeout(nastupnyi, 450);
+        } else {
+          if (pershaSproba) seriia = 0;
+          pershaSproba = false;
+          seriiaEl.textContent = '';
+          vidhuk.textContent = 'Ой, ні. Подумай ще раз!';
+          vidhuk.className = 'tren-vidhuk pohano';
+          pole.select();
+        }
+      });
+
+      $('.tren-hraty').addEventListener('click', pochaty);
+      $('.tren-znovu').addEventListener('click', pochaty);
+      $('.tren-nalashtuvannia').addEventListener('click', () => {
+        onovytyRekord();
+        pokazaty('start');
+      });
+      onovytyRekord();
+    }
+  }
+  if (!customElements.get('math-trenazher')) customElements.define('math-trenazher', MathTrenazher);
+</script>
+
+<style>
+  .tren {
+    display: block;
+    margin: 1.5rem 0;
+    padding: 1.5rem;
+    border-radius: calc(var(--dt-radius) * 1.3);
+    background:
+      radial-gradient(circle at 10% 10%, color-mix(in srgb, var(--dt-1) 25%, transparent), transparent 45%),
+      radial-gradient(circle at 90% 90%, color-mix(in srgb, var(--dt-2) 22%, transparent), transparent 45%),
+      var(--dt-card);
+    border: 2px solid var(--dt-card-border);
+    box-shadow: var(--dt-shadow);
+    text-align: center;
+  }
+  .tren-ekran[hidden] {
+    display: none;
+  }
+  .tren-pidpys {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+    color: var(--sl-color-gray-3);
+  }
+  .tren-vybir {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .tren button {
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    border: none;
+    border-radius: 999px;
+    transition: transform 0.1s ease;
+  }
+  .tren button:active {
+    transform: translateY(2px);
+  }
+  .tren-dia {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.7rem !important;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-text-accent);
+    box-shadow: 0 4px 0 var(--dt-card-border);
+  }
+  .tren-riven {
+    padding: 0.55rem 1rem;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-text-accent);
+    box-shadow: 0 4px 0 var(--dt-card-border);
+  }
+  .tren-dia[aria-pressed='true'],
+  .tren-riven[aria-pressed='true'] {
+    background: var(--dt-h-1);
+    color: #fff;
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--dt-h-1) 60%, #000);
+  }
+  .tren-hraty,
+  .tren-ok,
+  .tren-znovu {
+    padding: 0.8rem 1.6rem;
+    font-size: 1.15rem !important;
+    background: var(--dt-h-2);
+    color: #fff;
+    box-shadow: 0 5px 0 color-mix(in srgb, var(--dt-h-2) 60%, #000);
+  }
+  .tren-nalashtuvannia {
+    margin: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    background: transparent;
+    color: var(--sl-color-text-accent);
+  }
+  .tren-rekord {
+    margin: 0.85rem 0 0;
+    font-weight: 700;
+  }
+  .tren-verh {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    min-height: 1.75rem;
+  }
+  .tren-krapky {
+    display: flex;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tren-krapky :global(li) {
+    width: 0.9rem;
+    height: 0.9rem;
+    margin: 0;
+    border-radius: 50%;
+    background: var(--dt-card-border);
+  }
+  .tren-krapky :global(li.zaraz) {
+    background: var(--sl-color-accent);
+    transform: scale(1.3);
+  }
+  .tren-krapky :global(li.tak) {
+    background: var(--dt-ok);
+  }
+  .tren-krapky :global(li.maizhe) {
+    background: var(--dt-6);
+  }
+  .tren-seriia {
+    font-weight: 800;
+    color: var(--dt-2);
+  }
+  .tren-forma {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  .tren-pryklad {
+    font-size: clamp(2rem, 8vw, 3rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--sl-color-white);
+  }
+  .tren-pole {
+    width: 7rem;
+    padding: 0.4rem 0.6rem;
+    border: 3px solid var(--dt-card-border);
+    border-radius: 1rem;
+    background: var(--sl-color-bg);
+    color: var(--sl-color-white);
+    font: inherit;
+    font-size: clamp(1.75rem, 7vw, 2.5rem);
+    font-weight: 800;
+    text-align: center;
+  }
+  .tren-pole:focus {
+    outline: none;
+    border-color: var(--sl-color-accent);
+  }
+  .tren-vidhuk {
+    min-height: 1.5em;
+    margin: 1rem 0 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+  .tren-vidhuk.dobre {
+    color: var(--dt-ok);
+  }
+  .tren-vidhuk.pohano {
+    color: var(--dt-err);
+  }
+  .tren-zirky {
+    margin: 0;
+    font-size: 3rem;
+    letter-spacing: 0.3rem;
+    color: var(--dt-star);
+  }
+  .tren-rezultat {
+    margin: 0.5rem auto 1.25rem;
+    max-width: 30rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+</style>
