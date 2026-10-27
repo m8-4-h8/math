@@ -34,6 +34,7 @@ export default defineConfig({
           items: [{ autogenerate: { directory: papka } }],
         })),
         { label: '✏️ Як намалювати задачу', items: [{ autogenerate: { directory: 'vizualizatsiia-zadach' } }] },
+        { label: '💡 Поради для навчання', items: [{ autogenerate: { directory: 'porady' } }] },
       ],
     }),
   ],
