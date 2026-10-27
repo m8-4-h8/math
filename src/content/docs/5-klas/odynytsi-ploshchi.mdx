@@ -1,5 +1,6 @@
 ---
 title: Одиниці площі
+ikonka: 📐
 description: Як переводити мм², см², дм², м², ари, гектари і км² — чому крок 100, а не 10, з малюнками, таблицею і прикладами.
 sidebar:
   order: 7.5
@@ -9,6 +10,7 @@ import Pravylo from '../../../components/Pravylo.astro';
 import KvadratOdynytsi from '../../../components/KvadratOdynytsi.astro';
 import ShkalaOdynyts from '../../../components/ShkalaOdynyts.astro';
 import Perevedennia from '../../../components/Perevedennia.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
 
 <Pravylo>
   Сусідні **одиниці довжини** відрізняються в **10** разів: 1 дм = 10 см.
@@ -117,24 +119,43 @@ $20 \text{ дм} \cdot 3 \text{ дм} = 60$ дм², а не $2 \cdot 30 = 60$ «
 
 ## Перевір себе
 
-1. $4$ дм² = ? см²
-2. $6$ м² = ? дм² = ? см²
-3. $300$ мм² = ? см²
-4. $50\,000$ см² = ? м²
-5. Знайди площу прямокутника $3$ м на $40$ см у квадратних дециметрах.
-6. Поле $200$ м на $50$ м. Скільки це гектарів? А соток?
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
 
-<details>
-<summary>Відповіді</summary>
+<Zavdannia vidpovid="400" pidkazka="До меншої одиниці — множимо. Одна сходинка — це · 100.">
+  $4$ дм² — це скільки см²?
 
-1. $4 \cdot 100 = 400$ см²
-2. $6 \cdot 100 = 600$ дм², $600 \cdot 100 = 60\,000$ см²
-3. $300 : 100 = 3$ см²
-4. $50\,000 : 100 = 500$ дм², $500 : 100 = 5$ м²
-5. $3$ м $= 30$ дм, $40$ см $= 4$ дм, $S = 30 \cdot 4 = 120$ дм²
-6. $S = 200 \cdot 50 = 10\,000$ м² $= 1$ га $= 100$ а (соток)
+  <span slot="rozviazok">$4 \cdot 100 = 400$ см²</span>
+</Zavdannia>
 
-</details>
+<Zavdannia vidpovid="60000" pidkazka="Від м² до см² дві сходинки: · 100 і ще раз · 100.">
+  $6$ м² — це скільки см²?
+
+  <span slot="rozviazok">$6 \cdot 100 = 600$ дм², $600 \cdot 100 = 60\,000$ см²</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="3" pidkazka="До більшої одиниці — ділимо на 100.">
+  $300$ мм² — це скільки см²?
+
+  <span slot="rozviazok">$300 : 100 = 3$ см²</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="5" pidkazka="Дві сходинки вгору: см² → дм² → м². Ділимо на 100 двічі.">
+  $50\,000$ см² — це скільки м²?
+
+  <span slot="rozviazok">$50\,000 : 100 = 500$ дм², $500 : 100 = 5$ м²</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="120" pidkazka="Спершу переведи обидві сторони в дециметри: 3 м = 30 дм, 40 см = 4 дм.">
+  Прямокутник $3$ м на $40$ см. Яка його площа в **дм²**?
+
+  <span slot="rozviazok">$3$ м $= 30$ дм, $40$ см $= 4$ дм, $S = 30 \cdot 4 = 120$ дм²</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="100" pidkazka="Знайди площу в м², потім 1 сотка = 100 м².">
+  Поле $200$ м на $50$ м. Скільки це **соток** (арів)?
+
+  <span slot="rozviazok">$S = 200 \cdot 50 = 10\,000$ м² $= 100$ а $= 1$ га</span>
+</Zavdannia>
 
 ## Пов'язані теми
 
