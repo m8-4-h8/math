@@ -58,6 +58,9 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Perenos` | перенос числа через «=» зі зміною знака | `<Perenos znak="+" a={7} b={12} />` |
   | `Ostachi` | можливі остачі й приклад з перевіркою | `<Ostachi dilnyk={6} dilene={20} />` |
   | `Pryamokutnyk` | прямокутник/квадрат у клітинку, S і P | `<Pryamokutnyk a={5} b={3} />` |
+  | `KvadratOdynytsi` | чому 1 дм² = 100 см²: квадрат, поділений на квадратики | `<KvadratOdynytsi velyka="дм" mala="см" />` |
+  | `ShkalaOdynyts` | сходинки одиниць довжини або площі | `<ShkalaOdynyts vyd="ploshcha" />` |
+  | `Perevedennia` | переведення одиниць по кроках | `<Perevedennia chyslo={3} vid="м²" do="см²" />` |
   | `Kut` | кут із назвою виду | `<Kut hradusy={130} />` |
   | `Trykutnyk` | вид трикутника | `<Trykutnyk vyd="rivnobedrenyi" />` |
   | `Rukh` | задача на рух назустріч / навздогін | `<Rukh vidstan={40} v1={15} v2={5} napriamok="nazustrich" />` |

@@ -1,0 +1,86 @@
+---
+// «Сходинки» одиниць від найменшої до найбільшої: між сусідніми — у скільки разів вони відрізняються.
+import { dovzhyna, ploshcha, chyslo } from './odynytsi';
+
+interface Props {
+  vyd: 'dovzhyna' | 'ploshcha';
+}
+const { vyd } = Astro.props;
+const odynytsi = vyd === 'ploshcha' ? ploshcha : dovzhyna;
+---
+
+<figure class="ill not-content">
+  <div class="shkala">
+    {
+      odynytsi.map((o, i) => (
+        <>
+          <div class="kartka">
+            <span class="vyraz">{o.nazva}</span>
+            <span class="nazva">{o.povna}</span>
+          </div>
+          {o.dali && (
+            <div class="krok">
+              <span class="c2">· {chyslo(o.dali)}</span>
+              <span class="strilky" aria-hidden="true">⇄</span>
+              <span class="c1">: {chyslo(o.dali)}</span>
+              <span class="muted rivnist">
+                1 {odynytsi[i + 1].nazva} = {chyslo(o.dali)} {o.nazva}
+              </span>
+            </div>
+          )}
+        </>
+      ))
+    }
+  </div>
+  <figcaption class="ill-caption">
+    {vyd === 'ploshcha' ? 'Одиниці площі' : 'Одиниці довжини'}: <span class="c2">до менших — множимо</span>,{' '}
+    <span class="c1">до більших — ділимо</span>
+  </figcaption>
+</figure>
+
+<style>
+  .shkala {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .kartka {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 4.5rem;
+    padding: 0.5rem 0.6rem;
+    border: 2px solid var(--ill-accent);
+    border-radius: 0.6rem;
+    background: var(--ill-paper);
+    text-align: center;
+  }
+  .vyraz {
+    font-size: var(--sl-text-xl);
+    font-weight: 700;
+  }
+  .nazva {
+    max-width: 7rem;
+    font-size: var(--sl-text-xs);
+    line-height: 1.2;
+    color: var(--ill-muted);
+  }
+  .krok {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+  }
+  .strilky {
+    font-size: var(--sl-text-lg);
+  }
+  .rivnist {
+    font-size: var(--sl-text-xs);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+</style>

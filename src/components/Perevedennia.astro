@@ -1,0 +1,70 @@
+---
+// Переведення числа з однієї одиниці в іншу по сходинках: кожна сходинка — множення або ділення на 10, 100, 1000.
+// Одиниці беруться з odynytsi.ts; обидві мають бути одного виду (обидві довжини або обидві площі).
+import { dovzhyna, ploshcha, chyslo } from './odynytsi';
+
+interface Props {
+  chyslo: number;
+  vid: string; // 'м²'
+  do: string; // 'см²'
+}
+const { chyslo: x, vid, do: doOd } = Astro.props;
+
+const spysok = [dovzhyna, ploshcha].find((s) => s.some((o) => o.nazva === vid));
+const i0 = spysok?.findIndex((o) => o.nazva === vid) ?? -1;
+const i1 = spysok?.findIndex((o) => o.nazva === doOd) ?? -1;
+if (!spysok || i0 < 0 || i1 < 0) throw new Error(`Perevedennia: невідомі одиниці ${vid} → ${doOd}`);
+
+const doMenshoi = i1 < i0;
+const kroky: { vid: string; do: string; dia: string; na: number; bulo: number; stalo: number }[] = [];
+let znach = x;
+if (doMenshoi) {
+  for (let i = i0; i > i1; i--) {
+    const na = spysok[i - 1].dali!;
+    const stalo = znach * na;
+    kroky.push({ vid: spysok[i].nazva, do: spysok[i - 1].nazva, dia: '·', na, bulo: znach, stalo });
+    znach = stalo;
+  }
+} else {
+  for (let i = i0; i < i1; i++) {
+    const na = spysok[i].dali!;
+    const stalo = znach / na;
+    kroky.push({ vid: spysok[i].nazva, do: spysok[i + 1].nazva, dia: ':', na, bulo: znach, stalo });
+    znach = stalo;
+  }
+}
+const razom = kroky.reduce((d, k) => d * k.na, 1);
+const klas = doMenshoi ? 'c2' : 'c1';
+---
+
+<figure class="ill not-content">
+  <p class="ill-caption">{chyslo(x)} {vid} = ? {doOd}</p>
+  <ol class="ill-steps">
+    <li>
+      {doOd} — {doMenshoi ? 'менша' : 'більша'} одиниця, тому{' '}
+      <b class={klas}>{doMenshoi ? 'множимо' : 'ділимо'}</b>. Сходинок: <b class="num">{kroky.length}</b>.
+    </li>
+    {
+      kroky.map((k) => (
+        <li>
+          {k.vid} → {k.do}:{' '}
+          <b class="num">
+            {chyslo(k.bulo)} <span class={klas}>{k.dia} {chyslo(k.na)}</span> = {chyslo(k.stalo)} {k.do}
+          </b>
+        </li>
+      ))
+    }
+    <li>
+      Відповідь: <b class="num">{chyslo(x)} {vid} = {chyslo(znach)} {doOd}</b>
+      {
+        kroky.length > 1 && (
+          <ul>
+            <li>
+              одразу: {chyslo(x)} {doMenshoi ? '·' : ':'} {chyslo(razom)} = {chyslo(znach)}
+            </li>
+          </ul>
+        )
+      }
+    </li>
+  </ol>
+</figure>
