@@ -1,0 +1,92 @@
+---
+// Зручне множення: розбиваємо число на «круглі» частини, множимо кожну окремо і додаємо.
+//   <RozkladMnozhennia a={563} b={3} />                    → 500 + 63
+//   <RozkladMnozhennia a={563} b={3} chastyny={[500, 60, 3]} />
+// Без `chastyny` число ділиться на круглу старшу частину і решту.
+interface Props {
+  a: number;
+  b: number;
+  chastyny?: number[]; // на які частини розбити `a` (сума має дорівнювати `a`)
+}
+const { a, b } = Astro.props;
+
+const krugla = (n: number) => {
+  const step = 10 ** (String(n).length - 1);
+  const k = Math.floor(n / step) * step;
+  return k === n || n < 10 ? [n] : [k, n - k];
+};
+const chastyny = Astro.props.chastyny ?? krugla(a);
+const dobutky = chastyny.map((c) => c * b);
+const razom = dobutky.reduce((s, x) => s + x, 0);
+const fmt = (x: number) => x.toLocaleString('uk-UA').replace(/\s/g, ' ');
+
+const shyryny = chastyny.map((c) => Math.max(84, (c / a) * 440));
+const gap = 14;
+const xs = shyryny.map((_, i) => shyryny.slice(0, i).reduce((s, w) => s + w + gap, 10));
+const W = xs[xs.length - 1] + shyryny[shyryny.length - 1] + 10;
+const yV = 10;
+const yN = 86;
+const bh = 38;
+const yS = yN + bh + 8;
+const H = yS + 48;
+const duzhka = (x1: number, x2: number, y: number) => {
+  const m = (x1 + x2) / 2;
+  return `M ${x1} ${y} Q ${x1} ${y + 8} ${x1 + 8} ${y + 8} H ${m - 8} Q ${m} ${y + 8} ${m} ${y + 16} Q ${m} ${y + 8} ${m + 8} ${y + 8} H ${x2 - 8} Q ${x2} ${y + 8} ${x2} ${y}`;
+};
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${a} · ${b}: розбиваємо на ${chastyny.join(' і ')}`}>
+      {
+        chastyny.map((c, i) => (
+          <g>
+            <rect x={xs[i]} y={yV} width={shyryny[i]} height={bh} rx="6" fill={`var(--ill-${(i % 4) + 1})`} fill-opacity="0.3" stroke={`var(--ill-${(i % 4) + 1})`} stroke-width="1.5" />
+            <text x={xs[i] + shyryny[i] / 2} y={yV + bh / 2} text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="700" fill="var(--ill-ink)">
+              {fmt(c)}
+            </text>
+            <line x1={xs[i] + shyryny[i] / 2} y1={yV + bh + 4} x2={xs[i] + shyryny[i] / 2} y2={yN - 6} stroke="var(--ill-line)" stroke-width="1.5" marker-end="url(#rm-strilka)" />
+            <text x={xs[i] + shyryny[i] / 2 + 8} y={(yV + bh + yN) / 2} dominant-baseline="central" font-size="13" fill="var(--ill-muted)">
+              · {b}
+            </text>
+            <rect x={xs[i]} y={yN} width={shyryny[i]} height={bh} rx="6" fill={`var(--ill-${(i % 4) + 1})`} fill-opacity="0.65" stroke={`var(--ill-${(i % 4) + 1})`} stroke-width="1.5" />
+            <text x={xs[i] + shyryny[i] / 2} y={yN + bh / 2} text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="700" fill="var(--ill-ink)">
+              {fmt(dobutky[i])}
+            </text>
+          </g>
+        ))
+      }
+      <path d={duzhka(xs[0], W - 10, yS)} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+      <text x={W / 2} y={yS + 34} text-anchor="middle" font-size="16" font-weight="700" fill="var(--ill-ink)">
+        {dobutky.map(fmt).join(' + ')} = {fmt(razom)}
+      </text>
+      <defs>
+        <marker id="rm-strilka" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ill-line)" />
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Розбиваємо на круглі частини: <b class="num">{fmt(a)} = {chastyny.map(fmt).join(' + ')}</b>
+    </li>
+    <li>
+      Множимо кожну частину на {b}:
+      <ul>
+        {
+          chastyny.map((c, i) => (
+            <li>
+              <b class={`num c${(i % 4) + 1}`}>
+                {fmt(c)} · {b} = {fmt(dobutky[i])}
+              </b>
+            </li>
+          ))
+        }
+      </ul>
+    </li>
+    <li>
+      Додаємо: <b class="num">{dobutky.map(fmt).join(' + ')} = {fmt(razom)}</b>
+    </li>
+  </ol>
+</figure>
