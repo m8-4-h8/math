@@ -53,7 +53,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Stepin` | як росте степінь (кружечки) | `<Stepin osnova={2} pokaznyk={5} />` |
   | `Pravylo` | головне правило теми в рамці | `<Pravylo nazva="...">Текст</Pravylo>` |
   | `Rozriady` | таблиця розрядів і класів + число словами | `<Rozriady chyslo={123456789} />` |
-  | `DribVidChysla` | дріб від числа смужкою з розв'язком | `<DribVidChysla tsile={25} n={2} d={5} />` |
+  | `DribVidChysla` | дріб від числа смужкою з розв'язком | `<DribVidChysla tsile={25} n={2} d={5} />`; число за дробом: `znachennia={12} n={3} d={5}` |
   | `ChastynaTsile` | рівняння як «частина і ціле»: що невідоме і яку дію робити | `<ChastynaTsile a={5} b={7} nevidome="a" rivniannia="x + 7 = 12" />` |
   | `Perenos` | перенос числа через «=» зі зміною знака | `<Perenos znak="+" a={7} b={12} />` |
   | `Ostachi` | можливі остачі й приклад з перевіркою | `<Ostachi dilnyk={6} dilene={20} />` |
@@ -78,7 +78,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
 | `LiniiaStolit` | у якому столітті рік: лінія століть з позначкою | `<LiniiaStolit rik={1817} podiia="велосипед" />` |
 | `RymskeChyslo` | римське число по розрядах | `<RymskeChyslo chyslo={1984} />` |
 | `Tila` | геометричні тіла з гранями, ребрами, вершинами | `<Tila vydy={['kub', 'konus']} />` |
-| `KoordynatnyiPromin` | координатний промінь з точками, ціна поділки будь-яка | `<KoordynatnyiPromin krok={5} dovzhyna={10} tochky={[{ nazva: 'A', x: 15 }]} />` |
+| `KoordynatnyiPromin` | координатний промінь з точками, ціна поділки будь-яка; звичайні дроби — `znamennyk={4}` і `drib: '3/4'` у точці | `<KoordynatnyiPromin krok={5} dovzhyna={10} tochky={[{ nazva: 'A', x: 15 }]} />` |
 | `Diahrama` | стовпчаста або лінійна діаграма | `<Diahrama dani={[['Пн', 12], ['Вт', 18]]} vyd="liniia" />` |
 | `RozpodilnyiZakon` | розподільний закон прямокутником з клітинок | `<RozpodilnyiZakon a={4} b={5} c={3} />` |
 | `PoriadokDii` | номери дій над знаками і обчислення по кроках | `<PoriadokDii vyraz="48 : (2 + 6) · 3 − 5" />` |
