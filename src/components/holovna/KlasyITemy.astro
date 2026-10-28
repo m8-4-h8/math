@@ -42,8 +42,8 @@ function temy(n: number) {
 <div class="klasy not-content" id="klasy">
   {
     spysok.map((klas) => (
-      <section class="klas" style={`--kolir: var(--dt-${klas.kolir}); --shapka: var(--dt-h-${klas.kolir})`}>
-        <a class="klas-shapka" href={klas.temy[0]?.shliakh}>
+      <details class="klas" id={`klas-${klas.nomer}`} data-nomer={klas.nomer} style={`--kolir: var(--dt-${klas.kolir}); --shapka: var(--dt-h-${klas.kolir})`}>
+        <summary class="klas-shapka">
           <span class="klas-znachok" aria-hidden="true">
             {klas.znachok}
           </span>
@@ -51,7 +51,8 @@ function temy(n: number) {
             <span class="klas-nomer">{klas.nomer}</span> клас
           </span>
           <span class="klas-kilkist">{temy(klas.temy.length)}</span>
-        </a>
+          <span class="klas-strilka" aria-hidden="true">▼</span>
+        </summary>
         <ul class="klas-temy">
           {klas.temy.map((t) => (
             <li>
@@ -65,13 +66,36 @@ function temy(n: number) {
             </li>
           ))}
         </ul>
-      </section>
+      </details>
     ))
   }
 </div>
 
 <script>
   import { usiZirky } from '../../scripts/zirky';
+
+  // Картки класів згорнуті, щоб головна була короткою. Відкриваємо клас із адреси
+  // (кнопка «назад до класу» веде на #klas-N) або той, який дитина відкривала минулого разу.
+  const KLUCH = 'math-klas';
+  const klasy = [...document.querySelectorAll<HTMLDetailsElement>('details.klas')];
+  let ostanni: string | null = null;
+  try {
+    ostanni = localStorage.getItem(KLUCH);
+  } catch {}
+  const zAdresy = location.hash.match(/^#klas-(\d+)$/)?.[1];
+  const vidkryty = klasy.find((k) => k.dataset.nomer === (zAdresy ?? ostanni));
+  if (vidkryty) {
+    vidkryty.open = true;
+    if (zAdresy) vidkryty.scrollIntoView();
+  }
+  klasy.forEach((k) =>
+    k.addEventListener('toggle', () => {
+      if (!k.open) return;
+      try {
+        localStorage.setItem(KLUCH, k.dataset.nomer || '');
+      } catch {}
+    })
+  );
 
   // Показуємо біля теми, скільки зірочок дитина вже зібрала в «Перевір себе».
   const zirky = usiZirky();
@@ -104,14 +128,33 @@ function temy(n: number) {
   }
   .klas-shapka {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     grid-template-rows: auto auto;
     column-gap: 0.9rem;
     align-items: center;
     padding: 1.1rem 1.25rem;
     background: linear-gradient(135deg, var(--shapka), color-mix(in srgb, var(--shapka) 75%, #fff));
     color: #fff;
-    text-decoration: none;
+    cursor: pointer;
+    list-style: none;
+  }
+  .klas-shapka::-webkit-details-marker {
+    display: none;
+  }
+  .klas-strilka {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+  }
+  .klas[open] .klas-strilka {
+    transform: rotate(180deg);
   }
   .klas-znachok {
     grid-row: span 2;
@@ -131,6 +174,10 @@ function temy(n: number) {
   }
   .klas-nomer {
     font-size: 2rem;
+  }
+  .klas-nazva,
+  .klas-kilkist {
+    grid-column: 2;
   }
   .klas-kilkist {
     font-weight: 700;

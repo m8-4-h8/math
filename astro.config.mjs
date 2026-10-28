@@ -26,6 +26,12 @@ export default defineConfig({
       logo: { src: './src/assets/sova.svg' },
       defaultLocale: 'root',
       locales: { root: { label: 'Українська', lang: 'uk' } },
+      // Свої варіанти деяких частин Starlight — простіше для дітей на телефоні.
+      components: {
+        MobileMenuToggle: './src/components/starlight/MobileMenuToggle.astro',
+        MobileTableOfContents: './src/components/starlight/MobileTableOfContents.astro',
+        PageTitle: './src/components/starlight/PageTitle.astro',
+      },
       customCss: [
         '@fontsource-variable/nunito',
         'katex/dist/katex.min.css',
@@ -34,14 +40,16 @@ export default defineConfig({
       ],
       // Один клас = одна папка в src/content/docs (наприклад `6-klas`). Меню будується само:
       // нова папка = новий клас, новий .md/.mdx файл у ній = нова тема.
+      // Групи згорнуті, тож меню коротке; група з відкритою темою розгортається сама.
       sidebar: [
         { label: '🎮 Тренажер', link: '/trenazher/' },
         ...papkyKlasiv().map(({ papka, nomer }) => ({
           label: `${znachokKlasu(nomer)} ${nomer} клас`,
+          collapsed: true,
           items: [{ autogenerate: { directory: papka } }],
         })),
-        { label: '✏️ Як намалювати задачу', items: [{ autogenerate: { directory: 'vizualizatsiia-zadach' } }] },
-        { label: '💡 Поради для навчання', items: [{ autogenerate: { directory: 'porady' } }] },
+        { label: '✏️ Як намалювати задачу', collapsed: true, items: [{ autogenerate: { directory: 'vizualizatsiia-zadach' } }] },
+        { label: '💡 Поради для навчання', collapsed: true, items: [{ autogenerate: { directory: 'porady' } }] },
       ],
     }),
   ],
