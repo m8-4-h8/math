@@ -1,18 +1,24 @@
 ---
 // Дріб від числа: ціле (смужка) ділимо на `d` рівних частин і беремо `n` з них.
 // Під малюнком — обчислення: число ділимо на знаменник і множимо на чисельник.
+// Обернена задача (число за його дробом): замість `tsile` передаємо `znachennia` — скільки становлять
+// n частин, і шукаємо ціле: <DribVidChysla znachennia={12} n={3} d={4} />
 interface Props {
-  tsile: number; // ціле, від якого шукаємо дріб
+  tsile?: number; // ціле, від якого шукаємо дріб
+  znachennia?: number; // відоме значення дробу — тоді шукаємо ціле
   n: number; // чисельник: скільки частин беремо
   d: number; // знаменник: на скільки рівних частин ділимо
   kolir?: 1 | 2 | 3 | 4;
 }
-const { tsile, n, d, kolir = 1 } = Astro.props;
+const { n, d, znachennia, kolir = 1 } = Astro.props;
+const obernena = znachennia !== undefined;
 
-const chastyna = tsile / d;
+const chastyna = obernena ? znachennia / n : (Astro.props.tsile ?? 0) / d;
+const tsile = chastyna * d;
 const vidpovid = chastyna * n;
 const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(2).replace(/\.?0+$/, '').replace('.', ','));
 const color = `var(--ill-${kolir})`;
+const chastyn = (k: number) => (k % 10 === 1 && k % 100 !== 11 ? 'частина' : k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 10 || k % 100 >= 20) ? 'частини' : 'частин');
 
 const pad = 8;
 const cellW = Math.min(64, Math.max(36, 400 / d));
@@ -20,8 +26,10 @@ const barW = cellW * d;
 const barH = 40;
 const top = 34;
 const W = barW + 2 * pad;
-const H = top + barH + pad;
-const label = `${n}/${d} від ${fmt(tsile)} = ${fmt(vidpovid)}`;
+const H = top + barH + (obernena ? 40 : pad);
+const label = obernena
+  ? `${n}/${d} числа = ${fmt(vidpovid)}, число = ${fmt(tsile)}`
+  : `${n}/${d} від ${fmt(tsile)} = ${fmt(vidpovid)}`;
 ---
 
 <figure class="ill not-content">
@@ -30,12 +38,27 @@ const label = `${n}/${d} від ${fmt(tsile)} = ${fmt(vidpovid)}`;
       <path
         d={`M ${pad} ${top - 6} v -8 h ${barW} v 8 M ${pad + barW / 2} ${top - 14} v -4`}
         fill="none"
-        stroke="var(--ill-line)"
+        stroke={obernena ? 'var(--ill-4)' : 'var(--ill-line)'}
         stroke-width="1.5"
       />
-      <text x={W / 2} y="12" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">
-        {fmt(tsile)} — ціле
+      <text x={W / 2} y="12" text-anchor="middle" font-size="13" font-weight="700" fill={obernena ? 'var(--ill-4)' : 'var(--ill-ink)'}>
+        {obernena ? '? — ціле' : `${fmt(tsile)} — ціле`}
       </text>
+      {
+        obernena && (
+          <g>
+            <path
+              d={`M ${pad} ${top + barH + 6} v 8 h ${n * cellW} v -8`}
+              fill="none"
+              stroke={color}
+              stroke-width="1.5"
+            />
+            <text x={pad + (n * cellW) / 2} y={top + barH + 32} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">
+              {n} {chastyn(n)} = {fmt(vidpovid)}
+            </text>
+          </g>
+        )
+      }
       {
         Array.from({ length: d }, (_, i) => (
           <g>
@@ -65,6 +88,26 @@ const label = `${n}/${d} від ${fmt(tsile)} = ${fmt(vidpovid)}`;
       }
     </svg>
   </div>
+  {
+    obernena ? (
+      <>
+        <ol class="ill-steps">
+          {n !== 1 && (
+            <li>
+              {n} {chastyn(n)} — це {fmt(vidpovid)}, тому одна частина: <b class="num">{fmt(vidpovid)} : {n} = {fmt(chastyna)}</b>.
+            </li>
+          )}
+          <li>
+            Ціле — це всі {d} {chastyn(d)}: <b class="num">{fmt(chastyna)} · {d} = {fmt(tsile)}</b>.
+          </li>
+        </ol>
+        <figcaption class="ill-caption">
+          <span class="frac" style={`color: ${color}`}><span>{n}</span><span>{d}</span></span> числа = {fmt(vidpovid)} → число ={' '}
+          {n !== 1 ? `${fmt(vidpovid)} : ${n} · ${d}` : `${fmt(vidpovid)} · ${d}`} = <span class="c1">{fmt(tsile)}</span>
+        </figcaption>
+      </>
+    ) : (
+      <>
   <ol class="ill-steps">
     <li>
       Ділимо ціле на {d} рівних частин: <b class="num">{fmt(tsile)} : {d} = {fmt(chastyna)}</b> — одна частина.
@@ -81,4 +124,7 @@ const label = `${n}/${d} від ${fmt(tsile)} = ${fmt(vidpovid)}`;
     <span class="frac" style={`color: ${color}`}><span>{n}</span><span>{d}</span></span> від {fmt(tsile)} = {fmt(tsile)} : {d}
     {n !== 1 && ` · ${n}`} = <span class="c1">{fmt(vidpovid)}</span>
   </figcaption>
+      </>
+    )
+  }
 </figure>

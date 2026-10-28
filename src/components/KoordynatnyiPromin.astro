@@ -2,11 +2,14 @@
 // Координатний промінь: початок O(0), одиничні відрізки і точки з координатами.
 //   <KoordynatnyiPromin krok={1} dovzhyna={10} tochky={[{ nazva: 'A', x: 3 }, { nazva: 'B', x: 7 }]} />
 // `krok` — скільки «коштує» одна поділка (1, 5, 100, 0,1…), підписи ставимо кожні `pidpysy` поділок.
+// Звичайні дроби: `znamennyk={4}` ділить одиничний відрізок на 4 поділки, підписи — лише під цілими,
+// а точки підписуємо дробом: { nazva: 'A', x: 3 / 4, drib: '3/4' }.
 import { desiatkovyi, pomnozhyty, zapys } from './chysla';
 
 interface Tochka {
   nazva: string;
   x: number; // координата
+  drib?: string; // як підписати координату, наприклад '3/4' або '1 2/5'
 }
 interface Props {
   krok?: number | string; // ціна однієї поділки
@@ -15,25 +18,28 @@ interface Props {
   pidpysy?: number; // підписувати кожну n-ну поділку (за замовчуванням — кожну, якщо їх ≤ 12)
   odynychnyi?: boolean; // показати дужку «одиничний відрізок»
   bez_koordynat?: boolean; // біля точок лише назва — щоб дитина сама визначила координату
+  znamennyk?: number; // на скільки рівних поділок ділимо одиничний відрізок (звичайні дроби)
 }
-const { krok = 1, dovzhyna = 10, tochky = [], odynychnyi = false, bez_koordynat = false } = Astro.props;
-const pidpysy = Astro.props.pidpysy ?? (dovzhyna <= 12 ? 1 : 5);
+const { dovzhyna = 10, tochky = [], odynychnyi = false, bez_koordynat = false, znamennyk } = Astro.props;
+const krok = znamennyk ? 1 : (Astro.props.krok ?? 1);
+const pidpysy = Astro.props.pidpysy ?? (znamennyk ?? (dovzhyna <= 12 ? 1 : 5));
 
 const k = desiatkovyi(krok);
-const kNum = Number(String(krok).replace(',', '.'));
+const kNum = znamennyk ? 1 / znamennyk : Number(String(krok).replace(',', '.'));
 const pod = Math.max(26, Math.min(60, 520 / dovzhyna));
 const x0 = 30;
 const W = x0 + pod * dovzhyna + 46;
 const y = 66;
 const H = 112;
 const xPx = (v: number) => x0 + (v / kNum) * pod;
-const pidpys = (i: number) => zapys(pomnozhyty(k, desiatkovyi(i)));
+const pidpys = (i: number) => (znamennyk ? String(i / znamennyk) : zapys(pomnozhyty(k, desiatkovyi(i))).replace(/,0+$/, ''));
+const koord = (t: Tochka) => t.drib ?? fmt(t.x);
 const fmt = (v: number) => zapys(desiatkovyi(+v.toFixed(6)));
 ---
 
 <figure class="ill not-content">
   <div class="ill-scroll">
-    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Координатний промінь з точками ${tochky.map((t) => (bez_koordynat ? t.nazva : `${t.nazva}(${fmt(t.x)})`)).join(', ')}`}>
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Координатний промінь з точками ${tochky.map((t) => (bez_koordynat ? t.nazva : `${t.nazva}(${koord(t)})`)).join(', ')}`}>
       <line x1={x0} y1={y} x2={W - 10} y2={y} stroke="var(--ill-ink)" stroke-width="2.5" />
       <path d={`M ${W - 10} ${y} l -12 -6 v 12 z`} fill="var(--ill-ink)" />
       {
@@ -52,8 +58,8 @@ const fmt = (v: number) => zapys(desiatkovyi(+v.toFixed(6)));
       {
         odynychnyi && (
           <g>
-            <path d={`M ${x0} ${y + 36} q 0 6 6 6 h ${pod - 12} q 6 0 6 -6`} fill="none" stroke="var(--ill-3)" stroke-width="2" />
-            <text x={x0 + pod + 8} y={y + 46} font-size="12" fill="var(--ill-3)">одиничний відрізок</text>
+            <path d={`M ${x0} ${y + 36} q 0 6 6 6 h ${pod * (znamennyk ?? 1) - 12} q 6 0 6 -6`} fill="none" stroke="var(--ill-3)" stroke-width="2" />
+            <text x={x0 + pod * (znamennyk ?? 1) + 8} y={y + 46} font-size="12" fill="var(--ill-3)">одиничний відрізок</text>
           </g>
         )
       }
@@ -62,12 +68,14 @@ const fmt = (v: number) => zapys(desiatkovyi(+v.toFixed(6)));
           <g>
             <circle cx={xPx(t.x)} cy={y} r="6" fill={`var(--ill-${(i % 3) + 2})`} />
             <text x={xPx(t.x)} y={y - 18} text-anchor="middle" font-size="15" font-weight="700" fill={`var(--ill-${(i % 3) + 2})`}>
-              {bez_koordynat ? t.nazva : `${t.nazva}(${fmt(t.x)})`}
+              {bez_koordynat ? t.nazva : `${t.nazva}(${koord(t)})`}
             </text>
           </g>
         ))
       }
     </svg>
   </div>
-  <p class="ill-caption">Одна поділка = {zapys(k)}</p>
+  <p class="ill-caption">
+    {znamennyk ? <>Одиничний відрізок поділено на {znamennyk} рівних частин: одна поділка = 1/{znamennyk}</> : <>Одна поділка = {zapys(k)}</>}
+  </p>
 </figure>
