@@ -76,6 +76,24 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
 | `LiniiaStolit` | у якому столітті рік: лінія століть з позначкою | `<LiniiaStolit rik={1817} podiia="велосипед" />` |
 | `RymskeChyslo` | римське число по розрядах | `<RymskeChyslo chyslo={1984} />` |
 | `Tila` | геометричні тіла з гранями, ребрами, вершинами | `<Tila vydy={['kub', 'konus']} />` |
+| `KoordynatnyiPromin` | координатний промінь з точками, ціна поділки будь-яка | `<KoordynatnyiPromin krok={5} dovzhyna={10} tochky={[{ nazva: 'A', x: 15 }]} />` |
+| `Diahrama` | стовпчаста або лінійна діаграма | `<Diahrama dani={[['Пн', 12], ['Вт', 18]]} vyd="liniia" />` |
+| `RozpodilnyiZakon` | розподільний закон прямокутником з клітинок | `<RozpodilnyiZakon a={4} b={5} c={3} />` |
+| `PoriadokDii` | номери дій над знаками і обчислення по кроках | `<PoriadokDii vyraz="48 : (2 + 6) · 3 − 5" />` |
+| `Techiia` | швидкість за течією і проти течії | `<Techiia vlasna={12} techiia={2} />` |
+| `Liniyi` | відрізок, промінь, пряма; відрізок з лінійкою | `<Liniyi vydy={['vidrizok']} dovzhyna={5} />` |
+| `Transportyr` | транспортир, прикладений до кута | `<Transportyr hradusy={65} nazva="AOB" />` |
+| `Paralelepiped` | паралелепіпед / куб з кубиків і його об'єм | `<Paralelepiped a={4} b={3} c={2} />` |
+| `OznakyPodilnosti` | ознаки подільності на 2, 5, 10, 3, 9 для числа | `<OznakyPodilnosti chyslo={4320} />` |
+| `RozkladNaProsti` | розкладання на прості множники стовпчиком | `<RozkladNaProsti chyslo={360} />` |
+| `NsdNsk` | НСД і НСК через розклад, спільні множники виділено | `<NsdNsk a={24} b={36} />` |
+| `DesiatkovyiDrib` | десятковий дріб у таблиці розрядів, квадрат 10×10 | `<DesiatkovyiDrib chyslo="3,25" sitka />` |
+| `Okruhlennia` | округлення натурального числа чи десяткового дробу | `<Okruhlennia chyslo="3,476" do="десятих" />` |
+| `KomaPidKomoiu` | додавання / віднімання десяткових дробів стовпчиком | `<KomaPidKomoiu a="12,4" b="3,75" dia="+" />` |
+| `ZsuvKomy` | множення / ділення на 10, 100, 0,1… — кома стрибає | `<ZsuvKomy chyslo="3,47" dia="·" na={100} />` |
+| `Serednie` | середнє арифметичне стовпчиками | `<Serednie znachennia={[4, 7, 3, 6]} />` |
+| `Sotka` | відсотки на квадраті зі 100 клітинок, відсоток від числа | `<Sotka vidsotky={20} vid={450} odynytsi="грн" />` |
+| `Masshtab` | масштаб карти: відстань на карті і насправді | `<Masshtab na_karti={4} masshtab={500000} />` |
 | `Zavdannia` | інтерактивне завдання: поле або кнопки, підказка, зірочка ⭐ | `<Zavdannia vidpovid="6" pidkazka="...">Умова</Zavdannia>` |
   | `Trenazher` | гра «Швидкий рахунок» (10 прикладів, рекорд) | `<Trenazher dii={['×']} riven="seredno" />` |
 

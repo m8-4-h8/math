@@ -1,0 +1,62 @@
+---
+// НСД і НСК двох чисел через розкладання на прості множники. Спільні множники виділено кольором.
+//   <NsdNsk a={24} b={36} />
+import RozkladNaProsti from './RozkladNaProsti.astro';
+import { nsd, nsk, prostiMnozhnyky, tsile } from './chysla';
+
+interface Props {
+  a: number;
+  b: number;
+}
+const { a, b } = Astro.props;
+
+const ma = prostiMnozhnyky(a);
+const mb = prostiMnozhnyky(b);
+const zapas = [...mb];
+const spilni = ma.filter((m) => {
+  const i = zapas.indexOf(m);
+  if (i < 0) return false;
+  zapas.splice(i, 1);
+  return true;
+});
+// Для НСК: усі множники більшого розкладу + яких не вистачає з іншого.
+const [velykyi, menshyi] = ma.length >= mb.length ? [ma, mb] : [mb, ma];
+const dodaty = [...menshyi];
+for (const m of velykyi) {
+  const i = dodaty.indexOf(m);
+  if (i >= 0) dodaty.splice(i, 1);
+}
+const d = nsd(a, b);
+const k = nsk(a, b);
+---
+
+<figure class="ill not-content">
+  <div class="nsd-ryad">
+    <RozkladNaProsti chyslo={a} pidsvityty={spilni} ramka={false} />
+    <RozkladNaProsti chyslo={b} pidsvityty={spilni} ramka={false} />
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Спільні множники (підкреслені): <b class="num c2">{spilni.length ? spilni.join(' · ') : 'немає'}</b>
+    </li>
+    <li>
+      <b>НСД</b> — добуток спільних множників:{' '}
+      <b class="num">НСД({a}; {b}) = {spilni.length ? `${spilni.join(' · ')} = ` : ''}{d}</b>
+      {d === 1 && <span> — числа <b>взаємно прості</b></span>}
+    </li>
+    <li>
+      <b>НСК</b> — розклад одного числа ({velykyi.join(' · ')}) і множники, яких бракує, з іншого
+      ({dodaty.length ? dodaty.join(' · ') : 'усі вже є'}):{' '}
+      <b class="num">НСК({a}; {b}) = {[...velykyi, ...dodaty].join(' · ')} = {tsile(k)}</b>
+    </li>
+  </ol>
+</figure>
+
+<style>
+  .nsd-ryad {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+  }
+</style>

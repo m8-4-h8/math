@@ -1,0 +1,67 @@
+---
+// Відрізок, промінь і пряма: скільки в кожного кінців і як їх позначають.
+//   <Liniyi vydy={['vidrizok', 'promin', 'priama']} />
+//   <Liniyi vydy={['vidrizok']} dovzhyna={5} />   — відрізок AB з лінійкою під ним
+type Vyd = 'vidrizok' | 'promin' | 'priama';
+interface Props {
+  vydy?: Vyd[];
+  dovzhyna?: number; // довжина відрізка в сантиметрах (тільки для одного відрізка)
+}
+const { vydy = ['vidrizok', 'promin', 'priama'], dovzhyna } = Astro.props;
+
+const OPYS: Record<Vyd, { nazva: string; zapys: string; kintsi: string; litery: [string, string] }> = {
+  vidrizok: { nazva: 'Відрізок', zapys: 'AB', kintsi: 'два кінці — можна виміряти', litery: ['A', 'B'] },
+  promin: { nazva: 'Промінь', zapys: 'OA', kintsi: 'один кінець — початок', litery: ['O', 'A'] },
+  priama: { nazva: 'Пряма', zapys: 'MN', kintsi: 'кінців немає', litery: ['M', 'N'] },
+};
+const W = 520;
+const ryadok = 62;
+const liniika = vydy.length === 1 && vydy[0] === 'vidrizok' && dovzhyna;
+const cm = liniika ? Math.min(60, 400 / dovzhyna) : 0;
+const H = vydy.length * ryadok + (liniika ? 50 : 10);
+const xA = 190;
+const xB = liniika ? xA + dovzhyna * cm : 400;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={vydy.map((v) => OPYS[v].nazva).join(', ')}>
+      {
+        vydy.map((v, k) => {
+          const y = 34 + k * ryadok;
+          const o = OPYS[v];
+          const kolir = `var(--ill-${k + 1})`;
+          const x1 = v === 'priama' ? xA - 50 : xA;
+          const x2 = v === 'vidrizok' ? xB : W - 14;
+          return (
+            <g>
+              <text x="8" y={y - 4} font-size="14" font-weight="700" fill={kolir}>{o.nazva} {o.zapys}</text>
+              <text x="8" y={y + 14} font-size="12" fill="var(--ill-muted)">{o.kintsi}</text>
+              <line x1={x1} y1={y} x2={x2} y2={y} stroke={kolir} stroke-width="3" />
+              {v !== 'vidrizok' && <path d={`M ${x2 + 10} ${y} l -12 -6 v 12 z`} fill={kolir} />}
+              {v === 'priama' && <path d={`M ${x1 - 10} ${y} l 12 -6 v 12 z`} fill={kolir} />}
+              <circle cx={xA} cy={y} r="4.5" fill="var(--ill-ink)" />
+              <circle cx={v === 'vidrizok' ? xB : 400} cy={y} r="4.5" fill="var(--ill-ink)" />
+              <text x={xA} y={y - 12} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-ink)">{o.litery[0]}</text>
+              <text x={v === 'vidrizok' ? xB : 400} y={y - 12} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-ink)">{o.litery[1]}</text>
+            </g>
+          );
+        })
+      }
+      {
+        liniika && (
+          <g>
+            <rect x={xA - 10} y={52} width={dovzhyna * cm + 20} height="34" rx="4" fill="var(--ill-2)" fill-opacity="0.15" stroke="var(--ill-2)" />
+            {Array.from({ length: dovzhyna + 1 }, (_, i) => (
+              <g>
+                <line x1={xA + i * cm} y1={52} x2={xA + i * cm} y2={64} stroke="var(--ill-ink)" stroke-width="1.5" />
+                <text x={xA + i * cm} y={80} text-anchor="middle" font-size="11" fill="var(--ill-muted)">{i}</text>
+              </g>
+            ))}
+          </g>
+        )
+      }
+    </svg>
+  </div>
+  {liniika && <p class="ill-caption">AB = {dovzhyna} см</p>}
+</figure>

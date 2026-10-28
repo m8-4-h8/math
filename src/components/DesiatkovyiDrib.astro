@@ -1,0 +1,92 @@
+---
+// Десятковий дріб у таблиці розрядів: ціла частина, десяті, соті, тисячні. Як прочитати і як записати
+// звичайним дробом. З `sitka` — ще й квадрат 10×10, де зафарбовано дробову частину (до сотих).
+//   <DesiatkovyiDrib chyslo="3,25" sitka />
+import { desiatkovyi, tsile } from './chysla';
+
+interface Props {
+  chyslo: string; // з комою: "3,25"
+  sitka?: boolean;
+}
+const { chyslo, sitka = false } = Astro.props;
+
+const d = desiatkovyi(chyslo);
+const s = d.ts.toString().padStart(d.k + 1, '0');
+const tsila = BigInt(s.slice(0, s.length - d.k));
+const drob = s.slice(s.length - d.k);
+const ROZRIADY = ['десяті', 'соті', 'тисячні', 'десятитисячні'];
+const ODNYNA = ['десята', 'сота', 'тисячна', 'десятитисячна'];
+const MNOZHYNA = ['десятих', 'сотих', 'тисячних', 'десятитисячних'];
+const znamennyk = 10 ** d.k;
+const odna = (x: bigint) => x % 10n === 1n && x % 100n !== 11n;
+const drobChyslo = BigInt(drob || '0');
+const chytaty = `${tsile(tsila)} ${odna(tsila) ? 'ціла' : 'цілих'}` + (d.k ? `, ${drobChyslo} ${odna(drobChyslo) ? ODNYNA[d.k - 1] : MNOZHYNA[d.k - 1]}` : '');
+const sotyh = d.k <= 2 ? Number(drob.padEnd(2, '0')) : 0;
+const pokazatySitku = sitka && d.k <= 2;
+const c = 18;
+---
+
+<figure class="ill not-content">
+  <table class="dd-tabl num" aria-label={`${chyslo}: ${chytaty}`}>
+    <thead>
+      <tr>
+        <th>цілі</th>
+        <th class="koma"></th>
+        {drob.split('').map((_, i) => <th>{ROZRIADY[i]}</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="c1">{tsile(tsila)}</td>
+        <td class="koma">,</td>
+        {drob.split('').map((t, i) => <td class={`c${(i % 3) + 2}`}>{t}</td>)}
+      </tr>
+    </tbody>
+  </table>
+  {
+    pokazatySitku && (
+      <div class="ill-scroll">
+        <svg viewBox={`0 0 ${c * 10 + 4} ${c * 10 + 4}`} width={c * 10 + 4} height={c * 10 + 4} role="img" aria-label={`Зафарбовано ${sotyh} клітинок зі 100`} style="margin: 0.75rem auto 0">
+          {Array.from({ length: 100 }, (_, i) => (
+            <rect x={2 + (i % 10) * c} y={2 + Math.floor(i / 10) * c} width={c} height={c} fill={i < sotyh ? 'var(--ill-2)' : 'none'} fill-opacity="0.6" stroke="var(--ill-line)" stroke-width="1" />
+          ))}
+          <rect x="2" y="2" width={c * 10} height={c * 10} fill="none" stroke="var(--ill-ink)" stroke-width="2" />
+        </svg>
+      </div>
+    )
+  }
+  <ol class="ill-steps">
+    <li>Читаємо: <b>{chytaty}</b></li>
+    {d.k > 0 && (
+      <li>
+        Звичайним дробом: <b class="num">{chyslo} = {tsila > 0n ? tsile(tsila) + ' ' : ''}{drobChyslo}/{tsile(znamennyk)}</b> — після коми{' '}
+        {d.k} {d.k === 1 ? 'цифра' : 'цифри'}, у знаменнику {d.k === 1 ? 'один нуль' : `${d.k} нулі`}.
+      </li>
+    )}
+    {pokazatySitku && <li>Квадрат — це одна ціла, одна клітинка — одна сота: зафарбовано <b class="num">{sotyh}</b> із 100.</li>}
+  </ol>
+</figure>
+
+<style>
+  .dd-tabl {
+    margin: 0 auto;
+    border-collapse: collapse;
+    text-align: center;
+  }
+  .dd-tabl th {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    color: var(--ill-muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+  }
+  .dd-tabl td {
+    padding: 0.2rem 0.6rem;
+    font-size: 1.8rem;
+    font-weight: 800;
+  }
+  .dd-tabl .koma {
+    padding: 0;
+    width: 0.5rem;
+  }
+</style>

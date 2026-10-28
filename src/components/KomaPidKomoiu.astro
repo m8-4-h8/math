@@ -1,0 +1,69 @@
+---
+// Додавання і віднімання десяткових дробів стовпчиком: кома під комою, дописані нулі — блідіші.
+//   <KomaPidKomoiu a="12,4" b="3,75" />
+//   <KomaPidKomoiu a="7" b="2,35" dia="−" />
+import { desiatkovyi, dodaty, doK, skorotyty, vidniaty, zapys } from './chysla';
+
+interface Props {
+  a: string;
+  b: string;
+  dia?: '+' | '−';
+}
+const { a, b, dia = '+' } = Astro.props;
+
+const da = desiatkovyi(a);
+const db = desiatkovyi(b);
+const k = Math.max(da.k, db.k);
+const rez = dia === '+' ? dodaty(da, db) : vidniaty(da, db);
+// Кожен рядок — масив клітинок однакової довжини: цифри, кома, дописані нулі.
+const rozibraty = (d: typeof da) => {
+  const s = zapys(doK(d, k)).replace(/\s/g, '');
+  const [tsila, drob = ''] = s.split(',');
+  return { tsila, drob, dopysano: k - d.k };
+};
+const riadky = [rozibraty(da), rozibraty(db), rozibraty(rez)];
+const shyrynaTsiloi = Math.max(...riadky.map((r) => r.tsila.length));
+const kliitynky = (r: (typeof riadky)[number]) => [
+  ...Array(shyrynaTsiloi - r.tsila.length).fill({ t: '' }),
+  ...r.tsila.split('').map((t) => ({ t })),
+  ...(k ? [{ t: ',', koma: true }] : []),
+  ...r.drob.split('').map((t, i) => ({ t, blidyi: i >= r.drob.length - r.dopysano })),
+];
+const c = 28;
+const kolonok = shyrynaTsiloi + (k ? 1 : 0) + k;
+const W = (kolonok + 1) * c + 16;
+const H = c * 3 + 26;
+const zvychaine = `${zapys(da)} ${dia} ${zapys(db)} = ${zapys(skorotyty(rez))}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={zvychaine}>
+      <rect x="0" y="0" width={W} height={H} rx="6" fill="var(--ill-paper)" />
+      <g font-family="ui-monospace, Menlo, monospace" font-size="20" text-anchor="middle" dominant-baseline="central">
+        <text x={c * 0.6} y={c * 1.5 + 6} fill="var(--ill-muted)">{dia}</text>
+        {
+          riadky.map((r, j) =>
+            kliitynky(r).map((cl: any, i) => (
+              <text
+                x={8 + (i + 1) * c + c / 2}
+                y={(j + 0.5) * c + 6 + (j === 2 ? 14 : 0)}
+                fill={cl.koma ? 'var(--ill-2)' : cl.blidyi ? 'var(--ill-muted)' : j === 2 ? 'var(--ill-3)' : 'var(--ill-ink)'}
+                font-weight={j === 2 || cl.koma ? 700 : 400}
+                opacity={cl.blidyi ? 0.6 : 1}
+              >
+                {cl.t}
+              </text>
+            )),
+          )
+        }
+        <line x1={8 + c} y1={c * 2 + 12} x2={W - 8} y2={c * 2 + 12} stroke="var(--ill-ink)" stroke-width="2" />
+      </g>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>Пишемо <b>кому під комою</b>: десяті під десятими, соті під сотими.</li>
+    {riadky.slice(0, 2).some((r) => r.dopysano) && <li>Де цифр після коми менше — дописуємо нулі (від цього дріб не змінюється).</li>}
+    <li>{dia === '+' ? 'Додаємо' : 'Віднімаємо'}, як натуральні числа, а кому ставимо під комами: <b class="num">{zvychaine}</b></li>
+  </ol>
+</figure>

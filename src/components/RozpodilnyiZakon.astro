@@ -1,0 +1,71 @@
+---
+// Розподільний закон множення прямокутником: a рядів по (b + c) клітинок = a · b + a · c.
+// З dia="−" — від b клітинок відкидаємо c: a · (b − c) = a · b − a · c.
+//   <RozpodilnyiZakon a={4} b={5} c={3} />
+interface Props {
+  a: number; // кількість рядів
+  b: number;
+  c: number;
+  dia?: '+' | '−';
+}
+const { a, b, c, dia = '+' } = Astro.props;
+const plus = dia === '+';
+
+const shyryna = plus ? b + c : b; // скільки стовпчиків малюємо
+const cell = Math.min(30, 420 / shyryna, 200 / a);
+const x0 = 40;
+const y0 = 34;
+const W = x0 + shyryna * cell + 30;
+const H = y0 + a * cell + 34;
+const pershi = plus ? b : b - c; // перша (синя) частина
+const rez = plus ? a * (b + c) : a * (b - c);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${a} · (${b} ${dia} ${c}) = ${a} · ${b} ${dia} ${a} · ${c}`}>
+      <rect x={x0} y={y0} width={pershi * cell} height={a * cell} fill="var(--ill-1)" fill-opacity="0.35" />
+      <rect x={x0 + pershi * cell} y={y0} width={(shyryna - pershi) * cell} height={a * cell} fill={plus ? 'var(--ill-2)' : 'var(--ill-muted)'} fill-opacity={plus ? '0.35' : '0.12'} />
+      <g stroke="var(--ill-line)" stroke-width="1">
+        {Array.from({ length: shyryna - 1 }, (_, i) => <line x1={x0 + (i + 1) * cell} y1={y0} x2={x0 + (i + 1) * cell} y2={y0 + a * cell} />)}
+        {Array.from({ length: a - 1 }, (_, i) => <line x1={x0} y1={y0 + (i + 1) * cell} x2={x0 + shyryna * cell} y2={y0 + (i + 1) * cell} />)}
+      </g>
+      {!plus && <line x1={x0 + pershi * cell} y1={y0} x2={x0 + shyryna * cell} y2={y0 + a * cell} stroke="var(--ill-4)" stroke-width="2.5" />}
+      {!plus && <line x1={x0 + shyryna * cell} y1={y0} x2={x0 + pershi * cell} y2={y0 + a * cell} stroke="var(--ill-4)" stroke-width="2.5" />}
+      <rect x={x0} y={y0} width={shyryna * cell} height={a * cell} fill="none" stroke="var(--ill-ink)" stroke-width="2" />
+      <line x1={x0 + pershi * cell} y1={y0 - 6} x2={x0 + pershi * cell} y2={y0 + a * cell + 6} stroke="var(--ill-ink)" stroke-width="2.5" />
+      <g font-size="14" font-weight="700" text-anchor="middle">
+        <text x={x0 - 14} y={y0 + (a * cell) / 2} dominant-baseline="central" fill="var(--ill-ink)">{a}</text>
+        {plus ? (
+          <>
+            <text x={x0 + (b * cell) / 2} y={y0 - 12} fill="var(--ill-1)">{b}</text>
+            <text x={x0 + (b + c / 2) * cell} y={y0 - 12} fill="var(--ill-2)">{c}</text>
+          </>
+        ) : (
+          <>
+            <text x={x0 + (b * cell) / 2} y={y0 + a * cell + 24} fill="var(--ill-ink)">{b}</text>
+            <text x={x0 + ((b - c) * cell) / 2} y={y0 - 12} fill="var(--ill-1)">{b - c}</text>
+            <text x={x0 + (b - c / 2) * cell} y={y0 - 12} fill="var(--ill-4)">−{c}</text>
+          </>
+        )}
+      </g>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Усі клітинки разом: <b class="num">{a} · ({b} {dia} {c}) = {a} · {plus ? b + c : b - c} = {rez}</b>
+    </li>
+    <li>
+      {plus ? (
+        <span>
+          Частинами: <b class="num"><span class="c1">{a} · {b}</span> + <span class="c2">{a} · {c}</span> = {a * b} + {a * c} = {rez}</b>
+        </span>
+      ) : (
+        <span>
+          Усі мінус закреслені: <b class="num">{a} · {b} − <span class="c4">{a} · {c}</span> = {a * b} − {a * c} = {rez}</b>
+        </span>
+      )}{' '}
+      ✓
+    </li>
+  </ol>
+</figure>

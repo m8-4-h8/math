@@ -1,0 +1,89 @@
+---
+// Ознаки подільності на 2, 5, 10, 3 і 9 для конкретного числа: остання цифра і сума цифр.
+//   <OznakyPodilnosti chyslo={4320} />
+//   <OznakyPodilnosti chyslo={735} na={[3, 9]} />   — лише потрібні ознаки
+import { tsile } from './chysla';
+
+interface Props {
+  chyslo: number;
+  na?: (2 | 3 | 5 | 9 | 10)[];
+}
+const { chyslo, na = [2, 5, 10, 3, 9] } = Astro.props;
+
+const tsyfry = String(chyslo).split('').map(Number);
+const ostannia = tsyfry[tsyfry.length - 1];
+const suma = tsyfry.reduce((s, x) => s + x, 0);
+const zaSumoiu = na.some((d) => d === 3 || d === 9);
+const zaOstannoiu = na.some((d) => d === 2 || d === 5 || d === 10);
+
+const PRAVYLO: Record<number, string> = {
+  2: 'остання цифра парна (0, 2, 4, 6, 8)',
+  5: 'остання цифра 0 або 5',
+  10: 'остання цифра 0',
+  3: 'сума цифр ділиться на 3',
+  9: 'сума цифр ділиться на 9',
+};
+const ryadky = na.map((d) => ({
+  d,
+  tak: chyslo % d === 0,
+  chomu: d === 3 || d === 9 ? `${suma} ${suma % d === 0 ? '' : 'не '}ділиться на ${d}` : `остання цифра ${ostannia}`,
+}));
+---
+
+<figure class="ill not-content">
+  <p class="oz-chyslo num" aria-label={`Число ${tsile(chyslo)}`}>
+    {tsyfry.map((t, i) => <span class:list={{ ostannia: zaOstannoiu && i === tsyfry.length - 1 }}>{t}</span>)}
+  </p>
+  {zaSumoiu && <p class="ill-caption num">Сума цифр: {tsyfry.join(' + ')} = {suma}</p>}
+  <table class="oz-tabl">
+    <thead>
+      <tr><th>Ділиться на</th><th>Ознака</th><th>Перевіряємо</th><th></th></tr>
+    </thead>
+    <tbody>
+      {
+        ryadky.map((r) => (
+          <tr class:list={{ tak: r.tak }}>
+            <td><b>{r.d}</b></td>
+            <td>{PRAVYLO[r.d]}</td>
+            <td>{r.chomu}</td>
+            <td>{r.tak ? '✓ так' : '✗ ні'}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</figure>
+
+<style>
+  .oz-chyslo {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    margin: 0;
+  }
+  .ostannia {
+    color: var(--ill-2);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .oz-tabl {
+    width: 100%;
+    margin-top: 0.75rem;
+    border-collapse: collapse;
+  }
+  .oz-tabl th,
+  .oz-tabl td {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+    text-align: start;
+  }
+  .oz-tabl td:last-child {
+    white-space: nowrap;
+    color: var(--ill-4);
+    font-weight: 700;
+  }
+  .oz-tabl tr.tak td:last-child {
+    color: var(--ill-3);
+  }
+</style>
