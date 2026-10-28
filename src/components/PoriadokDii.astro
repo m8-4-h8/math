@@ -1,0 +1,124 @@
+---
+// Порядок дій у виразі: над кожним знаком — номер дії, під виразом — дії по черзі й ланцюжок спрощень.
+// Спершу дужки, потім степінь, потім множення й ділення, потім додавання й віднімання (зліва направо).
+//   <PoriadokDii vyraz="48 : (2 + 6) · 3 − 5" />
+interface Props {
+  vyraz: string; // знаки: + − · : ^ і дужки (можна й - * /)
+}
+const { vyraz } = Astro.props;
+
+type Vuzol = { chyslo: number; duzhky?: boolean } | { znak: string; l: Vuzol; p: Vuzol; poz: number; dujka: number; duzhky?: boolean };
+const ZNAK: Record<string, string> = { '-': '−', '*': '·', '/': ':', '×': '·' };
+const VAGA: Record<string, number> = { '+': 1, '−': 1, '·': 2, ':': 2, '^': 3 };
+
+// Розбиваємо на лексеми: числа, знаки, дужки.
+const leksemy = (vyraz.match(/\d+(?:[.,]\d+)?|[-−+*·×:/^()]/g) ?? []).map((t) => ZNAK[t] ?? t);
+let i = 0;
+let hlybyna = 0;
+function vyraz_(minVaga: number): Vuzol {
+  let l = atom();
+  while (i < leksemy.length && VAGA[leksemy[i]] >= minVaga) {
+    const znak = leksemy[i];
+    const poz = i++;
+    const p = vyraz_(znak === '^' ? VAGA[znak] : VAGA[znak] + 1);
+    l = { znak, l, p, poz, dujka: hlybyna };
+  }
+  return l;
+}
+function atom(): Vuzol {
+  const t = leksemy[i++];
+  if (t === '(') {
+    hlybyna++;
+    const v = vyraz_(1);
+    hlybyna--;
+    i++; // ')'
+    return { ...v, duzhky: true };
+  }
+  return { chyslo: Number(t.replace(',', '.')) };
+}
+let derevo = vyraz_(1);
+
+const fmt = (x: number) => String(+x.toFixed(6)).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+function rakhuvaty(z: string, a: number, b: number) {
+  return z === '+' ? a + b : z === '−' ? a - b : z === '·' ? a * b : z === ':' ? a / b : a ** b;
+}
+function zapys(v: Vuzol): string {
+  if ('chyslo' in v) return fmt(v.chyslo);
+  const s = `${zapys(v.l)} ${v.znak} ${zapys(v.p)}`;
+  return v.duzhky ? `(${s})` : s;
+}
+
+// Шукаємо дію, яку можна виконати зараз (обидва числа вже готові), найглибше в дужках і найстаршу.
+const nomery: Record<number, number> = {};
+const dii: string[] = [];
+const lantsiuzhok: string[] = [zapys(derevo)];
+function hotovi(v: Vuzol, acc: { v: Vuzol; bat?: any; bik?: 'l' | 'p' }[], bat?: any, bik?: 'l' | 'p') {
+  if ('chyslo' in v) return;
+  if ('chyslo' in v.l && 'chyslo' in v.p) acc.push({ v, bat, bik });
+  hotovi(v.l, acc, v, 'l');
+  hotovi(v.p, acc, v, 'p');
+}
+for (let krok = 1; !('chyslo' in derevo) && krok < 30; krok++) {
+  const kandydaty: any[] = [];
+  hotovi(derevo, kandydaty);
+  kandydaty.sort((x, y) => y.v.dujka * 10 + VAGA[y.v.znak] - (x.v.dujka * 10 + VAGA[x.v.znak]) || x.v.poz - y.v.poz);
+  const { v, bat, bik } = kandydaty[0];
+  const rez = rakhuvaty(v.znak, v.l.chyslo, v.p.chyslo);
+  nomery[v.poz] = krok;
+  dii.push(`${fmt(v.l.chyslo)} ${v.znak} ${fmt(v.p.chyslo)} = ${fmt(rez)}`);
+  const novyi = { chyslo: rez };
+  if (bat) bat[bik!] = novyi;
+  else derevo = novyi;
+  lantsiuzhok.push(zapys(derevo));
+}
+---
+
+<figure class="ill not-content">
+  <div class="poriadok" aria-label={`Порядок дій у виразі ${vyraz}`}>
+    {
+      leksemy.map((t, k) =>
+        nomery[k] ? (
+          <span class="znak">
+            <span class="nomer">{nomery[k]}</span>
+            <span>{t}</span>
+          </span>
+        ) : (
+          <span class="lex">{/^\d/.test(t) ? fmt(Number(t.replace(',', '.'))) : t}</span>
+        ),
+      )
+    }
+  </div>
+  <ol class="ill-steps">
+    {dii.map((d) => <li><b class="num">{d}</b></li>)}
+  </ol>
+  <p class="ill-caption num">{lantsiuzhok.join(' = ')}</p>
+</figure>
+
+<style>
+  .poriadok {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.35em;
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .znak {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--ill-2);
+  }
+  .nomer {
+    font-size: 0.75rem;
+    line-height: 1;
+    min-width: 1.3em;
+    padding: 0.15em 0.3em;
+    border-radius: 999px;
+    background: var(--ill-2);
+    color: var(--sl-color-black);
+    text-align: center;
+  }
+</style>

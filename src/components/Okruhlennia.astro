@@ -1,0 +1,106 @@
+---
+// Округлення до розряду: який розряд лишаємо, на яку цифру дивимося, і де число між двома «круглими» сусідами.
+// Працює і з натуральними числами, і з десятковими дробами.
+//   <Okruhlennia chyslo={4371} do="сотень" />
+//   <Okruhlennia chyslo="3,476" do="десятих" />
+import { desiatkovyi, skorotyty, zapys } from './chysla';
+
+const ROZRIAD: Record<string, number> = {
+  мільйонів: 6, 'сотень тисяч': 5, 'десятків тисяч': 4, тисяч: 3, сотень: 2, десятків: 1, одиниць: 0, десятих: -1, сотих: -2, тисячних: -3,
+};
+interface Props {
+  chyslo: number | string;
+  do: keyof typeof ROZRIAD | string;
+}
+const { chyslo } = Astro.props;
+const p = ROZRIAD[Astro.props.do];
+
+const d = desiatkovyi(chyslo);
+const u = 10n ** BigInt(d.k + p); // одиниця розряду в «копійках» числа
+const nyzhnie = d.ts - (d.ts % u);
+const nastupna = Number((d.ts % u) / (u / 10n)); // цифра праворуч від розряду
+const vhoru = nastupna >= 5;
+const verkhnie = nyzhnie + u;
+const rez = vhoru ? verkhnie : nyzhnie;
+// Як записати межі й відповідь: для десяткових розрядів лишаємо стільки знаків, скільки треба.
+const fmtR = (ts: bigint) => (p < 0 ? zapys({ ts: ts / 10n ** BigInt(d.k + p), k: -p }) : zapys(skorotyty({ ts, k: d.k })));
+
+// Цифри числа з комою; позначаємо розряд округлення і цифру праворуч.
+const s = d.ts.toString().padStart(d.k + 1, '0');
+const iRozriad = s.length - 1 - (d.k + p);
+const tsyfry = s.split('').map((t, i) => {
+  const pozytsiia = s.length - 1 - d.k - i; // степінь десяти для цієї цифри
+  return { t, i, koma: d.k > 0 && i === s.length - d.k, prohalyna: s.length > 4 && pozytsiia % 3 === 2 && i > 0 && d.k === 0 };
+});
+
+const W = 460;
+const xL = 50;
+const xR = W - 50;
+const xN = xL + (Number(d.ts - nyzhnie) / Number(u)) * (xR - xL);
+---
+
+<figure class="ill not-content">
+  <p class="ok-chyslo num" aria-label={`Округлюємо ${zapys(d)} до ${Astro.props.do}`}>
+    {
+      tsyfry.map((c) => (
+        <>
+          {c.koma && <span>,</span>}
+          {c.prohalyna && <span class="ok-prob"> </span>}
+          <span class:list={{ rozriad: c.i === iRozriad, nastupna: c.i === iRozriad + 1, vidkynuti: c.i > iRozriad }}>{c.t}</span>
+        </>
+      ))
+    }
+  </p>
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} 86`} width={W} height="86" role="img" aria-label={`${zapys(d)} між ${fmtR(nyzhnie)} і ${fmtR(verkhnie)}, ближче до ${fmtR(rez)}`}>
+      <line x1={xL} y1="40" x2={xR} y2="40" stroke="var(--ill-ink)" stroke-width="2.5" />
+      <line x1={(xL + xR) / 2} y1="32" x2={(xL + xR) / 2} y2="48" stroke="var(--ill-muted)" stroke-width="1.5" stroke-dasharray="3 3" />
+      {[xL, xR].map((x, i) => (
+        <g>
+          <line x1={x} y1="30" x2={x} y2="50" stroke="var(--ill-ink)" stroke-width="2.5" />
+          <text x={x} y="72" text-anchor="middle" font-size="14" font-weight="700" fill={(i === 1) === vhoru ? 'var(--ill-3)' : 'var(--ill-muted)'}>
+            {fmtR(i ? verkhnie : nyzhnie)}
+          </text>
+        </g>
+      ))}
+      <circle cx={xN} cy="40" r="6" fill="var(--ill-2)" />
+      <text x={xN} y="20" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-2)">{zapys(d)}</text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>Розряд {Astro.props.do} — цифра <b class="c1">{s[iRozriad]}</b>. Дивимося на цифру праворуч: <b class="c2">{nastupna}</b>.</li>
+    <li>
+      {nastupna} {vhoru ? '≥ 5 — цифру розряду збільшуємо на 1' : '< 5 — цифру розряду не змінюємо'}, а всі цифри праворуч{' '}
+      {p > 0 ? 'замінюємо нулями' : 'відкидаємо'}.
+    </li>
+    <li>
+      <b class="num">{zapys(d)} ≈ {fmtR(rez)}</b>
+    </li>
+  </ol>
+</figure>
+
+<style>
+  .ok-chyslo {
+    margin: 0;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+  .ok-prob {
+    display: inline-block;
+    width: 0.3em;
+  }
+  .rozriad {
+    color: var(--ill-1);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .vidkynuti {
+    opacity: 0.45;
+  }
+  .nastupna {
+    color: var(--ill-2);
+    opacity: 1;
+  }
+</style>

@@ -1,0 +1,43 @@
+---
+// Відсотки на квадраті 10×10: ціле — 100 клітинок, одна клітинка — 1 %.
+// З `vid` — ще й скільки це від числа: 1 % = число : 100, потім · на кількість відсотків.
+//   <Sotka vidsotky={35} />
+//   <Sotka vidsotky={20} vid={450} odynytsi="грн" />
+import { desiatkovyi, pomnozhyty, skorotyty, zapys, zsunuty } from './chysla';
+
+interface Props {
+  vidsotky: number; // від 0 до 100
+  vid?: number; // від якого числа
+  odynytsi?: string;
+}
+const { vidsotky, vid, odynytsi = '' } = Astro.props;
+
+const c = 22;
+const S = c * 10 + 4;
+const odyn = vid !== undefined ? skorotyty(zsunuty(desiatkovyi(vid), -2)) : null;
+const rez = odyn ? skorotyty(pomnozhyty(odyn, desiatkovyi(vidsotky))) : null;
+const u = odynytsi ? ` ${odynytsi}` : '';
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${S} ${S}`} width={S} height={S} role="img" aria-label={`Зафарбовано ${vidsotky} клітинок зі 100 — ${vidsotky} %`} style="margin: 0 auto">
+      {
+        Array.from({ length: 100 }, (_, i) => (
+          <rect x={2 + (i % 10) * c} y={2 + Math.floor(i / 10) * c} width={c} height={c} fill={i < vidsotky ? 'var(--ill-4)' : 'none'} fill-opacity="0.6" stroke="var(--ill-line)" stroke-width="1" />
+        ))
+      }
+      <rect x="2" y="2" width={c * 10} height={c * 10} fill="none" stroke="var(--ill-ink)" stroke-width="2" />
+    </svg>
+  </div>
+  <p class="ill-caption">{vidsotky} клітинок зі 100 — це {vidsotky} % (= {vidsotky}/100)</p>
+  {
+    odyn && rez && (
+      <ol class="ill-steps">
+        <li>Ціле — <b class="num">{zapys(desiatkovyi(vid!))}{u}</b>, це 100 %.</li>
+        <li>Одна клітинка — 1 %: <b class="num">{zapys(desiatkovyi(vid!))} : 100 = {zapys(odyn)}{u}</b></li>
+        <li>{vidsotky} клітинок: <b class="num">{zapys(odyn)} · {vidsotky} = {zapys(rez)}{u}</b></li>
+      </ol>
+    )
+  }
+</figure>

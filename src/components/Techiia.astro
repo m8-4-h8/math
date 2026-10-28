@@ -1,0 +1,55 @@
+---
+// Рух по річці: власна швидкість човна і швидкість течії. За течією вони додаються, проти — віднімаються.
+//   <Techiia vlasna={12} techiia={2} />
+interface Props {
+  vlasna: number; // власна швидкість (у стоячій воді)
+  techiia: number; // швидкість течії
+  odynytsi?: string;
+}
+const { vlasna, techiia, odynytsi = 'км/год' } = Astro.props;
+
+const za = vlasna + techiia;
+const proty = vlasna - techiia;
+const W = 520;
+const H = 190;
+const mashtab = 300 / za; // пікселів на одиницю швидкості
+const x0 = 110;
+const strilka = (y: number, dovzh: number, kolir: string, vlivo = false) => {
+  const x1 = vlivo ? x0 + 300 : x0;
+  const x2 = vlivo ? x1 - dovzh : x1 + dovzh;
+  const s = vlivo ? 10 : -10;
+  return { d: `M ${x1} ${y} H ${x2}`, nak: `M ${x2} ${y} l ${s} -6 v 12 z`, kolir };
+};
+const ryadky = [
+  { y: 44, nazva: 'за течією', dovzh: za * mashtab, vlivo: false, kolir: 'var(--ill-3)', tekst: `${vlasna} + ${techiia} = ${za}` },
+  { y: 112, nazva: 'проти течії', dovzh: proty * mashtab, vlivo: true, kolir: 'var(--ill-4)', tekst: `${vlasna} − ${techiia} = ${proty}` },
+];
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Швидкість за течією ${za}, проти течії ${proty} ${odynytsi}`}>
+      <rect x="0" y="70" width={W} height="20" rx="6" fill="var(--ill-1)" fill-opacity="0.18" />
+      {[0, 1, 2, 3].map((k) => <path d={`M ${60 + k * 120} 80 h 40 l -8 -5 m 8 5 l -8 5`} stroke="var(--ill-1)" stroke-width="2" fill="none" />)}
+      <text x="8" y="84" font-size="12" fill="var(--ill-1)">течія {techiia}</text>
+      {
+        ryadky.map((r) => {
+          const s = strilka(r.y, r.dovzh, r.kolir, r.vlivo);
+          return (
+            <g>
+              <text x="8" y={r.y + 5} font-size="13" font-weight="700" fill={r.kolir}>{r.nazva}</text>
+              <path d={s.d} stroke={r.kolir} stroke-width="5" />
+              <path d={s.nak} fill={r.kolir} />
+              <text x={x0 + 150} y={r.y - 12} text-anchor="middle" font-size="13" fill="var(--ill-ink)">{r.tekst} {odynytsi}</text>
+            </g>
+          );
+        })
+      }
+      <text x={W / 2} y={H - 18} text-anchor="middle" font-size="13" fill="var(--ill-muted)">власна швидкість човна — {vlasna} {odynytsi}</text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>За течією річка «допомагає»: <b class="num">v = {vlasna} + {techiia} = {za} {odynytsi}</b></li>
+    <li>Проти течії річка «заважає»: <b class="num">v = {vlasna} − {techiia} = {proty} {odynytsi}</b></li>
+  </ol>
+</figure>

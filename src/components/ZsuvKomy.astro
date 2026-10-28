@@ -1,0 +1,78 @@
+---
+// Множення і ділення десяткового дробу на 10, 100, 1000 і на 0,1; 0,01; 0,001 — кома «стрибає».
+// Скільки нулів — на стільки цифр. Вправо — число більшає, вліво — меншає.
+//   <ZsuvKomy chyslo="3,47" dia="·" na={100} />
+//   <ZsuvKomy chyslo="52,8" dia=":" na="1000" />
+//   <ZsuvKomy chyslo="6,5" dia="·" na="0,01" />
+import { desiatkovyi, skorotyty, zapys, zsunuty } from './chysla';
+
+interface Props {
+  chyslo: string;
+  dia: '·' | ':';
+  na: number | string; // 10, 100, 1000… або "0,1", "0,01"…
+}
+const { chyslo, dia, na } = Astro.props;
+
+const naS = String(na).replace('.', ',');
+const drobovyi = naS.startsWith('0,');
+const nuliv = drobovyi ? naS.length - 2 : naS.length - 1; // 0,01 → 2, 100 → 2
+const vpravo = (dia === '·') !== drobovyi; // ·10 і :0,1 — кома вправо
+const zsuv = vpravo ? nuliv : -nuliv;
+
+const d = desiatkovyi(chyslo);
+const rez = skorotyty(zsunuty(d, zsuv));
+// Цифри числа з запасом нулів з обох боків, щоб було куди стрибати комі.
+const s = d.ts.toString().padStart(d.k + 1, '0');
+const zliva = Math.max(0, -zsuv - (s.length - d.k) + 1);
+const sprava = Math.max(0, zsuv - d.k);
+const tsyfry = '0'.repeat(zliva) + s + '0'.repeat(sprava);
+const pozStara = zliva + s.length - d.k; // перед якою цифрою стоїть кома
+const pozNova = pozStara + zsuv;
+const pershaTsyfra = tsyfry.search(/[1-9]/); // нулі попереду в результаті не потрібні — блідіші
+const c = 34;
+const x0 = 20;
+const W = x0 * 2 + tsyfry.length * c;
+const H = 110;
+const y = 74;
+const xKoma = (poz: number) => x0 + poz * c;
+const strybky = Array.from({ length: nuliv }, (_, i) => (vpravo ? pozStara + i : pozStara - i));
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${chyslo} ${dia} ${naS} = ${zapys(rez)}: кома на ${nuliv} ${vpravo ? 'вправо' : 'вліво'}`}>
+      {
+        tsyfry.split('').map((t, i) => {
+          const dopysanyi = i < zliva || i >= zliva + s.length || (i < pershaTsyfra && i < pozNova - 1);
+          return (
+            <text x={x0 + i * c + c / 2} y={y} text-anchor="middle" font-size="28" font-weight="700" fill={dopysanyi ? 'var(--ill-muted)' : 'var(--ill-ink)'} opacity={dopysanyi ? 0.7 : 1}>
+              {t}
+            </text>
+          );
+        })
+      }
+      {pozStara < tsyfry.length && <text x={xKoma(pozStara)} y={y + 6} text-anchor="middle" font-size="30" fill="var(--ill-muted)" opacity="0.5">,</text>}
+      {pozNova < tsyfry.length && <text x={xKoma(pozNova)} y={y + 6} text-anchor="middle" font-size="30" font-weight="800" fill="var(--ill-2)">,</text>}
+      {
+        strybky.map((p) => {
+          const x1 = xKoma(p);
+          const x2 = xKoma(vpravo ? p + 1 : p - 1);
+          return (
+            <g>
+              <path d={`M ${x1} ${y - 28} Q ${(x1 + x2) / 2} ${y - 56} ${x2} ${y - 28}`} fill="none" stroke="var(--ill-2)" stroke-width="2" />
+              <path d={`M ${x2} ${y - 28} l ${vpravo ? -9 : 9} -4 l ${vpravo ? 3 : -3} 9 z`} fill="var(--ill-2)" />
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      {dia === '·' ? 'Множимо' : 'Ділимо'} на <b class="num">{naS}</b> — кома переходить на <b>{nuliv}</b>{' '}
+      {nuliv === 1 ? 'цифру' : 'цифри'} <b>{vpravo ? 'вправо' : 'вліво'}</b> (число {vpravo ? 'збільшується' : 'зменшується'}).
+    </li>
+    {(zliva > 0 || sprava > 0) && <li>Цифр не вистачило — дописали нулі (вони блідіші).</li>}
+    <li><b class="num">{chyslo} {dia} {naS} = {zapys(rez)}</b></li>
+  </ol>
+</figure>

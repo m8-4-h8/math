@@ -1,0 +1,58 @@
+---
+// Середнє арифметичне стовпчиками: пунктир — середнє. Що вище за пунктир, «пересипаємо» туди, де нижче,
+// і всі стовпчики стають однаковими.
+//   <Serednie znachennia={[4, 7, 3, 6]} imena={['Пн', 'Вт', 'Ср', 'Чт']} odynytsi="км" />
+import { tsile } from './chysla';
+
+interface Props {
+  znachennia: number[];
+  imena?: string[];
+  odynytsi?: string;
+}
+const { znachennia, imena = znachennia.map((_, i) => String(i + 1)), odynytsi = '' } = Astro.props;
+
+const suma = znachennia.reduce((s, x) => s + x, 0);
+const n = znachennia.length;
+const ser = suma / n;
+const fmt = (x: number) => String(+x.toFixed(2)).replace('.', ',');
+const fmtS = Number.isInteger(suma) ? tsile(suma) : fmt(suma);
+const max = Math.max(...znachennia);
+const st = Math.max(44, Math.min(70, 440 / n));
+const x0 = 20;
+const yTop = 30;
+const h = 170;
+const W = x0 * 2 + n * st + 70;
+const H = yTop + h + 34;
+const yPx = (z: number) => yTop + h - (z / max) * h;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Середнє чисел ${znachennia.map(fmt).join(', ')} дорівнює ${fmt(ser)}`}>
+      {
+        znachennia.map((z, i) => {
+          const x = x0 + i * st + st * 0.15;
+          const w = st * 0.7;
+          const vyshche = z > ser;
+          return (
+            <g>
+              <rect x={x} y={yPx(Math.min(z, ser))} width={w} height={yTop + h - yPx(Math.min(z, ser))} rx="3" fill="var(--ill-1)" fill-opacity="0.55" />
+              {vyshche && <rect x={x} y={yPx(z)} width={w} height={yPx(ser) - yPx(z)} rx="3" fill="var(--ill-2)" fill-opacity="0.75" />}
+              {z < ser && <rect x={x} y={yPx(ser)} width={w} height={yPx(z) - yPx(ser)} fill="none" stroke="var(--ill-2)" stroke-width="1.5" stroke-dasharray="4 3" />}
+              <text x={x + w / 2} y={yPx(Math.max(z, ser)) - 7} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">{fmt(z)}</text>
+              <text x={x + w / 2} y={yTop + h + 20} text-anchor="middle" font-size="13" fill="var(--ill-muted)">{imena[i]}</text>
+            </g>
+          );
+        })
+      }
+      <line x1={x0} y1={yTop + h} x2={x0 + n * st} y2={yTop + h} stroke="var(--ill-ink)" stroke-width="2" />
+      <line x1={x0} y1={yPx(ser)} x2={x0 + n * st + 6} y2={yPx(ser)} stroke="var(--ill-3)" stroke-width="2.5" stroke-dasharray="7 5" />
+      <text x={x0 + n * st + 10} y={yPx(ser)} dominant-baseline="central" font-size="13" font-weight="700" fill="var(--ill-3)">сер. {fmt(ser)}</text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>Сума: <b class="num">{znachennia.map(fmt).join(' + ')} = {fmtS}</b></li>
+    <li>Ділимо на кількість чисел ({n}): <b class="num">{fmtS} : {n} = {fmt(ser)}{odynytsi && ` ${odynytsi}`}</b></li>
+    <li>Помаранчеві «верхівки» заповнюють пунктирні «ями» — і всі стовпчики стають по {fmt(ser)}.</li>
+  </ol>
+</figure>

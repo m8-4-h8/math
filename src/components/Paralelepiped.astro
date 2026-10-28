@@ -1,0 +1,64 @@
+---
+// Прямокутний паралелепіпед, складений з кубиків 1×1×1: видно передню, верхню і бічну грані.
+// Під малюнком — об'єм V = a · b · c. Якщо a = b = c — це куб.
+//   <Paralelepiped a={4} b={3} c={2} />
+interface Props {
+  a: number; // довжина
+  b: number; // ширина (вглиб)
+  c: number; // висота
+  odynytsi?: string;
+}
+const { a, b, c, odynytsi = 'см' } = Astro.props;
+
+const kub = a === b && b === c;
+const V = a * b * c;
+const cell = Math.min(40, 280 / (a + b * 0.6), 200 / (c + b * 0.4));
+const dx = cell * 0.6; // зсув на одну одиницю вглиб
+const dy = cell * 0.4;
+const x0 = 40;
+const y0 = 30 + b * dy; // лівий верхній кут передньої грані
+const W = x0 + a * cell + b * dx + 70;
+const H = y0 + c * cell + 40;
+const p = (x: number, y: number) => `${x.toFixed(1)},${y.toFixed(1)}`;
+// Передня грань: x вправо, z вниз; верхня: x вправо, глибина вгору-вправо; бічна: глибина, z.
+const front = Array.from({ length: a - 1 }, (_, i) => [x0 + (i + 1) * cell, y0, x0 + (i + 1) * cell, y0 + c * cell]).concat(
+  Array.from({ length: c - 1 }, (_, j) => [x0, y0 + (j + 1) * cell, x0 + a * cell, y0 + (j + 1) * cell]),
+);
+const top = Array.from({ length: a - 1 }, (_, i) => [x0 + (i + 1) * cell, y0, x0 + (i + 1) * cell + b * dx, y0 - b * dy]).concat(
+  Array.from({ length: b - 1 }, (_, k) => [x0 + (k + 1) * dx, y0 - (k + 1) * dy, x0 + a * cell + (k + 1) * dx, y0 - (k + 1) * dy]),
+);
+const xr = x0 + a * cell;
+const side = Array.from({ length: b - 1 }, (_, k) => [xr + (k + 1) * dx, y0 - (k + 1) * dy, xr + (k + 1) * dx, y0 + c * cell - (k + 1) * dy]).concat(
+  Array.from({ length: c - 1 }, (_, j) => [xr, y0 + (j + 1) * cell, xr + b * dx, y0 + (j + 1) * cell - b * dy]),
+);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${kub ? 'Куб' : 'Прямокутний паралелепіпед'} ${a} на ${b} на ${c}: ${V} кубиків`}>
+      <polygon points={[p(x0, y0), p(xr, y0), p(xr, y0 + c * cell), p(x0, y0 + c * cell)].join(' ')} fill="var(--ill-1)" fill-opacity="0.3" />
+      <polygon points={[p(x0, y0), p(x0 + b * dx, y0 - b * dy), p(xr + b * dx, y0 - b * dy), p(xr, y0)].join(' ')} fill="var(--ill-3)" fill-opacity="0.3" />
+      <polygon points={[p(xr, y0), p(xr + b * dx, y0 - b * dy), p(xr + b * dx, y0 + c * cell - b * dy), p(xr, y0 + c * cell)].join(' ')} fill="var(--ill-2)" fill-opacity="0.3" />
+      <g stroke="var(--ill-line)" stroke-width="1">
+        {[...front, ...top, ...side].map(([x1, y1, x2, y2]) => <line x1={x1} y1={y1} x2={x2} y2={y2} />)}
+      </g>
+      <g fill="none" stroke="var(--ill-ink)" stroke-width="2" stroke-linejoin="round">
+        <polygon points={[p(x0, y0), p(xr, y0), p(xr, y0 + c * cell), p(x0, y0 + c * cell)].join(' ')} />
+        <polyline points={[p(x0, y0), p(x0 + b * dx, y0 - b * dy), p(xr + b * dx, y0 - b * dy), p(xr + b * dx, y0 + c * cell - b * dy), p(xr, y0 + c * cell)].join(' ')} />
+        <line x1={xr} y1={y0} x2={xr + b * dx} y2={y0 - b * dy} />
+      </g>
+      <g font-size="14" font-style="italic" font-weight="700" text-anchor="middle">
+        <text x={x0 + (a * cell) / 2} y={y0 + c * cell + 22} fill="var(--ill-1)">a = {a}</text>
+        <text x={xr + (b * dx) / 2 + 14} y={y0 + c * cell - (b * dy) / 2 + 16} text-anchor="start" fill="var(--ill-3)">b = {b}</text>
+        <text x={x0 - 10} y={y0 + (c * cell) / 2} text-anchor="end" dominant-baseline="central" fill="var(--ill-2)">c = {c}</text>
+      </g>
+    </svg>
+  </div>
+  <p class="ill-caption">{kub ? 'Куб' : 'Прямокутний паралелепіпед'}</p>
+  <ol class="ill-steps">
+    <li>В одному шарі: <b class="num">{a} · {b} = {a * b}</b> кубиків, шарів — <b>{c}</b>.</li>
+    <li>
+      Об'єм: <b class="num">V = {kub ? `a³ = ${a}³` : `a · b · c = ${a} · ${b} · ${c}`} = {V} {odynytsi}³</b>
+    </li>
+  </ol>
+</figure>

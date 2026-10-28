@@ -1,0 +1,89 @@
+---
+// Розкладання числа на прості множники «стовпчиком»: ліворуч — що залишилось, праворуч — на що ділимо.
+//   <RozkladNaProsti chyslo={360} />
+// `pidsvityty` — які множники виділити кольором (наприклад, спільні для НСД), `ramka={false}` — щоб
+// вставити кілька стовпчиків в одну рамку.
+import { prostiMnozhnyky, tsile } from './chysla';
+
+interface Props {
+  chyslo: number;
+  pidsvityty?: number[];
+  ramka?: boolean;
+}
+const { chyslo, pidsvityty = [], ramka = true } = Astro.props;
+
+const mnozhnyky = prostiMnozhnyky(chyslo);
+const zalyshky = mnozhnyky.reduce<number[]>((acc, m) => [...acc, acc[acc.length - 1] / m], [chyslo]);
+// Позначаємо, які саме множники підсвітити (з урахуванням повторів).
+const zapas = [...pidsvityty];
+const svitlo = mnozhnyky.map((m) => {
+  const i = zapas.indexOf(m);
+  if (i < 0) return false;
+  zapas.splice(i, 1);
+  return true;
+});
+const stepeni = [...new Set(mnozhnyky)].map((p) => {
+  const k = mnozhnyky.filter((m) => m === p).length;
+  return k > 1 ? `${p}^${k}` : `${p}`;
+});
+const zapys = `${tsile(chyslo)} = ${mnozhnyky.join(' · ')}`;
+---
+
+<figure class:list={['rozklad', { ill: ramka }, 'not-content']}>
+  <table class="rozklad-tabl num" aria-label={zapys}>
+    <tbody>
+      {
+        zalyshky.map((z, i) => (
+          <tr>
+            <td>{tsile(z)}</td>
+            <td class:list={{ svitlo: svitlo[i] }}>{mnozhnyky[i] ?? ''}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p class="ill-caption num">
+    {zapys}
+    {stepeni.some((s) => s.includes('^')) && (
+      <span>
+        {' '}={' '}
+        {stepeni.map((s, i) => (
+          <>
+            {i > 0 && ' · '}
+            {s.split('^')[0]}
+            {s.includes('^') && <sup>{s.split('^')[1]}</sup>}
+          </>
+        ))}
+      </span>
+    )}
+  </p>
+</figure>
+
+<style>
+  .rozklad-tabl {
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+  .rozklad-tabl td {
+    padding: 0.1rem 0.75rem;
+    border: none;
+    text-align: end;
+  }
+  .rozklad-tabl td + td {
+    border-inline-start: 2.5px solid var(--ill-ink);
+    text-align: start;
+    color: var(--ill-1);
+    min-width: 2.5em;
+  }
+  .rozklad-tabl td.svitlo {
+    color: var(--ill-2);
+    text-decoration: underline;
+  }
+  .rozklad .ill-caption {
+    margin-top: 0.75rem;
+    text-align: center;
+    font-weight: 600;
+  }
+</style>

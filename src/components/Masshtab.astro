@@ -1,0 +1,58 @@
+---
+// Масштаб карти: відстань на карті лінійкою і скільки це насправді.
+//   <Masshtab na_karti={4} masshtab={500000} vid="Село" do="Місто" />
+import { chyslo, desiatkovyi, pomnozhyty, skorotyty, tsile, zapys, zsunuty } from './chysla';
+
+interface Props {
+  na_karti: number; // сантиметрів на карті
+  masshtab: number; // 1 : masshtab
+  vid?: string;
+  do?: string;
+}
+const { na_karti, masshtab, vid = 'A', do: kudy = 'B' } = Astro.props;
+
+// Сантиметри → найзручніша одиниця (км, м або см).
+function perevesty(cm: ReturnType<typeof desiatkovyi>) {
+  const km = skorotyty(zsunuty(cm, -5));
+  if (chyslo(km) >= 1) return `${zapys(km)} км`;
+  const m = skorotyty(zsunuty(cm, -2));
+  if (chyslo(m) >= 1) return `${zapys(m)} м`;
+  return `${zapys(cm)} см`;
+}
+const odyn = perevesty(desiatkovyi(masshtab));
+const spravzhnia = pomnozhyty(desiatkovyi(na_karti), desiatkovyi(masshtab));
+const cm = Math.min(60, 420 / na_karti);
+const x0 = 40;
+const W = x0 * 2 + na_karti * cm;
+const H = 120;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`На карті ${na_karti} см, масштаб 1 : ${tsile(masshtab)}`}>
+      <rect x="4" y="4" width={W - 8} height="60" rx="8" fill="var(--ill-3)" fill-opacity="0.12" />
+      <path d={`M ${x0} 34 C ${x0 + na_karti * cm * 0.3} 14, ${x0 + na_karti * cm * 0.6} 54, ${x0 + na_karti * cm} 34`} fill="none" stroke="var(--ill-muted)" stroke-width="2" stroke-dasharray="5 4" />
+      <line x1={x0} y1="34" x2={x0 + na_karti * cm} y2="34" stroke="var(--ill-2)" stroke-width="2.5" />
+      <circle cx={x0} cy="34" r="6" fill="var(--ill-1)" />
+      <circle cx={x0 + na_karti * cm} cy="34" r="6" fill="var(--ill-1)" />
+      <text x={x0} y="20" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">{vid}</text>
+      <text x={x0 + na_karti * cm} y="20" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">{kudy}</text>
+      <rect x={x0 - 8} y="74" width={na_karti * cm + 16} height="34" rx="4" fill="var(--ill-2)" fill-opacity="0.15" stroke="var(--ill-2)" />
+      {
+        Array.from({ length: na_karti + 1 }, (_, i) => (
+          <g>
+            <line x1={x0 + i * cm} y1="74" x2={x0 + i * cm} y2="86" stroke="var(--ill-ink)" stroke-width="1.5" />
+            <text x={x0 + i * cm} y="102" text-anchor="middle" font-size="11" fill="var(--ill-muted)">{i}</text>
+          </g>
+        ))
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>Масштаб <b class="num">1 : {tsile(masshtab)}</b> — 1 см на карті = {tsile(masshtab)} см на місцевості = <b>{odyn}</b>.</li>
+    <li>На карті лінійкою: <b class="num">{na_karti} см</b>.</li>
+    <li>
+      Насправді: <b class="num">{na_karti} · {odyn} = {perevesty(spravzhnia)}</b>
+    </li>
+  </ol>
+</figure>

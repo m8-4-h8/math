@@ -1,0 +1,58 @@
+---
+// Транспортир, прикладений до кута: центр — у вершині, одна сторона йде через 0°, друга показує величину.
+//   <Transportyr hradusy={65} />
+interface Props {
+  hradusy: number; // від 0 до 180
+  nazva?: string; // назва кута, наприклад «AOB»
+}
+const { hradusy, nazva = 'AOB' } = Astro.props;
+
+const R = 170;
+const cx = 210;
+const cy = 200;
+const W = 420;
+const H = 236;
+const tochka = (g: number, r: number) => ({ x: cx + r * Math.cos((g * Math.PI) / 180), y: cy - r * Math.sin((g * Math.PI) / 180) });
+const vid = hradusy < 90 ? 'гострий' : hradusy === 90 ? 'прямий' : hradusy < 180 ? 'тупий' : 'розгорнутий';
+const B = tochka(hradusy, R + 12);
+const duha = tochka(hradusy, 46);
+const [A, O, Bn] = [nazva[0], nazva[1], nazva[2]];
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Транспортир показує кут ${hradusy}°`}>
+      <path d={`M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx + R} ${cy} Z`} fill="var(--ill-1)" fill-opacity="0.1" stroke="var(--ill-1)" stroke-width="2" />
+      <path d={`M ${cx - R + 40} ${cy} A ${R - 40} ${R - 40} 0 0 1 ${cx + R - 40} ${cy}`} fill="none" stroke="var(--ill-1)" stroke-opacity="0.4" />
+      {
+        Array.from({ length: 37 }, (_, i) => {
+          const g = i * 5;
+          const dovha = g % 10 === 0;
+          const a = tochka(g, R);
+          const b = tochka(g, R - (dovha ? 14 : 7));
+          const t = tochka(g, R - 26);
+          return (
+            <g>
+              <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--ill-1)" stroke-width={dovha ? 1.8 : 1} />
+              {g % 30 === 0 && (
+                <text x={t.x} y={t.y} text-anchor="middle" dominant-baseline="central" font-size="11" fill="var(--ill-muted)">{g}</text>
+              )}
+            </g>
+          );
+        })
+      }
+      <path d={`M ${cx + 46} ${cy} A 46 46 0 0 0 ${duha.x} ${duha.y}`} fill="none" stroke="var(--ill-2)" stroke-width="3" />
+      <line x1={cx} y1={cy} x2={cx + R + 12} y2={cy} stroke="var(--ill-ink)" stroke-width="3" />
+      <line x1={cx} y1={cy} x2={B.x} y2={B.y} stroke="var(--ill-2)" stroke-width="3" />
+      <circle cx={cx} cy={cy} r="4" fill="var(--ill-ink)" />
+      <text x={cx} y={cy + 20} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-ink)">{O}</text>
+      <text x={cx + R + 4} y={cy + 20} font-size="14" font-weight="700" fill="var(--ill-ink)">{A}</text>
+      <text x={B.x + (hradusy > 90 ? -14 : 8)} y={B.y - 6} font-size="14" font-weight="700" fill="var(--ill-2)">{Bn}</text>
+      <text x={tochka(hradusy / 2, 66).x} y={tochka(hradusy / 2, 66).y} text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" fill="var(--ill-2)">{hradusy}°</text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>Центр транспортира — у вершині <b>{O}</b>, сторона <b>{O}{A}</b> іде через <b>0</b>.</li>
+    <li>Друга сторона <b>{O}{Bn}</b> проходить через поділку <b class="num">{hradusy}</b>: <b class="num">∠{nazva} = {hradusy}°</b> — {vid} кут.</li>
+  </ol>
+</figure>

@@ -1,0 +1,59 @@
+---
+// Стовпчаста або лінійна діаграма з сіткою і підписаними значеннями.
+//   <Diahrama dani={[['Пн', 12], ['Вт', 18], ['Ср', 9]]} odynytsia="°C" />
+//   <Diahrama vyd="liniia" dani={[['8:00', 4], ['12:00', 11]]} />
+interface Props {
+  dani: [string, number][]; // [підпис, значення]
+  vyd?: 'stovpchyk' | 'liniia';
+  odynytsia?: string; // що вимірюємо — підпис осі
+  krok?: number; // крок сітки; без нього підбираємо сам
+}
+const { dani, vyd = 'stovpchyk', odynytsia = '' } = Astro.props;
+
+const max = Math.max(...dani.map(([, z]) => z));
+const krok = Astro.props.krok ?? [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000].find((s) => max / s <= 6) ?? 10000;
+const verkh = Math.ceil(max / krok) * krok;
+const liniyi = Array.from({ length: verkh / krok + 1 }, (_, i) => i * krok);
+
+const stovp = Math.max(40, Math.min(70, 480 / dani.length));
+const x0 = 56;
+const yTop = 34;
+const h = 200;
+const W = x0 + dani.length * stovp + 20;
+const H = yTop + h + 40;
+const yPx = (z: number) => yTop + h - (z / verkh) * h;
+const xC = (i: number) => x0 + i * stovp + stovp / 2;
+const fmt = (z: number) => String(z).replace('.', ',');
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${vyd === 'liniia' ? 'Лінійна' : 'Стовпчаста'} діаграма: ${dani.map(([n, z]) => `${n} — ${fmt(z)}`).join(', ')}`}>
+      {
+        liniyi.map((z) => (
+          <g>
+            <line x1={x0} y1={yPx(z)} x2={W - 10} y2={yPx(z)} stroke="var(--ill-grid)" stroke-width={z === 0 ? 0 : 1.5} />
+            <text x={x0 - 8} y={yPx(z)} text-anchor="end" dominant-baseline="central" font-size="12" fill="var(--ill-muted)">{fmt(z)}</text>
+          </g>
+        ))
+      }
+      <line x1={x0} y1={yTop - 14} x2={x0} y2={yTop + h} stroke="var(--ill-ink)" stroke-width="2" />
+      <line x1={x0} y1={yTop + h} x2={W - 10} y2={yTop + h} stroke="var(--ill-ink)" stroke-width="2" />
+      {odynytsia && <text x={x0 + 6} y={yTop - 18} font-size="12" fill="var(--ill-muted)">{odynytsia}</text>}
+      {
+        vyd === 'stovpchyk'
+          ? dani.map(([, z], i) => <rect x={xC(i) - stovp * 0.3} y={yPx(z)} width={stovp * 0.6} height={yTop + h - yPx(z)} rx="4" fill={`var(--ill-${(i % 4) + 1})`} fill-opacity="0.8" />)
+          : <polyline points={dani.map(([, z], i) => `${xC(i)},${yPx(z)}`).join(' ')} fill="none" stroke="var(--ill-1)" stroke-width="3" stroke-linejoin="round" />
+      }
+      {vyd === 'liniia' && dani.map(([, z], i) => <circle cx={xC(i)} cy={yPx(z)} r="5" fill="var(--ill-2)" />)}
+      {
+        dani.map(([n, z], i) => (
+          <g>
+            <text x={xC(i)} y={yPx(z) - 9} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">{fmt(z)}</text>
+            <text x={xC(i)} y={yTop + h + 20} text-anchor="middle" font-size="13" fill="var(--ill-ink)">{n}</text>
+          </g>
+        ))
+      }
+    </svg>
+  </div>
+</figure>
