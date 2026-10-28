@@ -15,7 +15,7 @@ const KROKY = [
         <span class="krok-znachok" aria-hidden="true">
           {k.znachok}
         </span>
-        <b>{k.nazva}</b> {k.tekst}
+        <b>{k.nazva}</b> <span class="krok-tekst">{k.tekst}</span>
       </li>
     ))
   }
@@ -59,5 +59,24 @@ const KROKY = [
     display: block;
     margin-bottom: 0.3rem;
     font-size: 2.3rem;
+  }
+  /* На телефоні — дві картки в ряд і лише головне слово, щоб не гортати довго. */
+  @media (max-width: 30rem) {
+    .kroky {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+    .kroky li {
+      padding: 0.8rem 0.5rem 0.7rem;
+      font-size: 0.9rem;
+    }
+    .krok-znachok {
+      font-size: 1.8rem;
+    }
+    .krok-tekst {
+      display: block;
+      color: var(--sl-color-gray-2);
+      font-size: 0.85rem;
+    }
   }
 </style>

@@ -1,0 +1,37 @@
+---
+// Заголовок теми + кнопка «назад до класу» над ним, щоб із будь-якої теми
+// можна було одним дотиком повернутися до списку тем свого класу.
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import { znachokKlasu } from '../../klasy.mjs';
+
+const { id } = Astro.locals.starlightRoute;
+const nomer = /^(\d+)-klas\//.test(id) ? parseInt(id, 10) : null;
+const baza = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+{
+  nomer && (
+    <a class="nazad-do-klasu" href={`${baza}/#klas-${nomer}`}>
+      <span aria-hidden="true">←</span> {znachokKlasu(nomer)} {nomer} клас: усі теми
+    </a>
+  )
+}
+<Default />
+
+<style>
+  .nazad-do-klasu {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-text-accent);
+    font-weight: 800;
+    text-decoration: none;
+  }
+  .nazad-do-klasu:hover {
+    background: color-mix(in srgb, var(--sl-color-accent) 22%, transparent);
+  }
+</style>

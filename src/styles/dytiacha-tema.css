@@ -76,9 +76,9 @@ h1#_top {
 
 /* Кнопки й поля — великі та круглі. */
 .sl-link-button,
-.sl-markdown-content details,
+.sl-markdown-content details:not(:where(.not-content *)),
 .sl-markdown-content .starlight-aside,
-.sl-markdown-content table {
+.sl-markdown-content table:not(:where(.not-content *)) {
   border-radius: var(--dt-radius);
 }
 
@@ -91,13 +91,13 @@ h1#_top {
 }
 
 /* «Відповіді» та інші сховані блоки — як картка, яку можна відкрити. */
-.sl-markdown-content details {
+.sl-markdown-content details:not(:where(.not-content *)) {
   padding: 0.75rem 1rem;
   border: 2px dashed var(--dt-card-border);
   background: var(--dt-card);
 }
 
-.sl-markdown-content details > summary {
+.sl-markdown-content details:not(:where(.not-content *)) > summary {
   cursor: pointer;
   font-weight: 700;
   color: var(--sl-color-text-accent);
@@ -120,4 +120,87 @@ h1#_top {
   .sl-link-button:hover {
     transform: translateY(-2px) scale(1.03);
   }
+}
+
+/* ===== Телефон ===== */
+
+/* Місце під велику кнопку «Теми» в шапці (див. components/starlight/MobileMenuToggle). */
+:root {
+  --sl-menu-button-size: 7.25rem;
+}
+
+/* Смужки «На цій сторінці» на телефоні немає, тож і місце під неї не потрібне. */
+@media (max-width: 71.99rem) {
+  :root {
+    --sl-mobile-toc-height: 0rem;
+  }
+}
+
+/* Довгі формули не вилазять за екран: переносяться по знаках =, +, − …,
+   а якщо й так задовгі — їх можна посунути пальцем. */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.15rem;
+}
+.katex-display > .katex > .katex-html {
+  white-space: normal;
+}
+.katex-display > .katex > .katex-html > .base {
+  margin-block: 0.2rem;
+}
+
+@media (max-width: 50rem) {
+  /* Великі кнопки у меню — легше влучити пальцем. */
+  #starlight__sidebar a,
+  #starlight__sidebar summary {
+    min-height: 2.75rem;
+  }
+
+  /* Таблиці щільніші, щоб частіше влазили в ширину екрана. */
+  .sl-markdown-content table:not(:where(.not-content *)) {
+    font-size: 0.95rem;
+  }
+  .sl-markdown-content table:not(:where(.not-content *)) :is(th, td) {
+    padding-block: 0.4rem;
+  }
+  .sl-markdown-content table:not(:where(.not-content *)) :is(th, td):not(:first-child) {
+    padding-inline-start: 0.6rem;
+  }
+  .sl-markdown-content table:not(:where(.not-content *)) :is(th, td):not(:last-child) {
+    padding-inline-end: 0.6rem;
+  }
+
+  /* Ілюстрації — на всю ширину, без зайвих полів. */
+  .ill {
+    padding: 0.75rem 0.6rem;
+  }
+
+  /* Головна: сова менша, щоб кнопки й класи було видно одразу. */
+  .hero {
+    padding-block: 1rem;
+    gap: 1rem;
+  }
+  .hero > img {
+    max-width: 9rem;
+    max-height: 9rem;
+    margin-inline: auto;
+  }
+  .hero .tagline {
+    font-size: 1.05rem;
+  }
+}
+
+/* Таблиця, яку можна гортати вбік, має тінь-підказку на краю. */
+.sl-markdown-content table:not(:where(.not-content *)) {
+  background:
+    linear-gradient(to right, var(--sl-color-bg), var(--sl-color-bg)) left / 1.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--sl-color-bg), var(--sl-color-bg)) right / 1.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.18), transparent) left / 0.75rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.18), transparent) right / 0.75rem 100% no-repeat scroll;
+}
+
+/* У таблицях короткі формули не розриваємо — краще посунути таблицю пальцем. */
+.sl-markdown-content :is(td, th) .katex {
+  white-space: nowrap;
 }

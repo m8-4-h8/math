@@ -83,6 +83,15 @@ const ryadky = na.map((d) => ({
     color: var(--ill-4);
     font-weight: 700;
   }
+  @media (max-width: 30rem) {
+    .oz-tabl th,
+    .oz-tabl td {
+      padding: 0.3rem 0.25rem;
+    }
+    .oz-tabl td:last-child {
+      white-space: normal;
+    }
+  }
   .oz-tabl tr.tak td:last-child {
     color: var(--ill-3);
   }
