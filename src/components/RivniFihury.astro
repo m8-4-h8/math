@@ -1,0 +1,112 @@
+---
+// Рівність фігур накладанням: фігура, її копія (повернута або перевернута) і що виходить, коли копію накласти.
+// Відповідні сторони позначено однаковою кількістю рисочок, відповідні вершини — буквами.
+//   <RivniFihury fihura="trykutnyk" povorot={70} />
+//   <RivniFihury fihura="chotyrykutnyk" dzerkalo rivni={false} />
+type Fihura = 'trykutnyk' | 'chotyrykutnyk';
+interface Props {
+  fihura?: Fihura;
+  povorot?: number; // на скільки градусів повернута копія
+  dzerkalo?: boolean; // копію перевернули, як аркуш паперу
+  rivni?: boolean; // false — копія трохи інша, при накладанні не збігається
+}
+const { fihura = 'trykutnyk', povorot = 0, dzerkalo = false, rivni = true } = Astro.props;
+
+type P = [number, number];
+const FIHURY: Record<Fihura, P[]> = {
+  trykutnyk: [[0, 70], [28, 0], [90, 70]],
+  chotyrykutnyk: [[0, 60], [18, 0], [80, 10], [92, 60]],
+};
+const LITERY = [['A', 'B', 'C', 'D'], ['K', 'M', 'N', 'P']];
+
+const persha = FIHURY[fihura];
+// «Трохи інша» копія: одну вершину зсуваємо.
+const druha: P[] = persha.map(([x, y], i) => (!rivni && i === persha.length - 1 ? [x + 18, y - 8] : [x, y]));
+
+const tsentr = (pts: P[]): P => [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length];
+function pereminyty(pts: P[]): P[] {
+  const [cx, cy] = tsentr(pts);
+  const a = (povorot * Math.PI) / 180;
+  return pts.map(([x, y]) => {
+    let dx = x - cx;
+    const dy = y - cy;
+    if (dzerkalo) dx = -dx;
+    return [cx + dx * Math.cos(a) - dy * Math.sin(a), cy + dx * Math.sin(a) + dy * Math.cos(a)];
+  });
+}
+// Ставимо фігуру по центру клітинки шириною S.
+const S = 150;
+function postavyty(pts: P[], kolonka: number, vid?: P): P[] {
+  const [cx, cy] = vid ?? tsentr(pts);
+  return pts.map(([x, y]) => [kolonka * S + S / 2 + x - cx, 80 + y - cy]);
+}
+const fig1 = postavyty(persha, 0);
+const fig2 = postavyty(pereminyty(druha), 1);
+// Накладання: обидві фігури від центру першої, щоб було видно, збіглися чи ні.
+const nakl1 = postavyty(persha, 2);
+const nakl2 = postavyty(druha, 2, tsentr(persha));
+
+const f = (x: number) => x.toFixed(1);
+const shliakh = (pts: P[]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'} ${f(x)} ${f(y)}`).join(' ') + ' Z';
+
+// n рисочок посередині сторони i (від вершини i до i+1).
+function rysky(pts: P[], i: number, n: number) {
+  const a = pts[i];
+  const b = pts[(i + 1) % pts.length];
+  const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const [ux, uy] = [(b[0] - a[0]) / l, (b[1] - a[1]) / l];
+  const [mx, my] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  return Array.from({ length: n }, (_, k) => {
+    const s = (k - (n - 1) / 2) * 4;
+    const [px, py] = [mx + ux * s, my + uy * s];
+    return `M ${f(px - uy * 5)} ${f(py + ux * 5)} L ${f(px + uy * 5)} ${f(py - ux * 5)}`;
+  }).join(' ');
+}
+// Буква біля вершини — трохи назовні від центру фігури.
+function litera(pts: P[], i: number): P {
+  const [cx, cy] = tsentr(pts);
+  const [x, y] = pts[i];
+  const l = Math.hypot(x - cx, y - cy) || 1;
+  return [x + ((x - cx) / l) * 12, y + ((y - cy) / l) * 12 + 4];
+}
+
+const nazva = fihura === 'trykutnyk' ? 'трикутник' : 'чотирикутник';
+const pidpys = rivni
+  ? 'Накладаємо — фігури збіглися, отже, вони рівні'
+  : 'Накладаємо — фігури не збіглися, отже, вони не рівні';
+const W = S * 3;
+const H = 175;
+const sidky = persha.map((_, i) => i);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Два ${nazva === 'трикутник' ? 'трикутники' : 'чотирикутники'}. ${pidpys}`}>
+      <path d={shliakh(fig1)} fill="var(--ill-1)" fill-opacity="0.18" stroke="var(--ill-1)" stroke-width="2.5" stroke-linejoin="round" />
+      <path d={shliakh(fig2)} fill="var(--ill-2)" fill-opacity="0.18" stroke="var(--ill-2)" stroke-width="2.5" stroke-linejoin="round" />
+      {rivni && sidky.map((i) => <path d={rysky(fig1, i, i + 1)} stroke="var(--ill-ink)" stroke-width="2" stroke-linecap="round" />)}
+      {rivni && sidky.map((i) => <path d={rysky(fig2, i, i + 1)} stroke="var(--ill-ink)" stroke-width="2" stroke-linecap="round" />)}
+      {
+        sidky.map((i) => {
+          const [x1, y1] = litera(fig1, i);
+          const [x2, y2] = litera(fig2, i);
+          return (
+            <g font-size="13" font-weight="700" text-anchor="middle">
+              <text x={f(x1)} y={f(y1)} fill="var(--ill-1)">{LITERY[0][i]}</text>
+              <text x={f(x2)} y={f(y2)} fill="var(--ill-2)">{LITERY[1][i]}</text>
+            </g>
+          );
+        })
+      }
+      <path d={shliakh(nakl1)} fill="var(--ill-1)" fill-opacity="0.18" stroke="var(--ill-1)" stroke-width="2.5" stroke-linejoin="round" />
+      <path d={shliakh(nakl2)} fill="none" stroke="var(--ill-2)" stroke-width="2.5" stroke-dasharray="6 4" stroke-linejoin="round" />
+      <g font-size="12" fill="var(--ill-muted)" text-anchor="middle">
+        <text x={S / 2} y={H - 8}>фігура</text>
+        <text x={S * 1.5} y={H - 8}>{dzerkalo ? 'копія перевернута' : povorot ? 'копія повернута' : 'копія'}</text>
+        <text x={S * 2.5} y={H - 8}>накладаємо</text>
+      </g>
+      <text x={S * 2.5} y="20" font-size="22" text-anchor="middle" fill={rivni ? 'var(--ill-3)' : 'var(--ill-4)'}>{rivni ? '✓' : '✗'}</text>
+    </svg>
+  </div>
+  <p class="ill-caption">{pidpys}</p>
+</figure>

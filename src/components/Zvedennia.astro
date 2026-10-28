@@ -1,0 +1,124 @@
+---
+// Зведення до одиниці табличкою: кожен рядок змінює одну величину — спершу ділимо до 1, потім множимо до потрібного.
+// Одна величина — четверте пропорційне, дві — подвійне зведення до одиниці.
+//   <Zvedennia nazvy={['Костюми']} vidomo={[6]} rezultat={18} shukaty={[4]} odynytsia="Тканина, м" />
+//   <Zvedennia nazvy={['Корови', 'Дні']} vidomo={[5, 4]} rezultat={100} shukaty={[3, 6]} odynytsia="Сіно, кг" />
+import { tsile } from './chysla';
+
+interface Props {
+  nazvy: string[]; // назви величин, від яких залежить результат
+  vidomo: number[]; // їхні значення в умові
+  rezultat: number; // що відомо для цих значень
+  shukaty: number[]; // значення, для яких треба знайти результат
+  odynytsia: string; // назва стовпчика з результатом
+}
+const { nazvy, vidomo, rezultat, shukaty, odynytsia } = Astro.props;
+
+const chyslo = (x: number) =>
+  Number.isInteger(x) ? tsile(x) : String(Math.round(x * 1000) / 1000).replace('.', ',');
+
+type Ryadok = { znach: number[]; rez: number; zmina?: number; dia?: ':' | '·'; na?: number; bulo?: number };
+const ryadky: Ryadok[] = [{ znach: [...vidomo], rez: rezultat }];
+let znach = [...vidomo];
+let rez = rezultat;
+// Спершу кожну величину зводимо до 1 (ділимо результат), потім доводимо до потрібної (множимо).
+vidomo.forEach((v, i) => {
+  if (v === 1) return;
+  const bulo = rez;
+  rez = rez / v;
+  znach = znach.map((z, k) => (k === i ? 1 : z));
+  ryadky.push({ znach: [...znach], rez, zmina: i, dia: ':', na: v, bulo });
+});
+shukaty.forEach((s, i) => {
+  if (s === 1) return;
+  const bulo = rez;
+  rez = rez * s;
+  znach = znach.map((z, k) => (k === i ? s : z));
+  ryadky.push({ znach: [...znach], rez, zmina: i, dia: '·', na: s, bulo });
+});
+const ostannii = ryadky.length - 1;
+const opys = `Відомо: ${vidomo.join(', ')} — ${chyslo(rezultat)}. Треба: ${shukaty.join(', ')}. Відповідь: ${chyslo(rez)}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <table class="zv-tabl num" aria-label={opys}>
+      <thead>
+        <tr>
+          {nazvy.map((n) => <th>{n}</th>)}
+          <th>{odynytsia}</th>
+          <th>Як знайшли</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          ryadky.map((r, j) => (
+            <tr class:list={{ vidomo: j === 0, vidpovid: j === ostannii }}>
+              {r.znach.map((z, k) => (
+                <td class:list={{ c1: r.zmina === k && r.dia === ':', c2: r.zmina === k && r.dia === '·' }}>
+                  {r.zmina === k ? <b>{chyslo(z)}</b> : chyslo(z)}
+                </td>
+              ))}
+              <td>
+                <b>{chyslo(r.rez)}</b>
+              </td>
+              <td class="zv-dia">
+                {r.dia === undefined ? (
+                  <span class="muted">відомо з умови</span>
+                ) : (
+                  <>
+                    <span class={r.dia === ':' ? 'c1' : 'c2'}>
+                      {nazvy[r.zmina!].toLowerCase()} {r.dia === ':' ? 'до 1' : `до ${chyslo(r.na!)}`}:
+                    </span>{' '}
+                    <span class="zv-dii">
+                      {chyslo(r.bulo!)} {r.dia} {chyslo(r.na!)} = {chyslo(r.rez)}
+                    </span>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="ill-caption">
+    <span class="c1">ділимо</span> — зводимо до одиниці, <span class="c2">множимо</span> — повертаємося до
+    потрібного числа
+  </p>
+</figure>
+
+<style>
+  .zv-tabl {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .zv-tabl th,
+  .zv-tabl td {
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+    text-align: center;
+  }
+  .zv-tabl th {
+    font-size: var(--sl-text-xs);
+    color: var(--ill-muted);
+  }
+  .zv-tabl .zv-dia {
+    text-align: start;
+  }
+  .zv-dii {
+    white-space: nowrap;
+  }
+  .zv-tabl tr.vidomo td {
+    background: color-mix(in srgb, var(--ill-1) 10%, transparent);
+  }
+  .zv-tabl tr.vidpovid td {
+    background: color-mix(in srgb, var(--ill-3) 16%, transparent);
+  }
+  @media (max-width: 30rem) {
+    .zv-tabl th,
+    .zv-tabl td {
+      padding: 0.3rem 0.3rem;
+    }
+  }
+</style>
