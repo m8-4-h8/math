@@ -1,12 +1,18 @@
 ---
 // «Сходинки» одиниць від найменшої до найбільшої: між сусідніми — у скільки разів вони відрізняються.
-import { dovzhyna, ploshcha, chyslo } from './odynytsi';
+import { dovzhyna, ploshcha, masa, chas, chyslo } from './odynytsi';
 
 interface Props {
-  vyd: 'dovzhyna' | 'ploshcha';
+  vyd: 'dovzhyna' | 'ploshcha' | 'masa' | 'chas';
 }
 const { vyd } = Astro.props;
-const odynytsi = vyd === 'ploshcha' ? ploshcha : dovzhyna;
+const VYDY = {
+  dovzhyna: { odynytsi: dovzhyna, nazva: 'Одиниці довжини' },
+  ploshcha: { odynytsi: ploshcha, nazva: 'Одиниці площі' },
+  masa: { odynytsi: masa, nazva: 'Одиниці маси' },
+  chas: { odynytsi: chas, nazva: 'Одиниці часу' },
+};
+const { odynytsi, nazva } = VYDY[vyd];
 ---
 
 <figure class="ill not-content">
@@ -33,7 +39,7 @@ const odynytsi = vyd === 'ploshcha' ? ploshcha : dovzhyna;
     }
   </div>
   <figcaption class="ill-caption">
-    {vyd === 'ploshcha' ? 'Одиниці площі' : 'Одиниці довжини'}: <span class="c2">до менших — множимо</span>,{' '}
+    {nazva}: <span class="c2">до менших — множимо</span>,{' '}
     <span class="c1">до більших — ділимо</span>
   </figcaption>
 </figure>

@@ -1,7 +1,7 @@
 ---
-// Переведення числа з однієї одиниці в іншу по сходинках: кожна сходинка — множення або ділення на 10, 100, 1000.
-// Одиниці беруться з odynytsi.ts; обидві мають бути одного виду (обидві довжини або обидві площі).
-import { dovzhyna, ploshcha, chyslo } from './odynytsi';
+// Переведення числа з однієї одиниці в іншу по сходинках: кожна сходинка — множення або ділення на 10, 100, 1000 (для часу — на 60, 24).
+// Одиниці беруться з odynytsi.ts; обидві мають бути одного виду (довжина, площа, маса або час).
+import { dovzhyna, ploshcha, masa, chas, chyslo } from './odynytsi';
 
 interface Props {
   chyslo: number;
@@ -10,7 +10,7 @@ interface Props {
 }
 const { chyslo: x, vid, do: doOd } = Astro.props;
 
-const spysok = [dovzhyna, ploshcha].find((s) => s.some((o) => o.nazva === vid));
+const spysok = [dovzhyna, ploshcha, masa, chas].find((s) => s.some((o) => o.nazva === vid));
 const i0 = spysok?.findIndex((o) => o.nazva === vid) ?? -1;
 const i1 = spysok?.findIndex((o) => o.nazva === doOd) ?? -1;
 if (!spysok || i0 < 0 || i1 < 0) throw new Error(`Perevedennia: невідомі одиниці ${vid} → ${doOd}`);

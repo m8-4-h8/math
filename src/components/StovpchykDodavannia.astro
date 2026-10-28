@@ -1,0 +1,137 @@
+---
+// Додавання або віднімання в стовпчик: запис у клітинках і пояснення по розрядах.
+// Додавання — над розрядом маленька «1», яку перенесли з попереднього розряду.
+// Віднімання — крапка над цифрою, у якої позичили, і поруч скільки в ній лишилось.
+// Приклад: <StovpchykDodavannia a={4508} b={958} dia="−" />
+import Klitynky from './Klitynky.astro';
+
+interface Props {
+  a: number;
+  b: number;
+  dia?: '+' | '−' | '-';
+}
+const { a, b, dia = '+' } = Astro.props;
+const plus = dia === '+';
+if (!plus && b > a) throw new Error(`StovpchykDodavannia: ${a} − ${b} — від'ємник більший за зменшуване`);
+
+const ROZRIADY = ['одиниці', 'десятки', 'сотні', 'тисячі', 'десятки тисяч', 'сотні тисяч', 'мільйони'];
+const ODYN = ['одиницю', 'десяток', 'сотню', 'тисячу', 'десяток тисяч', 'сотню тисяч', 'мільйон'];
+const fmt = (x: number) => x.toLocaleString('uk-UA');
+
+const A = String(a);
+const B = String(b);
+const result = plus ? a + b : a - b;
+const R = String(result);
+const da = [...A].reverse().map(Number);
+const db = [...B].reverse().map(Number);
+const n = Math.max(A.length, B.length);
+
+// Рахуємо по розрядах справа наліво і пишемо пояснення.
+const kroky: string[] = [];
+const nad: { col: number; ch: string; krapka?: boolean }[] = []; // позначки над верхнім числом (k — номер розряду)
+let perenos = 0;
+for (let k = 0; k < n; k++) {
+  const x = da[k] ?? 0;
+  const y = db[k] ?? 0;
+  const imia = ROZRIADY[k] ?? `розряд ${k + 1}`;
+  const last = k === n - 1;
+  if (plus) {
+    const s = x + y + perenos;
+    let t = `${imia}: ${x} + ${y}`;
+    if (perenos) t += ` + 1`;
+    t += ` = ${s}`;
+    if (s >= 10 && !last) {
+      t += ` — пишемо ${s % 10}, а 1 ${ODYN[k + 1]} запам'ятовуємо.`;
+      nad.push({ col: k + 1, ch: '1' });
+    } else t += ` — пишемо ${s}.`;
+    kroky.push(t[0].toUpperCase() + t.slice(1));
+    perenos = s >= 10 ? 1 : 0;
+  } else {
+    let cur = x - perenos;
+    let t = `${imia}: `;
+    const dali = ODYN[k + 1];
+    if (perenos && x === 0) {
+      t += `тут 0, тож теж позичаємо 1 ${dali}: 0 стає 10, 1 віддали праворуч — лишилось 9; 9 − ${y} = ${9 - y}.`;
+      cur = 9;
+      nad.push({ col: k + 1, ch: '', krapka: true });
+      perenos = 1;
+    } else {
+      if (perenos) t += `було ${x}, 1 віддали праворуч — лишилось ${cur}; `;
+      if (cur < y) {
+        t += `від ${cur} не відняти ${y} — позичаємо 1 ${dali}: ${cur + 10} − ${y} = ${cur + 10 - y}.`;
+        nad.push({ col: k + 1, ch: '', krapka: true });
+        perenos = 1;
+      } else {
+        t += `${cur} − ${y} = ${cur - y}.`;
+        perenos = 0;
+      }
+    }
+    kroky.push(t[0].toUpperCase() + t.slice(1));
+  }
+}
+
+const shyryna = Math.max(A.length, B.length, R.length);
+const cols = shyryna + 3;
+const right = cols - 2;
+const rows = 5;
+const kolirDii = plus ? 'var(--ill-1)' : 'var(--ill-2)';
+
+type Cell = { col: number; row: number; ch: string; fill: string; bold?: boolean; small?: boolean };
+const cells: Cell[] = [];
+const put = (text: string, row: number, color: string, extra: Partial<Cell> = {}) =>
+  [...text].forEach((ch, i) => cells.push({ col: right - text.length + 1 + i, row, ch, fill: color, ...extra }));
+put(A, 1, 'var(--ill-ink)');
+put(B, 2, 'var(--ill-ink)');
+cells.push({ col: right - n, row: 1.5, ch: plus ? '+' : '−', fill: kolirDii, bold: true });
+put(R, 3, 'var(--ill-accent)', { bold: true });
+const krapky = nad.filter((m) => m.krapka).map((m) => right - m.col);
+nad.filter((m) => !m.krapka).forEach((m) => cells.push({ col: right - m.col, row: 0.45, ch: m.ch, fill: kolirDii, small: true, bold: true }));
+const liniia = { from: right - n - 0.3, to: right + 1 };
+const label = `${plus ? 'Додавання' : 'Віднімання'} в стовпчик: ${A} ${plus ? '+' : '−'} ${B} = ${R}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <Klitynky cols={cols} rows={rows} label={label}>
+      <line
+        x1={liniia.from * 32}
+        x2={liniia.to * 32}
+        y1={3 * 32 + 0.5}
+        y2={3 * 32 + 0.5}
+        stroke="var(--ill-line)"
+        stroke-width="2.5"
+        stroke-linecap="round"
+      />
+      {krapky.map((c) => <circle cx={c * 32 + 16} cy={32 + 3} r="3.5" fill={kolirDii} />)}
+      {
+        cells.map((c) => (
+          <text
+            x={c.col * 32 + 16}
+            y={c.row * 32 + 16}
+            fill={c.fill}
+            font-weight={c.bold ? 700 : 500}
+            font-size={c.small ? 14 : undefined}
+          >
+            {c.ch}
+          </text>
+        ))
+      }
+    </Klitynky>
+  </div>
+  <ol class="ill-steps">
+    <li>Пишемо {plus ? 'доданки' : 'числа'} розряд під розрядом: одиниці під одиницями, десятки під десятками. Рахуємо <b>справа наліво</b>.</li>
+    {kroky.map((t) => <li>{t}</li>)}
+    <li>
+      {
+        plus ? (
+          <>Перевірка відніманням: <b class="num">{fmt(result)} − {fmt(b)} = {fmt(a)}</b> ✓</>
+        ) : (
+          <>Перевірка додаванням: <b class="num">{fmt(result)} + {fmt(b)} = {fmt(a)}</b> ✓</>
+        )
+      }
+    </li>
+  </ol>
+  <figcaption class="ill-caption">
+    {fmt(a)} {plus ? '+' : '−'} {fmt(b)} = {fmt(result)}
+  </figcaption>
+</figure>
