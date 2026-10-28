@@ -69,10 +69,11 @@ const label = `Дріб ${n}/${d}`;
         ),
       )
     }
-    <span class="frac" style={`color: ${color}`}>
+    <span class="frac" style={`color: ${color}`} aria-hidden="true" data-pagefind-ignore>
       <span>{n}</span>
       <span>{d}</span>
     </span>
+    <span class="sr-only">{n}/{d}</span>
   </div>
   {pidpys && <figcaption class="drib-caption">{pidpys}</figcaption>}
 </figure>

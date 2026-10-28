@@ -102,7 +102,7 @@ const label = obernena
           </li>
         </ol>
         <figcaption class="ill-caption">
-          <span class="frac" style={`color: ${color}`}><span>{n}</span><span>{d}</span></span> числа = {fmt(vidpovid)} → число ={' '}
+          <span class="frac" style={`color: ${color}`} aria-hidden="true" data-pagefind-ignore><span>{n}</span><span>{d}</span></span><span class="sr-only">{n}/{d}</span> числа = {fmt(vidpovid)} → число ={' '}
           {n !== 1 ? `${fmt(vidpovid)} : ${n} · ${d}` : `${fmt(vidpovid)} · ${d}`} = <span class="c1">{fmt(tsile)}</span>
         </figcaption>
       </>
@@ -121,7 +121,7 @@ const label = obernena
     }
   </ol>
   <figcaption class="ill-caption">
-    <span class="frac" style={`color: ${color}`}><span>{n}</span><span>{d}</span></span> від {fmt(tsile)} = {fmt(tsile)} : {d}
+    <span class="frac" style={`color: ${color}`} aria-hidden="true" data-pagefind-ignore><span>{n}</span><span>{d}</span></span><span class="sr-only">{n}/{d}</span> від {fmt(tsile)} = {fmt(tsile)} : {d}
     {n !== 1 && ` · ${n}`} = <span class="c1">{fmt(vidpovid)}</span>
   </figcaption>
       </>

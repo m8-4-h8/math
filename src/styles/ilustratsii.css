@@ -76,7 +76,8 @@
 .ill .muted { color: var(--ill-muted); }
 .ill b.num { font-variant-numeric: tabular-nums; }
 
-/* Звичайний дріб у тексті підпису: чисельник над знаменником. */
+/* Звичайний дріб у тексті підпису: чисельник над знаменником. Поруч — прихований рядок «2/5»
+   (.sr-only) для читачів екрана і пошуку, бо сам стовпчик читається як «25». */
 .frac {
   display: inline-flex;
   flex-direction: column;

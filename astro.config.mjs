@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { unified } from '@astrojs/markdown-remark';
+import rehypePoshukFormul from './src/poshuk-formul.mjs';
 import { papkyKlasiv, znachokKlasu } from './src/klasy.mjs';
 
 export default defineConfig({
@@ -17,8 +18,9 @@ export default defineConfig({
     '/5-klas/dilennia-z-ostacheiu': '/math/4-klas/dilennia-z-ostacheiu/',
   },
   markdown: {
-    // Формули: $...$ у рядку та $$...$$ окремим блоком.
-    processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }),
+    // Формули: $...$ у рядку та $$...$$ окремим блоком. rehypePoshukFormul — щоб формули в пошуку
+    // не дублювались тричі (див. src/poshuk-formul.mjs).
+    processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex, rehypePoshukFormul] }),
   },
   integrations: [
     starlight({
