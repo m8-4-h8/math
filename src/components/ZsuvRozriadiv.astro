@@ -1,0 +1,105 @@
+---
+// Множення і ділення на 10, 100, 1000: цифри числа «переїжджають» на кілька розрядів уліво (·) або вправо (:).
+// Таблиця розрядів: зверху — число, знизу — результат, нулі, що з'явились або зникли, — іншим кольором.
+// Приклад: <ZsuvRozriadiv chyslo={74} dia="·" na={100} />
+interface Props {
+  chyslo: number;
+  dia: '·' | ':';
+  na: 10 | 100 | 1000;
+}
+const { chyslo, dia, na } = Astro.props;
+const mnozhennia = dia === '·';
+if (!mnozhennia && chyslo % na !== 0) throw new Error(`ZsuvRozriadiv: ${chyslo} не ділиться на ${na} без остачі`);
+
+const kroky = String(na).length - 1; // скільки нулів
+const result = mnozhennia ? chyslo * na : chyslo / na;
+const A = String(chyslo);
+const R = String(result);
+const NAZVY = ['од.', 'дес.', 'сот.', 'од. тис.', 'дес. тис.', 'сот. тис.', 'од. млн'];
+const n = Math.max(A.length, R.length);
+const kolonky = Array.from({ length: n }, (_, i) => n - 1 - i); // номер розряду зліва направо
+const tsyfra = (s: string, r: number) => (r < s.length ? s[s.length - 1 - r] : '');
+// Нулі, які дописали (множення) або відкинули (ділення) — молодші `kroky` розрядів.
+const novyi = (r: number) => r < kroky;
+const fmt = (x: number) => x.toLocaleString('uk-UA');
+const nuli = kroky === 1 ? 'один нуль' : kroky === 2 ? 'два нулі' : 'три нулі';
+const odyn = kroky === 1;
+const rozriadiv = kroky === 1 ? 'один розряд' : `${kroky} розряди`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <table class="zsuv" aria-label={`${fmt(chyslo)} ${dia} ${fmt(na)} = ${fmt(result)}`}>
+      <thead>
+        <tr>
+          <th></th>
+          {kolonky.map((r) => <th class:list={{ klas: r === 3 }}>{NAZVY[r]}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th class="muted">було</th>
+          {kolonky.map((r) => <td class:list={['tsyfra', { klas: r === 3, c4: !mnozhennia && novyi(r) }]}>{tsyfra(A, r)}</td>)}
+        </tr>
+        <tr>
+          <th class={mnozhennia ? 'c2' : 'c1'}>{dia} {fmt(na)}</th>
+          {kolonky.map((r) => <td class:list={['tsyfra', 'rezultat', { klas: r === 3, c3: mnozhennia && novyi(r) }]}>{tsyfra(R, r)}</td>)}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      {
+        mnozhennia ? (
+          <>Кожна цифра переїжджає на <b>{rozriadiv} вліво</b>, а справа {odyn ? "з'являється" : "з'являються"} <b class="c3">{nuli}</b>.</>
+        ) : (
+          <>Кожна цифра переїжджає на <b>{rozriadiv} вправо</b>, а <b class="c4">{nuli}</b> в кінці {odyn ? 'зникає' : 'зникають'}.</>
+        )
+      }
+    </li>
+    <li>
+      Тому: <b class="num">{fmt(chyslo)} {dia} {fmt(na)} = {fmt(result)}</b>
+    </li>
+  </ol>
+</figure>
+
+<style>
+  .zsuv {
+    width: auto;
+    margin: 0 auto;
+    border-collapse: collapse;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .zsuv th,
+  .zsuv td {
+    padding: 0.25rem 0.45rem;
+    border: none;
+  }
+  .zsuv thead th {
+    font-size: var(--sl-text-xs);
+    font-weight: 400;
+    color: var(--ill-muted);
+  }
+  .zsuv tbody th {
+    text-align: start;
+    font-size: var(--sl-text-sm);
+    white-space: nowrap;
+  }
+  .zsuv .klas {
+    border-inline-start: 2px solid var(--sl-color-gray-5);
+  }
+  .zsuv .tsyfra {
+    min-width: 1.6rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .zsuv .rezultat {
+    border-top: 2px solid var(--ill-line);
+  }
+  .zsuv .c1 { color: var(--ill-1); }
+  .zsuv .c2 { color: var(--ill-2); }
+  .zsuv .c3 { color: var(--ill-3); }
+  .zsuv .c4 { color: var(--ill-4); text-decoration: line-through; }
+</style>

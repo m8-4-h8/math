@@ -59,8 +59,8 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Ostachi` | можливі остачі й приклад з перевіркою | `<Ostachi dilnyk={6} dilene={20} />` |
   | `Pryamokutnyk` | прямокутник/квадрат у клітинку, S і P | `<Pryamokutnyk a={5} b={3} />` |
   | `KvadratOdynytsi` | чому 1 дм² = 100 см²: квадрат, поділений на квадратики | `<KvadratOdynytsi velyka="дм" mala="см" />` |
-  | `ShkalaOdynyts` | сходинки одиниць довжини або площі | `<ShkalaOdynyts vyd="ploshcha" />` |
-  | `Perevedennia` | переведення одиниць по кроках | `<Perevedennia chyslo={3} vid="м²" do="см²" />` |
+  | `ShkalaOdynyts` | сходинки одиниць довжини, площі, маси або часу | `<ShkalaOdynyts vyd="masa" />` |
+  | `Perevedennia` | переведення одиниць (довжина, площа, маса, час) по кроках | `<Perevedennia chyslo={3} vid="м²" do="см²" />` |
   | `Kut` | кут із назвою виду | `<Kut hradusy={130} />` |
   | `Trykutnyk` | вид трикутника | `<Trykutnyk vyd="rivnobedrenyi" />` |
   | `Rukh` | задача на рух назустріч / навздогін | `<Rukh vidstan={40} v1={15} v2={5} napriamok="nazustrich" />` |
@@ -70,7 +70,13 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Chastyny` | задача на частини однаковими клітинками | `<Chastyny chastyny={[1, 3]} imena={['Брат', 'Сестра']} razom={24} />` |
   | `RozkladMnozhennia` | зручне множення: число на круглі частини | `<RozkladMnozhennia a={563} b={3} />` |
   | `DilnykNa5i10` | цифра частки через дільник · 5 і · 10 | `<DilnykNa5i10 dilene={47} dilnyk={6} />` |
-  | `Zavdannia` | інтерактивне завдання: поле або кнопки, підказка, зірочка ⭐ | `<Zavdannia vidpovid="6" pidkazka="...">Умова</Zavdannia>` |
+  | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
+| `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |
+| `SmuzhkaSumy` | сума смужкою; переставлені доданки, дужка під зручною парою | `<SmuzhkaSumy chastyny={[38, 27, 62]} poriadok={[0, 2, 1]} razom={[0, 2]} />` |
+| `LiniiaStolit` | у якому столітті рік: лінія століть з позначкою | `<LiniiaStolit rik={1817} podiia="велосипед" />` |
+| `RymskeChyslo` | римське число по розрядах | `<RymskeChyslo chyslo={1984} />` |
+| `Tila` | геометричні тіла з гранями, ребрами, вершинами | `<Tila vydy={['kub', 'konus']} />` |
+| `Zavdannia` | інтерактивне завдання: поле або кнопки, підказка, зірочка ⭐ | `<Zavdannia vidpovid="6" pidkazka="...">Умова</Zavdannia>` |
   | `Trenazher` | гра «Швидкий рахунок» (10 прикладів, рекорд) | `<Trenazher dii={['×']} riven="seredno" />` |
 
   Числа можна підставляти будь-які: малюнок і покрокове пояснення рахуються автоматично.
@@ -95,7 +101,10 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
 Мова — українська; назви файлів і компонентів — латиницею (транслітерація). Кольори малюнків беремо з
 `src/styles/ilustratsii.css` (`--ill-1`…`--ill-4`), щоб вони працювали у світлій і темній темах.
 
-Сторінка `5-klas/shpargalka-do-kontrolnoi.mdx` — коротке повторення перед контрольною з посиланнями на теми.
+Сторінки `<N>-klas/shpargalka-do-kontrolnoi.mdx` — коротке повторення перед контрольною з посиланнями на теми.
+
+Тема живе в тому класі, де її вперше вивчають. Якщо тему переносимо в інший клас, стару адресу додаємо в
+`redirects` в `astro.config.mjs`, щоб посилання не зламались.
 
 Локальний запуск (потрібен Node.js 22.23.4+ або 24): `npm install`, потім `npm run dev`.
 

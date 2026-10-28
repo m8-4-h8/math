@@ -1,4 +1,4 @@
-// Одиниці довжини і площі від найменшої до найбільшої.
+// Одиниці довжини, площі, маси і часу від найменшої до найбільшої.
 // `dali` — у скільки разів наступна (більша) одиниця більша за цю.
 export interface Odynytsia {
   nazva: string;
@@ -22,6 +22,20 @@ export const ploshcha: Odynytsia[] = [
   { nazva: 'а', povna: 'ар («сотка»)', dali: 100 },
   { nazva: 'га', povna: 'гектар', dali: 100 },
   { nazva: 'км²', povna: 'квадратний кілометр' },
+];
+
+export const masa: Odynytsia[] = [
+  { nazva: 'г', povna: 'грам', dali: 1000 },
+  { nazva: 'кг', povna: 'кілограм', dali: 100 },
+  { nazva: 'ц', povna: 'центнер', dali: 10 },
+  { nazva: 'т', povna: 'тонна' },
+];
+
+export const chas: Odynytsia[] = [
+  { nazva: 'с', povna: 'секунда', dali: 60 },
+  { nazva: 'хв', povna: 'хвилина', dali: 60 },
+  { nazva: 'год', povna: 'година', dali: 24 },
+  { nazva: 'доба', povna: 'доба' },
 ];
 
 /** Число з пробілами між класами, як у підручнику: 10 000. */

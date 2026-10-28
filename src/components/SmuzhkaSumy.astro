@@ -1,0 +1,82 @@
+---
+// Сума як смужка з кольорових шматків. Друга смужка — ті самі шматки в іншому порядку:
+// видно, що довжина (сума) не змінилась. Шматки, які зручно скласти першими, можна обвести дужкою.
+// Приклад: <SmuzhkaSumy chastyny={[38, 27, 62]} poriadok={[0, 2, 1]} razom={[0, 2]} />
+interface Props {
+  chastyny: number[]; // доданки
+  poriadok?: number[]; // новий порядок доданків (номери з chastyny); якщо немає — одна смужка
+  razom?: number[]; // які доданки (номери) зручно скласти спершу — їх обводимо у другій смужці
+}
+const { chastyny, poriadok, razom = [] } = Astro.props;
+
+const suma = chastyny.reduce((s, x) => s + x, 0);
+const W = 480;
+const xL = 10;
+const u = (W - 2 * xL) / suma;
+const bh = 34;
+const kolir = (i: number) => `var(--ill-${(i % 4) + 1})`;
+const ryadky = poriadok ? [chastyny.map((_, i) => i), poriadok] : [chastyny.map((_, i) => i)];
+const shmatky = (por: number[]) => {
+  let x = xL;
+  return por.map((i) => {
+    const s = { i, x, w: chastyny[i] * u };
+    x += s.w;
+    return s;
+  });
+};
+const top = 14;
+const krok = bh + 40;
+const H = top + ryadky.length * krok + 16;
+const zapys = (por: number[]) => por.map((i) => chastyny[i]).join(' + ');
+// Дужка під доданками, які додаємо першими (у другій смужці вони мають стояти поруч).
+const druha = poriadok ? shmatky(poriadok) : [];
+const dlaDuzhky = druha.filter((s) => razom.includes(s.i));
+const duzhka = dlaDuzhky.length > 1 && {
+  x1: Math.min(...dlaDuzhky.map((s) => s.x)),
+  x2: Math.max(...dlaDuzhky.map((s) => s.x + s.w)),
+  znach: dlaDuzhky.reduce((s, d) => s + chastyny[d.i], 0),
+};
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} role="img" aria-label={`${ryadky.map(zapys).join(' = ')} = ${suma}`}>
+      {
+        ryadky.map((por, r) => {
+          const y = top + r * krok + 16;
+          return (
+            <>
+              {shmatky(por).map((s) => (
+                <>
+                  <rect x={s.x + 1} y={y} width={s.w - 2} height={bh} rx="6" fill={kolir(s.i)} opacity="0.85" />
+                  <text x={s.x + s.w / 2} y={y + bh / 2 + 6} text-anchor="middle" font-size="17" font-weight="700" fill="var(--ill-paper)">
+                    {chastyny[s.i]}
+                  </text>
+                </>
+              ))}
+              <text x={xL} y={y - 5} font-size="14" fill="var(--ill-muted)">
+                {zapys(por)} = {suma}
+              </text>
+            </>
+          );
+        })
+      }
+      {
+        duzhka && (
+          <>
+            <path
+              d={`M${duzhka.x1 + 2} ${top + krok + 16 + bh + 4} v6 H${duzhka.x2 - 2} v-6`}
+              fill="none"
+              stroke="var(--ill-accent)"
+              stroke-width="2.5"
+            />
+            <text x={(duzhka.x1 + duzhka.x2) / 2} y={top + krok + 16 + bh + 24} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-accent)">
+              {duzhka.znach}
+            </text>
+          </>
+        )
+      }
+    </svg>
+  </div>
+  {poriadok && <figcaption class="ill-caption">Шматки ті самі — довжина та сама: сума не змінилась</figcaption>}
+</figure>

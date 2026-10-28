@@ -9,6 +9,13 @@ import { papkyKlasiv, znachokKlasu } from './src/klasy.mjs';
 export default defineConfig({
   site: 'https://m8-4-h8.github.io',
   base: '/math',
+  // Теми, які переїхали в інший клас: старі адреси ведуть на нові.
+  redirects: {
+    '/5-klas/rozriady-i-klasy': '/math/4-klas/rozriady-i-klasy/',
+    '/5-klas/ploshcha-i-perymetr': '/math/4-klas/ploshcha-i-perymetr/',
+    '/5-klas/odynytsi-ploshchi': '/math/4-klas/odynytsi-ploshchi/',
+    '/5-klas/dilennia-z-ostacheiu': '/math/4-klas/dilennia-z-ostacheiu/',
+  },
   markdown: {
     // Формули: $...$ у рядку та $$...$$ окремим блоком.
     processor: unified({ remarkPlugins: [remarkMath], rehypePlugins: [rehypeKatex] }),

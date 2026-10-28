@@ -1,0 +1,67 @@
+---
+// Лінія часу по століттях: у якому столітті рік. Позначає сусідні століття, межі (…01 та …00) і сам рік.
+// Приклад: <LiniiaStolit rik={1817} />
+import { rymske } from './rymski';
+
+interface Props {
+  rik: number; // рік нашої ери, від 1 до 3000
+  podiia?: string; // підпис події, наприклад «велосипед»
+}
+const { rik, podiia } = Astro.props;
+const st = Math.ceil(rik / 100);
+const pershi = Math.floor(rik / 100); // рік без двох останніх цифр
+const kruglyi = rik % 100 === 0;
+
+// Показуємо три століття: попереднє, потрібне і наступне.
+const stolittia = [st - 1, st, st + 1].filter((s) => s >= 1);
+const W = 520;
+const x0 = 20;
+const shyr = (W - 2 * x0) / stolittia.length;
+const xRoku = x0 + (stolittia.indexOf(st) + (rik - (st - 1) * 100) / 100) * shyr;
+const y = 70;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} 130`} width={W} role="img" aria-label={`${rik} рік — ${rymske(st)} століття`}>
+      {
+        stolittia.map((s, i) => {
+          const xa = x0 + i * shyr;
+          const ts = s === st;
+          return (
+            <>
+              <rect x={xa + 2} y={y - 14} width={shyr - 4} height="28" rx="6" fill={ts ? 'var(--ill-1)' : 'var(--ill-line)'} opacity={ts ? 0.85 : 0.25} />
+              <text x={xa + shyr / 2} y={y + 5} text-anchor="middle" font-size="16" font-weight="700" fill={ts ? 'var(--ill-paper)' : 'var(--ill-ink)'}>
+                {rymske(s)} ст.
+              </text>
+              <text x={xa + 4} y={y + 34} font-size="12" fill="var(--ill-muted)">{(s - 1) * 100 + 1}</text>
+              <text x={xa + shyr - 4} y={y + 34} text-anchor="end" font-size="12" fill="var(--ill-muted)">{s * 100}</text>
+            </>
+          );
+        })
+      }
+      <line x1={xRoku} x2={xRoku} y1="26" y2={y - 14} stroke="var(--ill-2)" stroke-width="3" />
+      <circle cx={xRoku} cy={y - 14} r="5" fill="var(--ill-2)" />
+      <text x={xRoku} y="18" text-anchor="middle" font-size="15" font-weight="700" fill="var(--ill-2)">
+        {rik}{podiia ? ` — ${podiia}` : ''}
+      </text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      {rymske(st)} століття — це роки від <b class="num">{(st - 1) * 100 + 1}</b> до <b class="num">{st * 100}</b>.
+    </li>
+    <li>
+      {
+        kruglyi ? (
+          <>Рік {rik} закінчується на 00 — це <b>останній</b> рік століття: {pershi}-те століття, без додавання 1.</>
+        ) : (
+          <>Відкидаємо дві останні цифри: {rik} → <b>{pershi}</b>, і додаємо 1: {pershi} + 1 = <b>{st}</b>.</>
+        )
+      }
+    </li>
+    <li>
+      Відповідь: {rik} рік — <b class="c1">{rymske(st)} століття</b> ({st}-те).
+    </li>
+  </ol>
+</figure>

@@ -1,0 +1,71 @@
+---
+// Римське число по розрядах: кожен розряд — свій шматочок знаків, разом — усе число.
+// Можна задати арабське число (chyslo) — тоді показуємо, як його записати римськими знаками.
+// Приклад: <RymskeChyslo chyslo={1984} />
+import { rozkladRymske, rymske } from './rymski';
+
+interface Props {
+  chyslo: number; // від 1 до 3999
+}
+const { chyslo } = Astro.props;
+const shmatky = rozkladRymske(chyslo);
+const zapys = rymske(chyslo);
+const kolir = (i: number) => `c${(i % 4) + 1}`;
+// Чому шматочок саме такий: IV = 5 − 1, VIII = 5 + 3, …
+const ZNACH: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+function poiasnennia(z: string) {
+  const v = [...z].map((c) => ZNACH[c]);
+  if (v.length === 2 && v[0] < v[1]) return `${v[1]} − ${v[0]}`;
+  if (v.length === 1) return '';
+  return v.join(' + ');
+}
+---
+
+<figure class="ill not-content">
+  <div class="rymske" role="img" aria-label={`${chyslo} = ${zapys}`}>
+    {
+      shmatky.map(([v, z], i) => (
+        <div class="shmatok">
+          <span class:list={['znaky', kolir(i)]}>{z}</span>
+          <span class="znach">{v}</span>
+          {poiasnennia(z) && <span class="muted dribno">{poiasnennia(z)}</span>}
+        </div>
+      ))
+    }
+  </div>
+  <p class="ill-caption">
+    {shmatky.map(([v], i) => (i ? ' + ' : '') + v)} = {chyslo} → {shmatky.map(([, z], i) => <span class={kolir(i)}>{z}</span>)}
+  </p>
+</figure>
+
+<style>
+  .rymske {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .shmatok {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 4rem;
+    padding: 0.5rem 0.7rem;
+    border: 2px solid var(--sl-color-gray-5);
+    border-radius: 0.6rem;
+    background: var(--ill-paper);
+  }
+  .znaky {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: var(--sl-text-2xl);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .znach {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .dribno {
+    font-size: var(--sl-text-xs);
+  }
+</style>
