@@ -1,0 +1,67 @@
+---
+// Два числа за сумою і різницею: дві смужки, друга довша на різницю, дужка — сума.
+// Під малюнком — кроки: відрізаємо різницю, ділимо навпіл, додаємо різницю назад.
+//   <SumaRiznytsia suma={30} riznytsia={6} imena={['Оля', 'Марко']} shcho="цукерок" />
+interface Props {
+  suma: number;
+  riznytsia: number; // на скільки друге число більше за перше
+  imena?: [string, string]; // перше — менше, друге — більше
+  shcho?: string;
+  kroky?: boolean; // показати розв'язання під малюнком
+}
+const { suma, riznytsia, imena = ['Перше', 'Друге'], shcho = '', kroky = true } = Astro.props;
+
+const od = shcho ? ` ${shcho}` : '';
+const menshe = (suma - riznytsia) / 2;
+const bilshe = menshe + riznytsia;
+const fmt = (x: number) => (Number.isInteger(x) ? String(x) : String(x).replace('.', ','));
+const u = Math.min(24, 300 / bilshe);
+const xL = 80;
+const bh = 30;
+const y1 = 18;
+const y2 = y1 + bh + 16;
+const xM = xL + menshe * u;
+const xB = xL + bilshe * u;
+const W = xB + 90;
+const H = y2 + bh + 14;
+const dX = xB + 10;
+const m = (y1 + y2 + bh) / 2;
+const duzhka = `M ${dX} ${y1} Q ${dX + 8} ${y1} ${dX + 8} ${y1 + 8} V ${m - 8} Q ${dX + 8} ${m} ${dX + 16} ${m} Q ${dX + 8} ${m} ${dX + 8} ${m + 8} V ${y2 + bh - 8} Q ${dX + 8} ${y2 + bh} ${dX} ${y2 + bh}`;
+const t = { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': '14', 'font-weight': '700', fill: 'var(--ill-ink)' };
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Разом ${fmt(suma)}, ${imena[1]} більше на ${fmt(riznytsia)}`}>
+      <text x={xL - 10} y={y1 + bh / 2} text-anchor="end" dominant-baseline="central" font-size="13" fill="var(--ill-ink)">{imena[0]}</text>
+      <text x={xL - 10} y={y2 + bh / 2} text-anchor="end" dominant-baseline="central" font-size="13" fill="var(--ill-ink)">{imena[1]}</text>
+      <rect x={xL} y={y1} width={menshe * u} height={bh} rx="5" fill="var(--ill-1)" fill-opacity="0.35" stroke="var(--ill-1)" stroke-width="1.5" />
+      <text x={(xL + xM) / 2} y={y1 + bh / 2} {...t}>?</text>
+      <rect x={xL} y={y2} width={menshe * u} height={bh} rx="5" fill="var(--ill-1)" fill-opacity="0.35" stroke="var(--ill-1)" stroke-width="1.5" />
+      <rect x={xM} y={y2} width={riznytsia * u} height={bh} rx="5" fill="var(--ill-2)" fill-opacity="0.35" stroke="var(--ill-2)" stroke-width="1.5" stroke-dasharray="5 3" />
+      <text x={(xM + xB) / 2} y={y2 + bh / 2} {...t} fill="var(--ill-2)">{fmt(riznytsia)}</text>
+      <line x1={xM} y1={y1 + bh} x2={xM} y2={y2} stroke="var(--ill-muted)" stroke-width="1" stroke-dasharray="4 3" />
+      <path d={duzhka} fill="none" stroke="var(--ill-ink)" stroke-width="1.5" />
+      <text x={dX + 22} y={m} dominant-baseline="central" font-size="14" font-weight="700" fill="var(--ill-ink)">{fmt(suma)}</text>
+    </svg>
+  </div>
+  {
+    kroky && (
+      <ol class="ill-steps">
+        <li>
+          Від смужки «{imena[1]}» відріжемо <span class="c2">зайвий шматок {fmt(riznytsia)}</span> — смужки стануть однакові:{' '}
+          {fmt(suma)} − {fmt(riznytsia)} = {fmt(suma - riznytsia)}
+        </li>
+        <li>
+          Дві однакові частини: {fmt(suma - riznytsia)} : 2 = <b>{fmt(menshe)}</b>{od} — це {imena[0]}
+        </li>
+        <li>
+          Повернемо шматок: {fmt(menshe)} + {fmt(riznytsia)} = <b>{fmt(bilshe)}</b>{od} — це {imena[1]}
+        </li>
+        <li class="muted">
+          Перевірка: {fmt(menshe)} + {fmt(bilshe)} = {fmt(suma)} ✓
+        </li>
+      </ol>
+    )
+  }
+</figure>
