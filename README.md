@@ -71,6 +71,8 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `RozkladMnozhennia` | зручне множення: число на круглі частини | `<RozkladMnozhennia a={563} b={3} />` |
   | `DilnykNa5i10` | цифра частки через дільник · 5 і · 10 | `<DilnykNa5i10 dilene={47} dilnyk={6} />` |
   | `Zvedennia` | зведення до одиниці табличкою (одна або дві величини) | `<Zvedennia nazvy={['Корови', 'Дні']} vidomo={[5, 4]} rezultat={100} shukaty={[3, 6]} odynytsia="Сіно, кг" />` |
+  | `Kolo` | коло або круг з центром, радіусом і діаметром | `<Kolo radius={3} pokazaty="obydva" />` |
+  | `SumaRiznytsia` | два числа за сумою і різницею: смужки + кроки | `<SumaRiznytsia suma={30} riznytsia={6} imena={['Оля', 'Марко']} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |

@@ -1,0 +1,93 @@
+---
+// Коло з центром O: радіус, діаметр або обидва. kruh — зафарбувати середину (тоді це круг).
+//   <Kolo radius={3} pokazaty="obydva" />
+//   <Kolo radius={2} pokazaty="diametr" kruh />
+// Кілька кіл поруч: <Ryad> з <Kolo ... ramka={false} /> всередині.
+interface Props {
+  radius: number; // радіус у сантиметрах (на малюнку масштаб сталий)
+  pokazaty?: 'radius' | 'diametr' | 'obydva' | 'nichoho';
+  kruh?: boolean;
+  odynytsia?: string;
+  ramka?: boolean; // false — без рамки, для кількох кіл у <Ryad>
+}
+const { radius, pokazaty = 'obydva', kruh = false, odynytsia = 'см', ramka = true } = Astro.props;
+
+const fmt = (x: number) => (Number.isInteger(x) ? String(x) : String(x).replace('.', ','));
+const R = 70;
+const cx = 110;
+const cy = 95;
+const W = 220;
+const H = 190;
+const diametr = radius * 2;
+// Радіус малюємо вгору-праворуч, щоб він не зливався з діаметром.
+const kut = (-50 * Math.PI) / 180;
+const rx = cx + R * Math.cos(kut);
+const ry = cy + R * Math.sin(kut);
+const zR = pokazaty === 'radius' || pokazaty === 'obydva';
+const zD = pokazaty === 'diametr' || pokazaty === 'obydva';
+const nazva = kruh ? 'Круг' : 'Коло';
+const opys = `${nazva} з центром O, радіус ${fmt(radius)} ${odynytsia}, діаметр ${fmt(diametr)} ${odynytsia}`;
+---
+
+<figure class={ramka ? 'ill not-content kolo' : 'not-content kolo'}>
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={R}
+        fill={kruh ? 'var(--ill-1)' : 'none'}
+        fill-opacity={kruh ? 0.25 : 0}
+        stroke="var(--ill-1)"
+        stroke-width="3"
+      />
+      {
+        zD && (
+          <g>
+            <line x1={cx - R} y1={cy} x2={cx + R} y2={cy} stroke="var(--ill-2)" stroke-width="2.5" />
+            <circle cx={cx - R} cy={cy} r="3" fill="var(--ill-2)" />
+            <circle cx={cx + R} cy={cy} r="3" fill="var(--ill-2)" />
+            <text x={cx - R / 2} y={cy + 16} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-2)">
+              d = {fmt(diametr)} {odynytsia}
+            </text>
+          </g>
+        )
+      }
+      {
+        zR && (
+          <g>
+            <line x1={cx} y1={cy} x2={rx.toFixed(2)} y2={ry.toFixed(2)} stroke="var(--ill-3)" stroke-width="2.5" />
+            <circle cx={rx.toFixed(2)} cy={ry.toFixed(2)} r="3" fill="var(--ill-3)" />
+            <text
+              x={(cx + rx) / 2 - 22}
+              y={(cy + ry) / 2 - 4}
+              text-anchor="middle"
+              font-size="13"
+              font-weight="700"
+              fill="var(--ill-3)"
+            >
+              r = {fmt(radius)} {odynytsia}
+            </text>
+          </g>
+        )
+      }
+      <circle cx={cx} cy={cy} r="3.5" fill="var(--ill-ink)" />
+      <text x={cx + 6} y={cy + 18} font-size="13" font-weight="700" fill="var(--ill-ink)">O</text>
+    </svg>
+  </div>
+  <figcaption class="ill-caption">
+    <b>{nazva}</b>: центр <b>O</b>
+    {zR && <span> · <span class="c3">радіус r = {fmt(radius)} {odynytsia}</span></span>}
+    {zD && <span> · <span class="c2">діаметр d = {fmt(radius)} · 2 = {fmt(diametr)} {odynytsia}</span></span>}
+  </figcaption>
+</figure>
+
+<style>
+  .kolo {
+    text-align: center;
+  }
+  .kolo svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>
