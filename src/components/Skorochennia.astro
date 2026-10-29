@@ -1,0 +1,90 @@
+---
+// Скорочення дробу: ланцюжок ділень на спільні прості множники і те саме за один крок — діленням на НСД.
+//   <Skorochennia chys={24} znam={36} />
+import { nsd, prostiMnozhnyky } from './chysla';
+
+interface Props {
+  chys: number; // чисельник
+  znam: number; // знаменник
+  lantsiuzhok?: boolean; // false — тільки один крок через НСД
+}
+const { chys, znam, lantsiuzhok = true } = Astro.props;
+
+const g = nsd(chys, znam);
+// Ланцюжок: ділимо на спільні прості множники від меншого до більшого.
+const kroky: { n: number; d: number; na?: number }[] = [{ n: chys, d: znam }];
+let n = chys;
+let d = znam;
+for (const p of prostiMnozhnyky(g)) {
+  n /= p;
+  d /= p;
+  kroky.push({ n, d, na: p });
+}
+const nezmenshuvanyi = g === 1;
+---
+
+<figure class="ill not-content skor">
+  {
+    lantsiuzhok && !nezmenshuvanyi && kroky.length > 2 && (
+      <p class="riad" aria-label={`Скорочуємо ${chys}/${znam} поступово`}>
+        {kroky.map((k, i) => (
+          <>
+            {i > 0 && (
+              <span class="znak">
+                =<sub class="c2">:{k.na}</sub>
+              </span>
+            )}
+            <span class={i === kroky.length - 1 ? 'frac c3' : 'frac'}>
+              <span>{k.n}</span>
+              <span>{k.d}</span>
+            </span>
+          </>
+        ))}
+      </p>
+    )
+  }
+  <p class="riad" aria-label={`${chys}/${znam} = ${n}/${d}`}>
+    <span class="frac"><span>{chys}</span><span>{znam}</span></span>
+    <span class="znak">=</span>
+    <span class="frac c2"><span>{chys} : {g}</span><span>{znam} : {g}</span></span>
+    <span class="znak">=</span>
+    <span class="frac c3"><span>{n}</span><span>{d}</span></span>
+  </p>
+  <ol class="ill-steps">
+    {
+      nezmenshuvanyi ? (
+        <li>
+          У {chys} і {znam} немає спільних дільників, крім 1 (НСД = 1) — дріб <b>нескоротний</b>.
+        </li>
+      ) : (
+        <>
+          <li>
+            Спільний дільник чисельника і знаменника: <b class="c2">НСД({chys}, {znam}) = {g}</b>.
+          </li>
+          <li>
+            Ділимо на {g} і чисельник, і знаменник: {chys} : {g} = {n}, {znam} : {g} = {d}.
+          </li>
+          <li class="muted">Більше спільних дільників немає — дріб нескоротний ✓</li>
+        </>
+      )
+    }
+  </ol>
+</figure>
+
+<style>
+  .riad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.35rem;
+    margin: 0.4rem 0;
+  }
+  .znak {
+    font-weight: 700;
+  }
+  .znak sub {
+    font-size: 0.7em;
+  }
+</style>
