@@ -1,0 +1,125 @@
+---
+// Два дроби — до спільного знаменника (НСК знаменників), з додатковими множниками над дробами.
+// dia: 'porivniaty' — порівняти, '+' — додати, '−' — відняти (результат скорочуємо і виділяємо цілу частину).
+//   <SpilnyiZnamennyk a={[3, 4]} b={[5, 6]} dia="+" />
+import { nsd, nsk } from './chysla';
+
+interface Props {
+  a: [number, number]; // [чисельник, знаменник]
+  b: [number, number];
+  dia?: 'porivniaty' | '+' | '−';
+}
+const { a, b, dia = 'porivniaty' } = Astro.props;
+
+const [n1, d1] = a;
+const [n2, d2] = b;
+const k = nsk(d1, d2);
+const m1 = k / d1;
+const m2 = k / d2;
+const c1 = n1 * m1;
+const c2 = n2 * m2;
+const znak = c1 > c2 ? '>' : c1 < c2 ? '<' : '=';
+const rez = dia === '+' ? c1 + c2 : dia === '−' ? c1 - c2 : 0;
+const g = dia === 'porivniaty' ? 1 : nsd(Math.abs(rez), k) || 1;
+const rn = rez / g;
+const rd = k / g;
+const tsila = Math.floor(rn / rd);
+const zalyshok = rn % rd;
+---
+
+<figure class="ill not-content spz">
+  <p class="riad" aria-label={`${n1}/${d1} і ${n2}/${d2} до знаменника ${k}`}>
+    <span class="mn">
+      <sup class="c2">{m1}</sup>
+      <span class="frac"><span>{n1}</span><span>{d1}</span></span>
+    </span>
+    <span class="znak">{dia === 'porivniaty' ? 'і' : dia}</span>
+    <span class="mn">
+      <sup class="c4">{m2}</sup>
+      <span class="frac"><span>{n2}</span><span>{d2}</span></span>
+    </span>
+    <span class="znak">→</span>
+    <span class="frac c1"><span>{c1}</span><span>{k}</span></span>
+    <span class="znak">{dia === 'porivniaty' ? znak : dia}</span>
+    <span class="frac c1"><span>{c2}</span><span>{k}</span></span>
+    {
+      dia !== 'porivniaty' && (
+        <>
+          <span class="znak">=</span>
+          <span class="frac"><span>{rez}</span><span>{k}</span></span>
+          {g > 1 && (
+            <>
+              <span class="znak">=</span>
+              <span class="frac c3"><span>{rn}</span><span>{rd}</span></span>
+            </>
+          )}
+          {tsila >= 1 && zalyshok !== 0 && (
+            <span class="mishane">
+              <span class="znak">=</span>
+              <span class="c3 tsila">{tsila}</span>
+              <span class="frac c3"><span>{zalyshok}</span><span>{rd}</span></span>
+            </span>
+          )}
+        </>
+      )
+    }
+  </p>
+  <ol class="ill-steps">
+    <li>
+      Спільний знаменник — найменше число, що ділиться на {d1} і на {d2}: <b class="c1">НСК({d1}, {d2}) = {k}</b>.
+    </li>
+    <li>
+      Додаткові множники: <span class="c2">{k} : {d1} = {m1}</span>, <span class="c4">{k} : {d2} = {m2}</span>.
+    </li>
+    <li>
+      Множимо на них чисельник і знаменник: {n1} · {m1} = {c1}, {n2} · {m2} = {c2}.
+    </li>
+    {
+      dia === 'porivniaty' ? (
+        <li>
+          Знаменники однакові — порівнюємо чисельники: {c1} {znak} {c2}, тому{' '}
+          <b>
+            {n1}/{d1} {znak} {n2}/{d2}
+          </b>
+          .
+        </li>
+      ) : (
+        <li>
+          {dia === '+' ? 'Додаємо' : 'Віднімаємо'} чисельники, знаменник лишається: {c1} {dia} {c2} = {rez}
+          {g > 1 && `, скорочуємо на ${g}`}
+          {tsila >= 1 && zalyshok !== 0 && ', виділяємо цілу частину'}.
+        </li>
+      )
+    }
+  </ol>
+</figure>
+
+<style>
+  .riad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.35rem;
+    margin: 0.4rem 0;
+  }
+  .mn {
+    display: inline-flex;
+    align-items: flex-start;
+  }
+  .mn sup {
+    font-size: 0.6em;
+    font-weight: 700;
+    margin-right: 0.1em;
+  }
+  .mishane {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .znak,
+  .tsila {
+    font-weight: 700;
+  }
+</style>
