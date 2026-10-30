@@ -2,6 +2,8 @@
 // Координатна пряма з від'ємними числами: нуль посередині, точки зі своїми координатами.
 // modul — показати дужками відстань від точки до нуля (модуль).
 //   <KoordynatnaPriama min={-6} max={6} tochky={[{ nazva: 'A', x: -4 }, { nazva: 'B', x: 3 }]} modul />
+// strybok — додавання як стрибок: з точки `vid` на `na` поділок (праворуч, якщо na > 0).
+//   <KoordynatnaPriama min={-6} max={6} strybok={{ vid: -4, na: 7 }} />
 type Tochka = { nazva: string; x: number };
 interface Props {
   min?: number; // ліва межа (ціле, від'ємне)
@@ -9,19 +11,27 @@ interface Props {
   tochky?: Tochka[];
   modul?: boolean;
   bez_koordynat?: boolean; // біля точок лише назва
+  strybok?: { vid: number; na: number };
 }
-const { min = -6, max = 6, tochky = [], modul = false, bez_koordynat = false } = Astro.props;
+const { min = -6, max = 6, tochky = [], modul = false, bez_koordynat = false, strybok } = Astro.props;
 
 const n = max - min;
 const krok = Math.min(34, 340 / n);
 const x0 = 22;
 const yL = 62;
 const W = x0 * 2 + n * krok + 10;
-const H = modul ? 112 : 92;
+const H = modul ? 112 : strybok ? 100 : 92;
 const X = (v: number) => x0 + (v - min) * krok;
 const fmt = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
 const kolory = ['var(--ill-2)', 'var(--ill-1)', 'var(--ill-4)', 'var(--ill-3)'];
 const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)})`).join(', ');
+const kinets = strybok ? strybok.vid + strybok.na : 0;
+const kroky = (k: number) => (k % 10 === 1 && k % 100 !== 11 ? 'крок' : k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 10 || k % 100 >= 20) ? 'кроки' : 'кроків');
+const dzn = (v: number) => (v < 0 ? `(${fmt(v)})` : fmt(v));
+// Дуга-стрибок над прямою від vid до vid + na.
+const duha = strybok
+  ? `M ${X(strybok.vid)} ${yL - 6} Q ${(X(strybok.vid) + X(kinets)) / 2} ${yL - 44} ${X(kinets)} ${yL - 6}`
+  : '';
 ---
 
 <figure class="ill not-content kpr">
@@ -41,6 +51,22 @@ const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)})`).join(', ');
             </g>
           );
         })
+      }
+      {
+        strybok && (
+          <g>
+            <path d={duha} fill="none" stroke={strybok.na >= 0 ? 'var(--ill-1)' : 'var(--ill-4)'} stroke-width="2.5" />
+            <path
+              d={`M ${X(kinets)} ${yL - 6} l ${strybok.na >= 0 ? -9 : 9} -6 l ${strybok.na >= 0 ? 2 : -2} 9 z`}
+              fill={strybok.na >= 0 ? 'var(--ill-1)' : 'var(--ill-4)'}
+            />
+            <text x={(X(strybok.vid) + X(kinets)) / 2} y={yL - 30} text-anchor="middle" font-size="13" font-weight="700" fill={strybok.na >= 0 ? 'var(--ill-1)' : 'var(--ill-4)'}>
+              {strybok.na >= 0 ? '+' : '−'}{String(Math.abs(strybok.na)).replace('.', ',')}
+            </text>
+            <circle cx={X(strybok.vid)} cy={yL} r="5" fill="var(--ill-2)" />
+            <circle cx={X(kinets)} cy={yL} r="5" fill="var(--ill-3)" />
+          </g>
+        )
       }
       {
         tochky.map((t, i) => (
@@ -67,6 +93,16 @@ const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)})`).join(', ');
       }
     </svg>
   </div>
+  {
+    strybok && (
+      <p class="ill-caption">
+        <b>
+          {dzn(strybok.vid)} + {dzn(strybok.na)} = <span class="c3">{fmt(kinets)}</span>
+        </b>
+        : стартуємо з {fmt(strybok.vid)} і робимо {Math.abs(strybok.na)} {kroky(Math.abs(strybok.na))} {strybok.na >= 0 ? 'праворуч' : 'ліворуч'}
+      </p>
+    )
+  }
   <p class="ill-caption">
     <span class="c4">від'ємні</span> — ліворуч від нуля, <span class="c1">додатні</span> — праворуч
   </p>

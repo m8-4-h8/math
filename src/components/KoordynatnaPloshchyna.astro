@@ -1,0 +1,116 @@
+---
+// Координатна площина: дві осі (x — праворуч, y — вгору), сітка і точки з координатами.
+// Пунктиром показано, як «дійти» до точки: спершу по x, потім по y.
+//   <KoordynatnaPloshchyna rozmir={5} tochky={[{ nazva: 'A', x: 3, y: 2 }, { nazva: 'B', x: -2, y: -4 }]} />
+type Tochka = { nazva: string; x: number; y: number };
+interface Props {
+  rozmir?: number; // осі від −rozmir до rozmir
+  tochky?: Tochka[];
+  bez_koordynat?: boolean; // біля точок лише назва
+  shliakh?: boolean; // пунктир від осей до точки (за замовчуванням — так)
+}
+const { rozmir = 5, tochky = [], bez_koordynat = false, shliakh = true } = Astro.props;
+
+const k = 26; // одна клітинка
+const pole = 20;
+const W = 2 * rozmir * k + 2 * pole;
+const c = pole + rozmir * k; // центр — початок координат
+const X = (v: number) => c + v * k;
+const Y = (v: number) => c - v * k;
+const fmt = (v: number) => (v < 0 ? `−${-v}` : String(v));
+const kolory = ['var(--ill-2)', 'var(--ill-1)', 'var(--ill-4)', 'var(--ill-3)'];
+const chverti = [
+  { t: 'I', x: rozmir / 2, y: rozmir / 2 },
+  { t: 'II', x: -rozmir / 2, y: rozmir / 2 },
+  { t: 'III', x: -rozmir / 2, y: -rozmir / 2 },
+  { t: 'IV', x: rozmir / 2, y: -rozmir / 2 },
+];
+// Підпис точки: ліворуч від'ємних, але так, щоб не вилазив за край малюнка.
+const napys = (t: Tochka) => (bez_koordynat ? t.nazva : `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`);
+const zliva = (t: Tochka) => {
+  const shyryna = napys(t).length * 8;
+  return t.x < 0 ? X(t.x) - 8 - shyryna >= 0 : X(t.x) + 8 + shyryna > W;
+};
+const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', ');
+---
+
+<figure class="ill not-content kpl">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${W}`} width={W} height={W} role="img" aria-label={`Координатна площина${opys ? ': ' + opys : ''}`}>
+      {
+        Array.from({ length: 2 * rozmir + 1 }, (_, i) => (
+          <g>
+            <line x1={pole + i * k} y1={pole} x2={pole + i * k} y2={W - pole} stroke="var(--ill-grid)" stroke-width="1" />
+            <line x1={pole} y1={pole + i * k} x2={W - pole} y2={pole + i * k} stroke="var(--ill-grid)" stroke-width="1" />
+          </g>
+        ))
+      }
+      {chverti.map((q) => (
+        <text x={X(q.x)} y={Y(q.y)} text-anchor="middle" dominant-baseline="central" font-size="16" fill="var(--ill-muted)" opacity="0.6">
+          {q.t}
+        </text>
+      ))}
+      <line x1={pole - 6} y1={c} x2={W - pole + 10} y2={c} stroke="var(--ill-ink)" stroke-width="2" />
+      <line x1={c} y1={W - pole + 6} x2={c} y2={pole - 10} stroke="var(--ill-ink)" stroke-width="2" />
+      <path d={`M ${W - pole + 12} ${c} l -9 -5 v 10 z`} fill="var(--ill-ink)" />
+      <path d={`M ${c} ${pole - 12} l -5 9 h 10 z`} fill="var(--ill-ink)" />
+      <text x={W - pole + 4} y={c + 18} font-size="13" font-style="italic" font-weight="700" fill="var(--ill-ink)">x</text>
+      <text x={c + 10} y={pole - 2} font-size="13" font-style="italic" font-weight="700" fill="var(--ill-ink)">y</text>
+      {
+        Array.from({ length: 2 * rozmir + 1 }, (_, i) => {
+          const v = i - rozmir;
+          return (
+            v !== 0 && v !== rozmir && (
+              <g>
+                <line x1={X(v)} y1={c - 3} x2={X(v)} y2={c + 3} stroke="var(--ill-ink)" stroke-width="1.5" />
+                <line x1={c - 3} y1={Y(v)} x2={c + 3} y2={Y(v)} stroke="var(--ill-ink)" stroke-width="1.5" />
+                <text x={X(v)} y={c + 15} text-anchor="middle" font-size="10" fill="var(--ill-muted)" class="tlo">{fmt(v)}</text>
+                <text x={c - 6} y={Y(v)} text-anchor="end" dominant-baseline="central" font-size="10" fill="var(--ill-muted)" class="tlo">{fmt(v)}</text>
+              </g>
+            )
+          );
+        })
+      }
+      <text x={c - 6} y={c + 15} text-anchor="end" font-size="11" font-weight="700" fill="var(--ill-ink)">0</text>
+      {
+        tochky.map((t, i) => {
+          const kol = kolory[i % kolory.length];
+          return (
+            <g>
+              {shliakh && (
+                <path d={`M ${X(t.x)} ${c} V ${Y(t.y)} M ${c} ${Y(t.y)} H ${X(t.x)}`} fill="none" stroke={kol} stroke-width="1.5" stroke-dasharray="4 3" />
+              )}
+              <circle cx={X(t.x)} cy={Y(t.y)} r="5" fill={kol} />
+              <text
+                x={X(t.x) + (zliva(t) ? -8 : 8)}
+                y={Y(t.y) + (t.y < 0 ? 16 : -8)}
+                text-anchor={zliva(t) ? 'end' : 'start'}
+                font-size="13"
+                font-weight="700"
+                fill={kol}
+                class="tlo"
+              >
+                {napys(t)}
+              </text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  <p class="ill-caption">спершу <b>x</b> — праворуч чи ліворуч, потім <b>y</b> — вгору чи вниз</p>
+</figure>
+
+<style>
+  /* Підкладка під підписи, щоб пунктир не перекреслював цифри. */
+  .kpl .tlo {
+    paint-order: stroke;
+    stroke: var(--ill-paper);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+  .kpl svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>
