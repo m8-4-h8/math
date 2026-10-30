@@ -1,0 +1,108 @@
+---
+// Задача на пряму чи обернену пропорційність: табличка зі стрілками і пропорція для x.
+// Пряма — стрілки в один бік (більше → більше), обернена — у різні (більше → менше).
+//   <Proportsiia nazvy={['Час, год', 'Шлях, км']} a={[5, 300]} x0={8} typ="priama" />
+//   <Proportsiia nazvy={['Робітники', 'Дні']} a={[3, 8]} x0={6} typ="obernena" />
+interface Props {
+  nazvy: [string, string]; // назви двох величин
+  a: [number, number]; // перший рядок: значення обох величин (відомо)
+  x0: number; // нове значення першої величини; другу шукаємо
+  typ: 'priama' | 'obernena';
+}
+const { nazvy, a, x0, typ } = Astro.props;
+
+const [a1, b1] = a;
+const priama = typ === 'priama';
+const x = priama ? (b1 * x0) / a1 : (b1 * a1) / x0;
+const fmt = (v: number) => {
+  const r = Math.round(v * 1000) / 1000;
+  return String(r).replace('.', ',');
+};
+const vgoru1 = x0 > a1; // перша величина зросла
+const vgoru2 = priama ? vgoru1 : !vgoru1;
+// Стрілка в кожному стовпчику показує на більше число.
+const opys = `${nazvy[0]}: ${fmt(a1)} і ${fmt(x0)}; ${nazvy[1]}: ${fmt(b1)} і x. ${priama ? 'Пряма' : 'Обернена'} пропорційність, x = ${fmt(x)}`;
+---
+
+<figure class="ill not-content prop">
+  <div class="ill-scroll">
+    <table class="prop-tabl num" aria-label={opys}>
+      <thead>
+        <tr>
+          <th>{nazvy[0]}</th>
+          <th></th>
+          <th>{nazvy[1]}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{fmt(a1)}</td>
+          <td rowspan="2" class="c1 str">{vgoru1 ? '↓' : '↑'}</td>
+          <td>{fmt(b1)}</td>
+          <td rowspan="2" class="c2 str">{vgoru2 ? '↓' : '↑'}</td>
+        </tr>
+        <tr>
+          <td>{fmt(x0)}</td>
+          <td><b class="c3">x</b></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="ill-caption muted">стрілка показує на більше число</p>
+  <ol class="ill-steps">
+    <li>
+      {
+        priama ? (
+          <>Стрілки в <b>один бік</b>: більше одного — більше й другого, тож пропорційність <b>пряма</b>.</>
+        ) : (
+          <>Стрілки в <b>різні боки</b>: більше одного — менше другого, тож пропорційність <b>обернена</b>.</>
+        )
+      }
+    </li>
+    <li>
+      {
+        priama ? (
+          <>Пропорція — як у табличці: {fmt(a1)} : {fmt(x0)} = {fmt(b1)} : x.</>
+        ) : (
+          <>Для оберненої один стовпчик перевертаємо: {fmt(a1)} : {fmt(x0)} = x : {fmt(b1)}.</>
+        )
+      }
+    </li>
+    <li>
+      {
+        priama ? (
+          <>x = {fmt(b1)} · {fmt(x0)} : {fmt(a1)} = <b class="c3">{fmt(x)}</b></>
+        ) : (
+          <>x = {fmt(b1)} · {fmt(a1)} : {fmt(x0)} = <b class="c3">{fmt(x)}</b></>
+        )
+      }
+    </li>
+  </ol>
+</figure>
+
+<style>
+  .prop-tabl {
+    margin-inline: auto;
+    border-collapse: collapse;
+    font-size: 1.1rem;
+  }
+  .prop-tabl th,
+  .prop-tabl td {
+    padding: 0.35rem 0.9rem;
+    text-align: center;
+  }
+  .prop-tabl th {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ill-muted);
+  }
+  .prop-tabl tbody tr:first-child td:not(.str) {
+    border-bottom: 1px solid var(--ill-line);
+  }
+  .prop-tabl td.str {
+    font-size: 1.8rem;
+    font-weight: 700;
+    border-bottom: none;
+  }
+</style>
