@@ -2,6 +2,7 @@
 // Коло з центром O: радіус, діаметр або обидва. kruh — зафарбувати середину (тоді це круг).
 //   <Kolo radius={3} pokazaty="obydva" />
 //   <Kolo radius={2} pokazaty="diametr" kruh />
+//   <Kolo radius={5} kruh formuly />  — ще й довжина кола та площа круга
 // Кілька кіл поруч: <Ryad> з <Kolo ... ramka={false} /> всередині.
 interface Props {
   radius: number; // радіус у сантиметрах (на малюнку масштаб сталий)
@@ -9,10 +10,15 @@ interface Props {
   kruh?: boolean;
   odynytsia?: string;
   ramka?: boolean; // false — без рамки, для кількох кіл у <Ryad>
+  formuly?: boolean; // показати довжину кола і площу круга (π ≈ 3,14)
 }
-const { radius, pokazaty = 'obydva', kruh = false, odynytsia = 'см', ramka = true } = Astro.props;
+const { radius, pokazaty = 'obydva', kruh = false, odynytsia = 'см', ramka = true, formuly = false } = Astro.props;
 
 const fmt = (x: number) => (Number.isInteger(x) ? String(x) : String(x).replace('.', ','));
+// Довжина кола і площа круга з π ≈ 3,14, округлені до сотих.
+const okr = (x: number) => fmt(Math.round(x * 100) / 100);
+const dovzhyna = okr(2 * 3.14 * radius);
+const ploshcha = okr(3.14 * radius * radius);
 const R = 70;
 const cx = 110;
 const cy = 95;
@@ -79,6 +85,15 @@ const opys = `${nazva} з центром O, радіус ${fmt(radius)} ${odynyt
     <b>{nazva}</b>: центр <b>O</b>
     {zR && <span> · <span class="c3">радіус r = {fmt(radius)} {odynytsia}</span></span>}
     {zD && <span> · <span class="c2">діаметр d = {fmt(radius)} · 2 = {fmt(diametr)} {odynytsia}</span></span>}
+    {
+      formuly && (
+        <>
+          <br />
+          <span class="c1">довжина кола C = 2 · 3,14 · {fmt(radius)} ≈ {dovzhyna} {odynytsia}</span> ·{' '}
+          <span class="c4">площа круга S = 3,14 · {fmt(radius)}² ≈ {ploshcha} {odynytsia}²</span>
+        </>
+      )
+    }
   </figcaption>
 </figure>
 
