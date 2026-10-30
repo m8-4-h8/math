@@ -1,0 +1,100 @@
+---
+title: Множення дробів
+ikonka: ✖️
+description: Як помножити дріб на дріб, на натуральне число і мішані числа, скорочуючи ще до множення. Дріб від числа — теж множення.
+sidebar:
+  order: 4
+---
+
+import Pravylo from '../../../components/Pravylo.astro';
+import DobutokDrobiv from '../../../components/DobutokDrobiv.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
+
+<Pravylo>
+Щоб помножити дроби, **чисельник множимо на чисельник**, а **знаменник — на знаменник**. Спільний знаменник
+**не потрібен**. Скорочувати зручно **ще до множення**.
+
+Мішані числа спершу перетвори на **неправильні дроби**.
+</Pravylo>
+
+## Що це таке
+
+Тато залишив $\frac{3}{4}$ піци, а ти з'їв $\frac{2}{3}$ від цього шматка. Яку частину **цілої** піци ти з'їв?
+«$\frac{2}{3}$ від $\frac{3}{4}$» — це і є множення $\frac{2}{3} \cdot \frac{3}{4}$. Подивись на квадрат:
+
+<DobutokDrobiv a={[3, 4]} b={[2, 3]} />
+
+$$
+\frac{a}{b} \cdot \frac{c}{d} = \frac{a \cdot c}{b \cdot d} \qquad\qquad n \cdot \frac{a}{b} = \frac{n \cdot a}{b}
+$$
+
+Тут $a, b, c, d$ — чисельники й знаменники, $n$ — натуральне число (його можна записати як $\frac{n}{1}$).
+
+## Приклад
+
+**Обчисли $\dfrac{4}{9} \cdot \dfrac{15}{16}$.**
+
+1. Пишемо під однією рискою: $\dfrac{4 \cdot 15}{9 \cdot 16}$.
+2. Скорочуємо навхрест, поки не перемножили: $4$ і $16$ — на $4$, $15$ і $9$ — на $3$: $\dfrac{1 \cdot 5}{3 \cdot 4}$.
+3. Множимо: $\dfrac{5}{12}$.
+4. **Перевірка** без скорочення: $\dfrac{60}{144}$, НСД$(60, 144) = 12$, $\dfrac{60 : 12}{144 : 12} = \dfrac{5}{12}$ ✓
+
+**Мішані числа:** $1\frac{1}{2} \cdot 2\frac{2}{3} = \frac{3}{2} \cdot \frac{8}{3} = \frac{3 \cdot 8}{2 \cdot 3} = \frac{4}{1} = 4$.
+
+:::tip[Дріб від числа — це множення]
+Знайти $\frac{2}{5}$ від $30$ — те саме, що $30 \cdot \frac{2}{5} = \frac{60}{5} = 12$. Так само знаходимо дріб від дробу:
+$\frac{3}{4}$ від $\frac{2}{5}$ — це $\frac{3}{4} \cdot \frac{2}{5}$. Як це робили в 5 класі — у темі
+[Дріб від числа](/math/5-klas/drib-vid-chysla/).
+:::
+
+:::caution[Не плутай]
+**Спільний знаменник — для додавання, а не для множення.** При множенні знаменники перемножуємо. А мішане число
+не множимо «по частинах»: $1\frac{1}{2} \cdot 2 \ne 1\frac{2}{4}$ — правильно $\frac{3}{2} \cdot 2 = 3$.
+:::
+
+## Перевір себе
+
+Впиши відповідь і натисни «Перевірити». Дріб пиши через риску (`3/4`), мішане число — через пробіл (`1 1/2`).
+За кожну правильну відповідь — зірочка ⭐
+
+<Zavdannia vidpovid="6/35" pidkazka="Чисельник на чисельник, знаменник на знаменник.">
+  $\dfrac{2}{5} \cdot \dfrac{3}{7}$
+
+  <span slot="rozviazok">$\frac{2 \cdot 3}{5 \cdot 7} = \frac{6}{35}$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid={['1 1/2', '3/2']} pidkazka="4 = 4/1. Скороти 4 і 8.">
+  $\dfrac{3}{8} \cdot 4$ (виділи цілу частину)
+
+  <span slot="rozviazok">$\frac{3 \cdot 4}{8} = \frac{3}{2} = 1\frac{1}{2}$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="3/4" pidkazka="Скороти навхрест: 5 і 10, 9 і 6.">
+  $\dfrac{5}{6} \cdot \dfrac{9}{10}$
+
+  <span slot="rozviazok">$\frac{5 \cdot 9}{6 \cdot 10} = \frac{1 \cdot 3}{2 \cdot 2} = \frac{3}{4}$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="4" pidkazka="1 1/2 = 3/2, 2 2/3 = 8/3.">
+  $1\dfrac{1}{2} \cdot 2\dfrac{2}{3}$
+
+  <span slot="rozviazok">$\frac{3}{2} \cdot \frac{8}{3} = \frac{24}{6} = 4$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="3/10" pidkazka="«3/4 від 2/5» — це 3/4 · 2/5.">
+  Знайди $\dfrac{3}{4}$ від $\dfrac{2}{5}$.
+
+  <span slot="rozviazok">$\frac{3}{4} \cdot \frac{2}{5} = \frac{6}{20} = \frac{3}{10}$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="10" pidkazka="За 12 хвилин — у 12 разів більше: 5/6 · 12.">
+  Дракон пролітає $\dfrac{5}{6}$ км за хвилину. Скільки кілометрів він пролетить за $12$ хвилин?
+
+  <span slot="rozviazok">$\frac{5}{6} \cdot 12 = \frac{60}{6} = 10$ (км)</span>
+</Zavdannia>
+
+## Пов'язані теми
+
+- [Ділення дробів](/math/6-klas/dilennia-drobiv/)
+- [Скорочення дробів](/math/6-klas/skorochennia-drobiv/)
+- [Дріб від числа](/math/5-klas/drib-vid-chysla/)

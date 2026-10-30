@@ -1,0 +1,87 @@
+---
+// Множення дробів на квадраті: стовпчики — перший дріб, рядки — другий дріб.
+// Клітинки, зафарбовані двічі, — це добуток: (a·c) з (b·d) клітинок.
+//   <DobutokDrobiv a={[2, 3]} b={[3, 4]} />
+import { nsd } from './chysla';
+
+interface Props {
+  a: [number, number]; // перший дріб [чисельник, знаменник], правильний
+  b: [number, number]; // другий дріб
+}
+const { a, b } = Astro.props;
+
+const [n1, d1] = a;
+const [n2, d2] = b;
+const S = 200; // сторона квадрата
+const x0 = 20;
+const y0 = 14;
+const cw = S / d1;
+const ch = S / d2;
+const n = n1 * n2;
+const d = d1 * d2;
+const g = nsd(n, d);
+const W = S + 2 * x0;
+const H = S + y0 + 34;
+---
+
+<figure class="ill not-content dd">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${n1}/${d1} · ${n2}/${d2} = ${n}/${d}`}>
+      {
+        Array.from({ length: d1 }, (_, i) =>
+          Array.from({ length: d2 }, (_, j) => {
+            const vA = i < n1;
+            const vB = j < n2;
+            return (
+              <rect
+                x={x0 + i * cw}
+                y={y0 + j * ch}
+                width={cw}
+                height={ch}
+                fill={vA && vB ? 'var(--ill-3)' : vA ? 'var(--ill-1)' : vB ? 'var(--ill-2)' : 'none'}
+                fill-opacity={vA && vB ? 0.75 : vA || vB ? 0.25 : 0}
+                stroke="var(--ill-line)"
+                stroke-width="1"
+              />
+            );
+          }),
+        )
+      }
+      <rect x={x0} y={y0} width={S} height={S} fill="none" stroke="var(--ill-ink)" stroke-width="2" />
+      <line x1={x0} y1={y0 + S + 10} x2={x0 + n1 * cw} y2={y0 + S + 10} stroke="var(--ill-1)" stroke-width="3" />
+      <text x={x0 + (n1 * cw) / 2} y={y0 + S + 26} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-1)">
+        {n1}/{d1}
+      </text>
+      <line x1={x0 - 10} y1={y0} x2={x0 - 10} y2={y0 + n2 * ch} stroke="var(--ill-2)" stroke-width="3" />
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Квадрат — одне ціле. Стовпчиками ділимо на {d1} частин і беремо <span class="c1">{n1}</span> — це{' '}
+      <span class="frac c1"><span>{n1}</span><span>{d1}</span></span>.
+    </li>
+    <li>
+      Від цього беремо <span class="frac c2"><span>{n2}</span><span>{d2}</span></span>: рядками ділимо на {d2} і беремо{' '}
+      <span class="c2">{n2}</span>.
+    </li>
+    <li>
+      Усього клітинок {d1} · {d2} = {d}, зафарбованих двічі <span class="c3">{n1} · {n2} = {n}</span>. Отже,{' '}
+      <span class="frac"><span>{n1}</span><span>{d1}</span></span> ·{' '}
+      <span class="frac"><span>{n2}</span><span>{d2}</span></span> ={' '}
+      <span class="frac c3"><span>{n}</span><span>{d}</span></span>
+      {g > 1 && (
+        <>
+          {' '}= <span class="frac c3"><span>{n / g}</span><span>{d / g}</span></span>
+        </>
+      )}
+      .
+    </li>
+  </ol>
+</figure>
+
+<style>
+  .dd svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>
