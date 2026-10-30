@@ -1,0 +1,96 @@
+---
+title: Ділення дробів
+ikonka: ➗
+description: Взаємно обернені числа і ділення дробів — ділене множимо на число, обернене до дільника.
+sidebar:
+  order: 5
+---
+
+import Pravylo from '../../../components/Pravylo.astro';
+import Drib from '../../../components/Drib.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
+
+<Pravylo>
+Два числа, добуток яких дорівнює $1$, — **взаємно обернені**: $\frac{a}{b}$ і $\frac{b}{a}$.
+
+Щоб поділити на дріб, **ділене множимо на число, обернене до дільника**: $\frac{a}{b} : \frac{c}{d} = \frac{a}{b} \cdot \frac{d}{c}$.
+</Pravylo>
+
+## Що це таке
+
+Скільки разів по чверть піци вміщається в $3$ піцах? У кожній піці $4$ чверті, тож у трьох — $3 \cdot 4 = 12$:
+
+<Drib n={12} d={4} pidpys="3 : 1/4 = 3 · 4 = 12 чвертинок" />
+
+Поділити на $\frac{1}{4}$ — те саме, що помножити на $4$. А $4$ — це $\frac{1}{4}$, «перевернута догори дриґом»:
+числа $\frac{1}{4}$ і $\frac{4}{1}$ взаємно обернені, бо $\frac{1}{4} \cdot 4 = 1$.
+
+$$
+\frac{a}{b} \cdot \frac{b}{a} = 1 \qquad\qquad \frac{a}{b} : \frac{c}{d} = \frac{a}{b} \cdot \frac{d}{c} = \frac{a \cdot d}{b \cdot c}
+$$
+
+Тут $\frac{a}{b}$ — ділене, $\frac{c}{d}$ — дільник, а $\frac{d}{c}$ — число, обернене до дільника. Обернене до натурального
+числа $n$ — це $\frac{1}{n}$. У нуля оберненого немає — на нуль не ділимо.
+
+## Приклад
+
+**Обчисли $\dfrac{3}{4} : \dfrac{2}{5}$.**
+
+1. Дільник $\dfrac{2}{5}$ перевертаємо: $\dfrac{5}{2}$.
+2. Множимо: $\dfrac{3}{4} \cdot \dfrac{5}{2} = \dfrac{15}{8}$.
+3. Виділяємо цілу частину: $\dfrac{15}{8} = 1\dfrac{7}{8}$.
+4. **Перевірка** множенням: $\dfrac{15}{8} \cdot \dfrac{2}{5} = \dfrac{30}{40} = \dfrac{3}{4}$ ✓
+
+**Мішані числа** спершу перетворюємо на неправильні дроби: $2\frac{1}{4} : 1\frac{1}{2} = \frac{9}{4} : \frac{3}{2} = \frac{9}{4} \cdot \frac{2}{3} = \frac{18}{12} = 1\frac{1}{2}$.
+
+:::caution[Не плутай]
+Перевертаємо **тільки дільник** — те, **на що** ділимо. Ділене лишаємо як є: $\frac{3}{4} : \frac{2}{5} \ne \frac{4}{3} \cdot \frac{2}{5}$.
+І не забудь замінити знак: ділення стає **множенням**.
+:::
+
+## Перевір себе
+
+Впиши відповідь і натисни «Перевірити». Дріб пиши через риску (`3/4`), мішане число — через пробіл (`1 1/2`).
+За кожну правильну відповідь — зірочка ⭐
+
+<Zavdannia vidpovid={['7/5', '1 2/5']} pidkazka="Поміняй місцями чисельник і знаменник.">
+  Яке число обернене до $\dfrac{5}{7}$?
+
+  <span slot="rozviazok">$\frac{7}{5}$, бо $\frac{5}{7} \cdot \frac{7}{5} = 1$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="1/6" pidkazka="6 = 6/1.">
+  Яке число обернене до $6$?
+
+  <span slot="rozviazok">$\frac{1}{6}$, бо $6 \cdot \frac{1}{6} = 1$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid={['1 1/2', '3/2']} pidkazka="Перевертаємо 4/9 і множимо.">
+  $\dfrac{2}{3} : \dfrac{4}{9}$
+
+  <span slot="rozviazok">$\frac{2}{3} \cdot \frac{9}{4} = \frac{18}{12} = \frac{3}{2} = 1\frac{1}{2}$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="1/6" pidkazka="Поділити на 5 — помножити на 1/5.">
+  $\dfrac{5}{6} : 5$
+
+  <span slot="rozviazok">$\frac{5}{6} \cdot \frac{1}{5} = \frac{5}{30} = \frac{1}{6}$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="6" pidkazka="4 · 3/2.">
+  $4 : \dfrac{2}{3}$
+
+  <span slot="rozviazok">$4 \cdot \frac{3}{2} = \frac{12}{2} = 6$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="8" pidkazka="Скільки разів 3/8 вміщається в 3? Поділи 3 на 3/8.">
+  Чарівниця розливає $3$ л зілля в пляшечки по $\dfrac{3}{8}$ л. Скільки пляшечок вона наповнить?
+
+  <span slot="rozviazok">$3 : \frac{3}{8} = 3 \cdot \frac{8}{3} = 8$ (пляшечок)</span>
+</Zavdannia>
+
+## Пов'язані теми
+
+- [Множення дробів](/math/6-klas/mnozhennia-drobiv/)
+- [Число за його дробом](/math/5-klas/chyslo-za-drobom/) — задачі, які тепер розв'язуємо діленням на дріб
+- [Відношення](/math/6-klas/vidnoshennia/)
