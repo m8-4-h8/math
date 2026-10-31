@@ -1,0 +1,80 @@
+---
+// Усне додавання і віднімання по розрядах: кожне число розкладаємо на сотні, десятки й одиниці,
+// дію виконуємо в кожному розряді окремо, потім складаємо результати.
+// Якщо в розряді вийшло 10 і більше — це вже наступний розряд (підказка під таблицею).
+//   <RozriadnaSuma a={346} b={252} />
+//   <RozriadnaSuma a={785} b={432} dia="−" />   — без «позичання» (кожна цифра a не менша за цифру b)
+interface Props {
+  a: number;
+  b: number;
+  dia?: '+' | '−';
+}
+const { a, b, dia = '+' } = Astro.props;
+const plus = dia === '+';
+const rozklad = (n: number) => [Math.floor(n / 100) * 100, (Math.floor(n / 10) % 10) * 10, n % 10];
+const ra = rozklad(a);
+const rb = rozklad(b);
+const rez = ra.map((x, i) => (plus ? x + rb[i] : x - rb[i]));
+if (rez.some((x) => x < 0)) throw new Error(`RozriadnaSuma: ${a} − ${b} потребує позичання — візьми інший приклад`);
+const vidpovid = plus ? a + b : a - b;
+const NAZVY = ['сотні', 'десятки', 'одиниці'];
+const KOLORY = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)'];
+const perekhid = plus && rez.some((x, i) => i > 0 && x >= [1000, 100, 10][i]);
+const dodanky = rez.filter((x) => x > 0);
+---
+
+<figure class="ill not-content rs">
+  <table aria-label={`${a} ${dia} ${b} = ${vidpovid}`}>
+    <tbody>
+      {
+        NAZVY.map((nazva, i) => (
+          <tr>
+            <th style={`color:${KOLORY[i]}`}>{nazva}</th>
+            <td>{ra[i]}</td>
+            <td class="z">{dia}</td>
+            <td>{rb[i]}</td>
+            <td class="z">=</td>
+            <td style={`color:${KOLORY[i]}`}>
+              <b>{rez[i]}</b>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p class="ill-caption">
+    <b class="num">
+      {a} {dia} {b} = {dodanky.join(' + ')}{dodanky.length > 1 && <> = {vidpovid}</>}
+    </b>
+    {perekhid && (
+      <>
+        <br />у розряді вийшло 10 або більше — частина переходить у старший розряд
+      </>
+    )}
+  </p>
+</figure>
+
+<style>
+  .rs table {
+    margin: 0.4rem auto 0;
+    border-collapse: collapse;
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .rs th {
+    text-align: left;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.8rem 0.3rem 0;
+  }
+  .rs td {
+    text-align: right;
+    padding: 0.3rem 0.35rem;
+    border-top: 1px dashed var(--ill-line);
+  }
+  .rs tr:first-child td {
+    border-top: none;
+  }
+  .rs td.z {
+    color: var(--ill-muted);
+  }
+</style>

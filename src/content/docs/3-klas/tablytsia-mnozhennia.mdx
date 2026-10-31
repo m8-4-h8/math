@@ -1,0 +1,102 @@
+---
+title: Таблиця множення і ділення
+ikonka: 🔟
+description: "Як влаштована таблиця множення, чому її половину вчити не треба, хитрощі для 9, множення на 0 і 1 та як ділити за допомогою множення."
+sidebar:
+  order: 2.5
+---
+
+import Pravylo from '../../../components/Pravylo.astro';
+import Hrupy from '../../../components/Hrupy.astro';
+import TablytsiaMnozhennia from '../../../components/TablytsiaMnozhennia.astro';
+import Trenazher from '../../../components/Trenazher.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
+
+<Pravylo>
+**Множення** — це додавання однакових доданків: $4 \cdot 3 = 3 + 3 + 3 + 3 = 12$.
+
+Від **перестановки множників** добуток не змінюється: $7 \cdot 8 = 8 \cdot 7$.
+
+**Ділення** — дія, обернена до множення: $56 : 7 = 8$, бо $7 \cdot 8 = 56$.
+
+$a \cdot 1 = a$, $\;a \cdot 0 = 0$, $\;a : 1 = a$, а **на нуль ділити не можна**.
+</Pravylo>
+
+## Що це таке
+
+$4$ коробки по $3$ цукерки — це $3 + 3 + 3 + 3$, або коротко $4 \cdot 3 = 12$:
+
+<Hrupy hrupy={4} po={3} />
+
+Усі такі добутки зібрані в **таблицю множення**. Знайди рядок першого множника і стовпчик другого — на перетині відповідь:
+
+<TablytsiaMnozhennia ryadok={7} klitynka={[7, 8]} />
+
+Рядок і стовпчик однакові, тож половину таблиці вчити **не треба**: знаєш $3 \cdot 8$ — знаєш і $8 \cdot 3$.
+Сині числа на діагоналі — квадрати: $5 \cdot 5$, $6 \cdot 6$…
+
+**Хитрість для 9.** Помнож на $10$ і відніми одне число: $9 \cdot 6 = 60 - 6 = 54$. А ще сума цифр відповіді завжди $9$: $5 + 4 = 9$.
+
+## Приклад
+
+**Обчисли $63 : 7$.**
+
+1. Ділення перевіряємо множенням: на яке число треба помножити $7$, щоб вийшло $63$?
+2. Іду рядком $7$ у таблиці: $7, 14, 21, 28, 35, 42, 49, 56, 63$ — це дев'ятий стовпчик.
+3. Отже $63 : 7 = 9$.
+4. **Перевірка**: $7 \cdot 9 = 63$ ✓
+
+:::caution[Не плутай]
+$5 \cdot 0 = 0$, а не $5$: п'ять разів по нулю — нуль. А $5 \cdot 1 = 5$.
+І ще: $0 : 5 = 0$, а от $5 : 0$ — **не можна**.
+:::
+
+## Перевір себе
+
+Впиши відповідь і натисни «Перевірити». За кожну правильну відповідь — зірочка ⭐
+
+<Zavdannia vidpovid="56" pidkazka="7 · 8 = 8 · 7. Подивись у таблицю.">
+  $7 \cdot 8$
+
+  <span slot="rozviazok">$56$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="54" pidkazka="60 − 6">
+  $9 \cdot 6$
+
+  <span slot="rozviazok">$9 \cdot 6 = 10 \cdot 6 - 6 = 54$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="8" pidkazka="6 помножити на яке число дає 48?">
+  $48 : 6$
+
+  <span slot="rozviazok">$8$, бо $6 \cdot 8 = 48$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="0" pidkazka="Дев'ять разів по нулю.">
+  $0 \cdot 9$
+
+  <span slot="rozviazok">$0$</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="9" pidkazka="На яке число помножити 8, щоб вийшло 72?">
+  $72 : 8$
+
+  <span slot="rozviazok">$9$, бо $8 \cdot 9 = 72$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="48" pidkazka="8 коробок по 6.">
+  У кожній з $8$ коробок по $6$ олівців. Скільки олівців усього?
+
+  <span slot="rozviazok">$8 \cdot 6 = 48$ олівців.</span>
+</Zavdannia>
+
+## Потренуйся
+
+<Trenazher dii={['×', ':']} riven="seredno" />
+
+## Пов'язані теми
+
+- [Позатабличне множення і ділення](/math/3-klas/pozatablychne-mnozhennia-i-dilennia/) — коли числа більші за таблицю
+- [Ділення з остачею](/math/4-klas/dilennia-z-ostacheiu/)
+- [Тренажер](/math/trenazher/)
