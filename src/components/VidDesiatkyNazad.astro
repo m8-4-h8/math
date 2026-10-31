@@ -1,0 +1,89 @@
+---
+// Підбір цифри частки «від десятки назад»: пробуємо 10, бачимо, скільки «зайвого»,
+// і відкидаємо стільки дільників, скільки вміщується в це зайве (розподільна властивість:
+// d · (10 − k) = d · 10 − d · k). Смужка з 10 блоків по дільнику, зайві блоки закреслено.
+//   <VidDesiatkyNazad dilene={344} dilnyk={43} />
+interface Props {
+  dilene: number; // неповне ділене, менше за дільник · 10
+  dilnyk: number;
+}
+const { dilene, dilnyk } = Astro.props;
+const p10 = dilnyk * 10;
+if (dilnyk <= 0 || dilene < dilnyk || dilene >= p10) {
+  throw new Error('VidDesiatkyNazad: потрібно дільник ≤ ділене < дільник · 10');
+}
+const zaive = p10 - dilene; // скільки бракує до дільник · 10
+const k = Math.ceil(zaive / dilnyk); // скільки дільників відкидаємо
+const q = 10 - k; // цифра частки
+const ost = dilene - q * dilnyk;
+const tochno = zaive % dilnyk === 0;
+const fmt = (x: number) => x.toLocaleString('uk-UA').replace(/\s/g, ' ');
+
+const x0 = 20;
+const w = 52;
+const W = x0 * 2 + w * 10;
+const yB = 52; // верх смужки
+const hB = 34;
+const H = 172;
+const xN = x0 + (dilene / dilnyk) * w;
+const xQ = x0 + q * w;
+const xE = x0 + 10 * w;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${dilnyk} · 10 = ${p10}, це на ${zaive} більше за ${dilene}; відкидаємо ${k}, цифра частки ${q}`}>
+      {
+        Array.from({ length: 10 }, (_, i) => {
+          const zaivyi = i >= q;
+          return (
+            <g>
+              <rect x={x0 + i * w} y={yB} width={w} height={hB} fill={zaivyi ? 'var(--ill-4)' : 'var(--ill-1)'} fill-opacity={zaivyi ? '0.18' : '0.35'} stroke="var(--ill-line)" stroke-width="1" />
+              <text x={x0 + i * w + w / 2} y={yB + hB / 2} text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill={zaivyi ? 'var(--ill-muted)' : 'var(--ill-ink)'}>
+                {dilnyk}
+              </text>
+              {zaivyi && <line x1={x0 + i * w + 6} y1={yB + hB - 6} x2={x0 + (i + 1) * w - 6} y2={yB + 6} stroke="var(--ill-4)" stroke-width="2.5" />}
+            </g>
+          );
+        })
+      }
+      <rect x={x0} y={yB} width={w * 10} height={hB} fill="none" stroke="var(--ill-ink)" stroke-width="2" />
+      <line x1={xQ} y1={yB - 6} x2={xQ} y2={yB + hB + 6} stroke="var(--ill-ink)" stroke-width="2.5" />
+      <text x={xE} y={yB - 12} text-anchor="end" font-size="13" font-weight="700" fill="var(--ill-ink)">{dilnyk} · 10 = {fmt(p10)}</text>
+      <text x={x0 + (q * w) / 2} y={yB - 12} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-1)">{dilnyk} · {q} = {fmt(dilnyk * q)}</text>
+      <path d={`M ${xN} ${yB + hB + 4} l -7 12 h 14 z`} fill="var(--ill-3)" />
+      <text x={xN} y={yB + hB + 32} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-3)">{fmt(dilene)}</text>
+      <path d={`M ${xN} ${yB + hB + 50} v 6 H ${xE} v -6`} fill="none" stroke="var(--ill-4)" stroke-width="2" />
+      <text x={(xN + xE) / 2} y={yB + hB + 74} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-4)">зайве {fmt(zaive)}</text>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Пробуємо 10: <b class="num">{dilnyk} · 10 = {fmt(p10)}</b> — це більше за {fmt(dilene)}, отже 10 завелико.
+    </li>
+    <li>
+      Скільки зайвого: <b class="num c4">{fmt(p10)} − {fmt(dilene)} = {fmt(zaive)}</b>
+    </li>
+    <li>
+      {
+        tochno ? (
+          <span>
+            Зайве — це рівно <b class="num c4">{k}</b> дільник{k === 1 ? '' : 'и'}: <b class="num">{dilnyk} · {k} = {fmt(zaive)}</b>
+          </span>
+        ) : (
+          <span>
+            <b class="num">{dilnyk} · {k - 1} = {fmt(dilnyk * (k - 1))}</b> — замало, щоб покрити {fmt(zaive)}, а{' '}
+            <b class="num">{dilnyk} · {k} = {fmt(dilnyk * k)}</b> — вистачає. Відкидаємо <b class="c4">{k}</b>.
+          </span>
+        )
+      }
+    </li>
+    <li>
+      Цифра частки: <b class="num c1">10 − {k} = {q}</b>, бо <b class="num">{dilnyk} · (10 − {k}) = {fmt(p10)} − {fmt(dilnyk * k)} = {fmt(dilnyk * q)}</b>
+    </li>
+    <li>
+      Відповідь: <b class="num">{fmt(dilene)} : {dilnyk} = {q}{ost > 0 && ` (ост. ${ost})`}</b>
+      {ost > 0 && <span class="muted"> — остача {ost} менша за {dilnyk} ✓</span>}
+    </li>
+  </ol>
+</figure>
