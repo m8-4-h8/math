@@ -70,6 +70,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Chastyny` | задача на частини однаковими клітинками | `<Chastyny chastyny={[1, 3]} imena={['Брат', 'Сестра']} razom={24} />` |
   | `RozkladMnozhennia` | зручне множення: число на круглі частини | `<RozkladMnozhennia a={563} b={3} />` |
   | `DilnykNa5i10` | цифра частки через дільник · 5 і · 10 | `<DilnykNa5i10 dilene={47} dilnyk={6} />` |
+  | `VidDesiatkyNazad` | цифра частки від десятки назад: дільник · 10 мінус зайві дільники | `<VidDesiatkyNazad dilene={344} dilnyk={43} />` |
   | `Zvedennia` | зведення до одиниці табличкою (одна або дві величини) | `<Zvedennia nazvy={['Корови', 'Дні']} vidomo={[5, 4]} rezultat={100} shukaty={[3, 6]} odynytsia="Сіно, кг" />` |
   | `Kolo` | коло або круг з центром, радіусом і діаметром; `formuly` — ще довжина кола і площа (π ≈ 3,14) | `<Kolo radius={3} pokazaty="obydva" />` |
   | `SumaRiznytsia` | два числа за сумою і різницею: смужки + кроки | `<SumaRiznytsia suma={30} riznytsia={6} imena={['Оля', 'Марко']} />` |
