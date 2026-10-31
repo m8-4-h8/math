@@ -1,0 +1,56 @@
+---
+// Позатабличне ділення: ділене розбиваємо на зручні доданки, що діляться на дільник (круглі десятки + решта),
+// ділимо кожен окремо й додаємо частки.
+//   <RozkladDilennia a={48} b={3} />                      → 30 + 18
+//   <RozkladDilennia a={96} b={4} chastyny={[40, 40, 16]} />
+interface Props {
+  a: number;
+  b: number;
+  chastyny?: number[]; // на які доданки розбити `a` (кожен ділиться на `b`, сума — `a`)
+}
+const { a, b } = Astro.props;
+const krugli = Math.floor(a / (10 * b)) * 10 * b;
+const chastyny = Astro.props.chastyny ?? [krugli, a - krugli].filter((v) => v > 0);
+if (chastyny.reduce((s, v) => s + v, 0) !== a || chastyny.some((v) => v % b !== 0)) {
+  throw new Error(`RozkladDilennia: ${chastyny.join(' + ')} не підходить для ${a} : ${b}`);
+}
+const chastky = chastyny.map((v) => v / b);
+const kolory = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)', 'var(--ill-4)'];
+
+const shyrynaSmuhy = 320;
+const minW = 70;
+// Пропорційні ширини, але не вужчі за minW, щоб підписи вміщалися.
+const syri = chastyny.map((v) => Math.max(minW, (v / a) * shyrynaSmuhy));
+const masshtab = shyrynaSmuhy / syri.reduce((s, w) => s + w, 0);
+const shyr = syri.map((w) => w * masshtab);
+const x0 = 14;
+const xs = shyr.map((_, i) => x0 + shyr.slice(0, i).reduce((s, w) => s + w, 0));
+const W = x0 * 2 + shyrynaSmuhy;
+const yTop = 30;
+const hSmuha = 38;
+const H = yTop + hSmuha + 36;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${a} : ${b} = ${chastyny.map((v) => `${v} : ${b}`).join(' + ')} = ${a / b}`}>
+      <text x={W / 2} y={18} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-ink)">{a}</text>
+      {
+        chastyny.map((v, i) => (
+          <g>
+            <rect x={xs[i]} y={yTop} width={shyr[i]} height={hSmuha} rx="6" fill={kolory[i % 4]} fill-opacity="0.25" stroke={kolory[i % 4]} stroke-width="2" />
+            <text x={xs[i] + shyr[i] / 2} y={yTop + hSmuha / 2} text-anchor="middle" dominant-baseline="central" font-size="18" font-weight="800" fill={kolory[i % 4]}>
+              {v}
+            </text>
+            <text x={xs[i] + shyr[i] / 2} y={yTop + hSmuha + 24} text-anchor="middle" font-size="14" fill="var(--ill-ink)">
+              {v} : {b} = <tspan font-weight="800" fill={kolory[i % 4]}>{chastky[i]}</tspan>
+            </text>
+          </g>
+        ))
+      }
+    </svg>
+  </div>
+  <p class="ill-caption">
+    <b class="num">{a} : {b} = {chastky.join(' + ')} = {a / b}</b>
+  </p>
+</figure>
