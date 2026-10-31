@@ -1,0 +1,78 @@
+---
+// Рівняння з невідомим в обох частинах: a·x + b = c·x + d.
+// Доданки з x збираємо зліва, числа — справа; кожен перенесений доданок змінює знак (рожевий).
+// Під малюнком — зведення подібних і ділення на коефіцієнт.
+//   <PerenosDodankiv a={5} b={3} c={2} d={12} />   — 5x + 3 = 2x + 12
+interface Props {
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  zminna?: string;
+}
+const { a, b, c, d, zminna = 'x' } = Astro.props;
+
+const dzn = (v: number) => String(Math.abs(v)).replace('.', ',');
+const minus = (v: number) => (v < 0 ? `−${dzn(v)}` : dzn(v));
+const zX = (k: number, pershyi: boolean) => {
+  const chyslo = Math.abs(k) === 1 ? '' : dzn(k);
+  return pershyi ? `${k < 0 ? '−' : ''}${chyslo}${zminna}` : `${k < 0 ? '−' : '+'} ${chyslo}${zminna}`;
+};
+const zCh = (k: number, pershyi: boolean) => (pershyi ? minus(k) : `${k < 0 ? '−' : '+'} ${dzn(k)}`);
+
+const koef = Math.round((a - c) * 1000) / 1000;
+const pravo = Math.round((d - b) * 1000) / 1000;
+const vidpovid = Math.round((pravo / koef) * 1000) / 1000;
+
+// Рядок 1: ax | +b | = | cx | +d     Рядок 2: ax | −cx | = | d | −b
+const r1 = [zX(a, true), zCh(b, false), '=', zX(c, true), zCh(d, false)];
+const r2 = [zX(a, true), zX(-c, false), '=', zCh(d, true), zCh(-b, false)];
+const kol = (i: number, riadok: 1 | 2) => {
+  if (i === 2) return 'var(--ill-ink)';
+  if (riadok === 2 && (i === 1 || i === 4)) return 'var(--ill-4)';
+  const zX_ = riadok === 1 ? i === 0 || i === 3 : i === 0 || i === 1;
+  return zX_ ? 'var(--ill-1)' : 'var(--ill-2)';
+};
+const ch = 13;
+const shyr = [0, 1, 2, 3, 4].map((i) => (i === 2 ? 34 : Math.max(r1[i].length, r2[i].length) * ch + 20));
+const pad = 10;
+const xs = shyr.map((_, i) => pad + shyr.slice(0, i).reduce((s, w) => s + w, 0));
+const cx = (i: number) => xs[i] + shyr[i] / 2;
+const W = pad * 2 + shyr.reduce((s, w) => s + w, 0);
+const y1 = 30;
+const y2 = 128;
+const H = y2 + 20;
+const id = `pd-${a}-${b}-${c}-${d}`.replace(/[.−-]/g, '_');
+const opys = `${r1.join(' ')}; ${r2.join(' ')}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <defs>
+        <marker id={id} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ill-4)" />
+        </marker>
+      </defs>
+      <g font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="central">
+        {r1.map((t, i) => <text x={cx(i)} y={y1} fill={kol(i, 1)}>{t}</text>)}
+        {r2.map((t, i) => <text x={cx(i)} y={y2} fill={kol(i, 2)}>{t}</text>)}
+      </g>
+      <line x1={cx(2)} y1={y1 + 16} x2={cx(2)} y2={y2 - 16} stroke="var(--ill-line)" stroke-width="1.5" stroke-dasharray="3 4" />
+      <path d={`M ${cx(3)} ${y1 + 16} C ${cx(3)} ${y1 + 60}, ${cx(1)} ${y1 + 40}, ${cx(1)} ${y2 - 18}`} fill="none" stroke="var(--ill-4)" stroke-width="2" marker-end={`url(#${id})`} />
+      <path d={`M ${cx(1)} ${y1 + 16} C ${cx(1)} ${y1 + 60}, ${cx(4)} ${y1 + 40}, ${cx(4)} ${y2 - 18}`} fill="none" stroke="var(--ill-4)" stroke-width="2" marker-end={`url(#${id})`} />
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Доданки з <b class="c1">{zminna}</b> — наліво, <b class="c2">числа</b> — направо. Перенесені доданки змінюють знак:{' '}
+      <b class="c4">{r2[1]}</b> і <b class="c4">{r2[4]}</b>.
+    </li>
+    <li>
+      Зводимо подібні: <b class="num">{zX(koef, true)} = {minus(pravo)}</b>.
+    </li>
+    <li>
+      Ділимо обидві частини на {koef < 0 ? `(${minus(koef)})` : minus(koef)}: <b class="num">{zminna} = {minus(vidpovid)}</b>.
+    </li>
+  </ol>
+</figure>

@@ -8,8 +8,9 @@ interface Props {
   tochky?: Tochka[];
   bez_koordynat?: boolean; // біля точок лише назва
   shliakh?: boolean; // пунктир від осей до точки (за замовчуванням — так)
+  priami?: [string, string][]; // прямі через пари точок за назвами, напр. [['A', 'B']]
 }
-const { rozmir = 5, tochky = [], bez_koordynat = false, shliakh = true } = Astro.props;
+const { rozmir = 5, tochky = [], bez_koordynat = false, shliakh = true, priami = [] } = Astro.props;
 
 const k = 26; // одна клітинка
 const pole = 20;
@@ -31,6 +32,14 @@ const zliva = (t: Tochka) => {
   const shyryna = napys(t).length * 8;
   return t.x < 0 ? X(t.x) - 8 - shyryna >= 0 : X(t.x) + 8 + shyryna > W;
 };
+// Пряма через дві точки, продовжена далеко за межі (обрізається рамкою сітки).
+const liniia = ([p, q]: [string, string]) => {
+  const a = tochky.find((t) => t.nazva === p)!;
+  const b = tochky.find((t) => t.nazva === q)!;
+  const d = 4 * rozmir;
+  return { x1: X(a.x - (b.x - a.x) * d), y1: Y(a.y - (b.y - a.y) * d), x2: X(b.x + (b.x - a.x) * d), y2: Y(b.y + (b.y - a.y) * d) };
+};
+const ramkaId = `kpl-${rozmir}-${tochky.map((t) => t.nazva).join('')}`;
 const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', ');
 ---
 
@@ -72,6 +81,20 @@ const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', '
         })
       }
       <text x={c - 6} y={c + 15} text-anchor="end" font-size="11" font-weight="700" fill="var(--ill-ink)">0</text>
+      {priami.length > 0 && (
+        <>
+          <defs>
+            <clipPath id={ramkaId}>
+              <rect x={pole} y={pole} width={W - 2 * pole} height={W - 2 * pole} />
+            </clipPath>
+          </defs>
+          <g clip-path={`url(#${ramkaId})`}>
+            {priami.map((pr, i) => (
+              <line {...liniia(pr)} stroke={kolory[(2 * i + 1) % kolory.length]} stroke-width="2.5" opacity="0.85" />
+            ))}
+          </g>
+        </>
+      )}
       {
         tochky.map((t, i) => {
           const kol = kolory[i % kolory.length];
