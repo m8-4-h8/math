@@ -1,0 +1,78 @@
+---
+// Таблиця множення 10 × 10 (у клітинці — добуток номера рядка і стовпчика).
+// `ryadok` підсвічує рядок і стовпчик числа (видно, що a · b = b · a), `klitynka` — одну відповідь.
+//   <TablytsiaMnozhennia ryadok={7} klitynka={[7, 8]} />
+interface Props {
+  ryadok?: number;
+  klitynka?: [number, number];
+}
+const { ryadok, klitynka } = Astro.props;
+const N = 10;
+const ch = Array.from({ length: N }, (_, i) => i + 1);
+const vybrana = (r: number, c: number) => klitynka && ((klitynka[0] === r && klitynka[1] === c) || (klitynka[0] === c && klitynka[1] === r));
+---
+
+<figure class="ill not-content tm">
+  <div class="ill-scroll">
+    <table aria-label={ryadok ? `Таблиця множення, виділено число ${ryadok}` : 'Таблиця множення'}>
+      <thead>
+        <tr>
+          <th class="kut">×</th>
+          {ch.map((c) => <th class:list={{ hl: c === ryadok }}>{c}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          ch.map((r) => (
+            <tr>
+              <th class:list={{ hl: r === ryadok }}>{r}</th>
+              {ch.map((c) => (
+                <td class:list={{ riad: r === ryadok || c === ryadok, kv: r === c, vybr: vybrana(r, c) }}>{r * c}</td>
+              ))}
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="ill-caption">
+    {klitynka ? <b class="num">{klitynka[0]} · {klitynka[1]} = {klitynka[1]} · {klitynka[0]} = {klitynka[0] * klitynka[1]}</b> : 'на перетині рядка і стовпчика — добуток'}
+    {ryadok && <><br />рядок і стовпчик числа {ryadok} однакові, бо від перестановки множників добуток не змінюється</>}
+  </p>
+</figure>
+
+<style>
+  .tm table {
+    margin: 0.3rem auto 0;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .tm th,
+  .tm td {
+    width: 1.9rem;
+    height: 1.7rem;
+    text-align: center;
+    border: 1px solid var(--ill-grid);
+    padding: 0;
+  }
+  .tm th {
+    color: var(--ill-muted);
+    font-weight: 700;
+  }
+  .tm th.hl {
+    color: var(--ill-2);
+  }
+  .tm td.kv {
+    color: var(--ill-1);
+    font-weight: 700;
+  }
+  .tm td.riad {
+    background: color-mix(in srgb, var(--ill-2) 18%, transparent);
+  }
+  .tm td.vybr {
+    background: var(--ill-2);
+    color: var(--ill-paper);
+    font-weight: 800;
+  }
+</style>
