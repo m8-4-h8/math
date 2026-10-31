@@ -1,0 +1,96 @@
+---
+// Ламана або многокутник на клітчастому аркуші: вершини з буквами, довжина кожної ланки (сторони)
+// і під малюнком — сума довжин. Замкнена ламана — це многокутник, а сума — його периметр.
+//   <Lamana vershyny={[[0, 3], [3, 0], [6, 2], [9, 0]]} dovzhyny={[4, 3, 2]} />
+//   <Lamana vershyny={[[0, 0], [4, 0], [4, 3]]} dovzhyny={[4, 3, 5]} zamknena />
+type Tochka = [number, number]; // клітинки: x — праворуч, y — вгору
+interface Props {
+  vershyny: Tochka[];
+  dovzhyny: number[]; // довжина кожної ланки (для замкненої — і останньої, що повертається до першої вершини)
+  zamknena?: boolean;
+  odynytsi?: string;
+  nazvy?: string; // букви вершин, за замовчуванням A, B, C…
+}
+const { vershyny, dovzhyny, zamknena = false, odynytsi = 'см', nazvy = 'ABCDEFGHKLMN' } = Astro.props;
+const lanok = zamknena ? vershyny.length : vershyny.length - 1;
+if (dovzhyny.length !== lanok) throw new Error(`Lamana: потрібно ${lanok} довжин, а передано ${dovzhyny.length}`);
+
+const k = 28;
+const pole = 26;
+const xs = vershyny.map((v) => v[0]);
+const ys = vershyny.map((v) => v[1]);
+const minX = Math.min(...xs);
+const maxX = Math.max(...xs);
+const minY = Math.min(...ys);
+const maxY = Math.max(...ys);
+const W = (maxX - minX) * k + 2 * pole;
+const H = (maxY - minY) * k + 2 * pole;
+const X = (x: number) => pole + (x - minX) * k;
+const Y = (y: number) => H - pole - (y - minY) * k;
+const cx = xs.reduce((s, v) => s + v, 0) / xs.length;
+const cy = ys.reduce((s, v) => s + v, 0) / ys.length;
+const lanky = Array.from({ length: lanok }, (_, i) => [vershyny[i], vershyny[(i + 1) % vershyny.length]] as [Tochka, Tochka]);
+// Підпис довжини — посередині ланки, трохи вбік від центру фігури.
+const pidpys = ([a, b]: [Tochka, Tochka]) => {
+  const mx = (a[0] + b[0]) / 2;
+  const my = (a[1] + b[1]) / 2;
+  let nx = -(b[1] - a[1]);
+  let ny = b[0] - a[0];
+  const d = Math.hypot(nx, ny) || 1;
+  nx /= d;
+  ny /= d;
+  if (nx * (mx - cx) + ny * (my - cy) < 0) {
+    nx = -nx;
+    ny = -ny;
+  }
+  return { x: X(mx) + nx * 13, y: Y(my) - ny * 13 };
+};
+const vidCentru = (v: Tochka) => {
+  const dx = v[0] - cx;
+  const dy = v[1] - cy;
+  const d = Math.hypot(dx, dy) || 1;
+  return { x: X(v[0]) + (dx / d) * 14, y: Y(v[1]) - (dy / d) * 14 };
+};
+const suma = dovzhyny.reduce((s, v) => s + v, 0);
+const shliakh = vershyny.map((v, i) => `${i ? 'L' : 'M'} ${X(v[0])} ${Y(v[1])}`).join(' ') + (zamknena ? ' Z' : '');
+const nazva = vershyny.map((_, i) => nazvy[i]).join('');
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${zamknena ? 'Многокутник' : 'Ламана'} ${nazva}: ${dovzhyny.join(' + ')} = ${suma} ${odynytsi}`}>
+      {Array.from({ length: maxX - minX + 3 }, (_, i) => <line x1={X(minX - 1 + i)} y1="0" x2={X(minX - 1 + i)} y2={H} stroke="var(--ill-grid)" />)}
+      {Array.from({ length: maxY - minY + 3 }, (_, i) => <line x1="0" y1={Y(minY - 1 + i)} x2={W} y2={Y(minY - 1 + i)} stroke="var(--ill-grid)" />)}
+      <path d={shliakh} fill={zamknena ? 'var(--ill-1)' : 'none'} fill-opacity="0.12" stroke="var(--ill-1)" stroke-width="2.5" stroke-linejoin="round" />
+      {
+        lanky.map((l, i) => {
+          const p = pidpys(l);
+          return (
+            <text x={p.x} y={p.y} text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="var(--ill-2)">
+              {dovzhyny[i]}
+            </text>
+          );
+        })
+      }
+      {
+        vershyny.map((v, i) => {
+          const p = vidCentru(v);
+          return (
+            <g>
+              <circle cx={X(v[0])} cy={Y(v[1])} r="4" fill="var(--ill-ink)" />
+              <text x={p.x} y={p.y} text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" fill="var(--ill-ink)">
+                {nazvy[i]}
+              </text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  <p class="ill-caption">
+    {zamknena ? <>периметр {nazva}</> : <>довжина ламаної {nazva}</>}:{' '}
+    <b class="num">
+      {dovzhyny.join(' + ')} = {suma} {odynytsi}
+    </b>
+  </p>
+</figure>
