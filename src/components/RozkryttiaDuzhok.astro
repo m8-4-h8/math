@@ -1,0 +1,84 @@
+---
+// Розкриття дужок: множник перед дужками «дістає» до кожного доданка (дуги-стрілки),
+// під кожним доданком — що з нього вийшло. Доданки, у яких знак змінився, — рожеві.
+//   <RozkryttiaDuzhok mnozhnyk={-1} dodanky={[{ k: 1, b: 'a' }, { k: -5 }, { k: 2, b: 'b' }]} />   — −(a − 5 + 2b)
+//   <RozkryttiaDuzhok mnozhnyk={3} dodanky={[{ k: 1, b: 'x' }, { k: -4 }]} />                      — 3(x − 4)
+type Dodanok = { k: number; b?: string }; // коефіцієнт і буква (без букви — просто число)
+interface Props {
+  mnozhnyk: number; // −1 — лише мінус перед дужками, 1 — плюс
+  dodanky: Dodanok[];
+}
+const { mnozhnyk, dodanky } = Astro.props;
+
+const dzn = (v: number) => String(Math.abs(v)).replace('.', ',');
+// Запис доданка: «перший» пишемо без «+» на початку.
+const zapys = (d: Dodanok, pershyi: boolean) => {
+  const znak = d.k < 0 ? '−' : pershyi ? '' : '+';
+  const chyslo = d.b && Math.abs(d.k) === 1 ? '' : dzn(d.k);
+  return `${znak}${znak && !pershyi ? ' ' : ''}${chyslo}${d.b ?? ''}`;
+};
+const rezultat = dodanky.map((d) => ({ k: Math.round(d.k * mnozhnyk * 1000) / 1000, b: d.b }));
+const mnTekst = mnozhnyk === -1 ? '−' : mnozhnyk === 1 ? '+' : `${mnozhnyk < 0 ? '−' : ''}${dzn(mnozhnyk)}`;
+
+const ch = 13; // ширина символу
+const shyr = dodanky.map((d, i) => Math.max(zapys(d, i === 0).length, zapys(rezultat[i], i === 0).length) * ch + 22);
+const x0 = 14;
+const mnW = mnTekst.length * ch + 18;
+const duzhkaW = 14;
+const starty = shyr.map((_, i) => x0 + mnW + duzhkaW + shyr.slice(0, i).reduce((s, w) => s + w, 0));
+const cx = (i: number) => starty[i] + shyr[i] / 2;
+const kinets = starty[starty.length - 1] + shyr[shyr.length - 1];
+const W = kinets + duzhkaW + 14;
+const r1 = 62;
+const r2 = 122;
+const H = r2 + 22;
+const mx = x0 + mnW / 2;
+const zminyvsia = (i: number) => Math.sign(dodanky[i].k) !== Math.sign(rezultat[i].k);
+const tekst = (ds: Dodanok[]) => ds.map((d, i) => zapys(d, i === 0)).join(' ');
+const opys = `${mnTekst}(${tekst(dodanky)}) = ${tekst(rezultat)}`;
+const id = `rd-${Math.abs(mnozhnyk)}-${dodanky.length}-${mnozhnyk < 0 ? 'm' : 'p'}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <defs>
+        <marker id={id} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ill-2)" />
+        </marker>
+      </defs>
+      {
+        dodanky.map((_, i) => (
+          <path
+            d={`M ${mx} ${r1 - 16} Q ${(mx + cx(i)) / 2} ${r1 - 50 - i * 6} ${cx(i)} ${r1 - 18}`}
+            fill="none"
+            stroke="var(--ill-2)"
+            stroke-width="1.8"
+            marker-end={`url(#${id})`}
+          />
+        ))
+      }
+      <g font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="var(--ill-ink)">
+        <text x={mx} y={r1} fill="var(--ill-2)">{mnTekst}</text>
+        <text x={x0 + mnW + duzhkaW / 2} y={r1}>(</text>
+        {dodanky.map((d, i) => <text x={cx(i)} y={r1}>{zapys(d, i === 0)}</text>)}
+        <text x={kinets + duzhkaW / 2} y={r1}>)</text>
+
+        <text x={mx} y={r2}>=</text>
+        {rezultat.map((d, i) => <text x={cx(i)} y={r2} fill={zminyvsia(i) ? 'var(--ill-4)' : 'var(--ill-1)'}>{zapys(d, i === 0)}</text>)}
+      </g>
+      {dodanky.map((_, i) => <line x1={cx(i)} y1={r1 + 16} x2={cx(i)} y2={r2 - 18} stroke="var(--ill-line)" stroke-width="1.5" stroke-dasharray="3 4" />)}
+    </svg>
+  </div>
+  <p class="ill-caption">
+    {
+      mnozhnyk === -1 ? (
+        <>мінус перед дужками змінює знак <b>кожного</b> доданка на <b class="c4">протилежний</b></>
+      ) : mnozhnyk === 1 ? (
+        <>плюс перед дужками — дужки просто прибираємо, знаки <b class="c1">не змінюються</b></>
+      ) : (
+        <>множимо <b class="c2">{mnTekst}</b> на <b>кожен</b> доданок у дужках{mnozhnyk < 0 && <>, знаки <b class="c4">змінюються</b></>}</>
+      )
+    }
+  </p>
+</figure>

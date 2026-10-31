@@ -1,0 +1,95 @@
+---
+// Взаємне розміщення двох прямих на клітчастому папері: перпендикулярні (кут 90°, позначка-квадратик),
+// паралельні (не перетинаються, з пунктиром-відстанню) або просто перетинаються під іншим кутом.
+//   <PeretynPriamykh vydy={['perpendykuliarni', 'paralelni', 'peretyn']} />
+type Vyd = 'perpendykuliarni' | 'paralelni' | 'peretyn';
+interface Props {
+  vydy?: Vyd[];
+}
+const { vydy = ['perpendykuliarni', 'paralelni', 'peretyn'] } = Astro.props;
+
+const k = 15; // клітинка
+const n = 8; // клітинок у панелі
+const P = n * k;
+const gap = 18;
+const W = vydy.length * P + (vydy.length - 1) * gap + 20;
+const H = P + 50;
+const c = P / 2;
+
+// Пряма через точку (x, y) у клітинках відносно центру з напрямком (dx, dy) у клітинках.
+const priama = (x: number, y: number, dx: number, dy: number) => {
+  const t = 10;
+  return { x1: c + (x - dx * t) * k, y1: c - (y - dy * t) * k, x2: c + (x + dx * t) * k, y2: c - (y + dy * t) * k };
+};
+const OPYS: Record<Vyd, { pidpys: string; zapys: string }> = {
+  perpendykuliarni: { pidpys: 'перпендикулярні', zapys: 'a ⊥ b' },
+  paralelni: { pidpys: 'паралельні', zapys: 'a ∥ b' },
+  peretyn: { pidpys: 'перетинаються', zapys: 'кут не 90°' },
+};
+// Квадратик прямого кута: уздовж (2,1) і (−1,2), нормовані до ~10 px.
+const l = 10 / Math.sqrt(5);
+const kvadratyk = `M ${c + 2 * l} ${c - l} L ${c + l} ${c - 3 * l} L ${c - l} ${c - 2 * l}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={vydy.map((v) => OPYS[v].pidpys).join(', ')}>
+      <defs>
+        {vydy.map((_, i) => <clipPath id={`pp-${vydy.join('-')}-${i}`}><rect x="0" y="0" width={P} height={P} /></clipPath>)}
+      </defs>
+      {
+        vydy.map((v, i) => {
+          const a = v === 'paralelni' ? priama(0, 1.5, 2, 1) : priama(0, 0, 2, 1);
+          const b = v === 'perpendykuliarni' ? priama(0, 0, -1, 2) : v === 'paralelni' ? priama(0, -1.5, 2, 1) : priama(0, 0, 1, 3);
+          return (
+            <g transform={`translate(${10 + i * (P + gap)} 8)`}>
+              <g clip-path={`url(#pp-${vydy.join('-')}-${i})`}>
+                {Array.from({ length: n + 1 }, (_, j) => (
+                  <g>
+                    <line x1={j * k} y1="0" x2={j * k} y2={P} stroke="var(--ill-grid)" />
+                    <line x1="0" y1={j * k} x2={P} y2={j * k} stroke="var(--ill-grid)" />
+                  </g>
+                ))}
+                <line {...a} stroke="var(--ill-1)" stroke-width="2.5" />
+                <line {...b} stroke="var(--ill-4)" stroke-width="2.5" />
+                {v === 'perpendykuliarni' && <path d={kvadratyk} fill="none" stroke="var(--ill-ink)" stroke-width="1.5" />}
+                {v === 'perpendykuliarni' && <circle cx={c} cy={c} r="3.5" fill="var(--ill-ink)" />}
+                {v === 'peretyn' && <circle cx={c} cy={c} r="3.5" fill="var(--ill-ink)" />}
+                {v === 'paralelni' && (
+                  <line
+                    x1={c - 0.6 * k}
+                    y1={c - 1.2 * k}
+                    x2={c + 0.6 * k}
+                    y2={c + 1.2 * k}
+                    stroke="var(--ill-2)"
+                    stroke-width="2"
+                    stroke-dasharray="4 3"
+                  />
+                )}
+              </g>
+              <text x={P - 14} y={c - 3.4 * k} font-size="15" font-style="italic" font-weight="700" fill="var(--ill-1)">a</text>
+              <text
+                x={v === 'perpendykuliarni' ? c - 2.3 * k : v === 'paralelni' ? P - 14 : c + 1.6 * k}
+                y={v === 'perpendykuliarni' ? 16 : v === 'paralelni' ? c - 0.2 * k : 16}
+                font-size="15"
+                font-style="italic"
+                font-weight="700"
+                fill="var(--ill-4)"
+              >
+                b
+              </text>
+              <text x={P / 2} y={P + 18} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">
+                {OPYS[v].pidpys}
+              </text>
+              {OPYS[v].zapys && (
+                <text x={P / 2} y={P + 36} text-anchor="middle" font-size="13" fill="var(--ill-muted)">
+                  {OPYS[v].zapys}
+                </text>
+              )}
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+</figure>

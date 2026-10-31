@@ -70,12 +70,17 @@ const maRozviazok = Astro.slots.has('rozviazok');
       .replace(/’|ʼ/g, "'")
       .replace(/(\d)\s+(?=\d{3}(?!\d))/g, '$1')
       .replace(/(мм|см|дм|км|м)\s*[23²³]/g, '$1'); // «см2» і «см²» — це одиниця, а не число 2
-    const chyslo = desiatkova ? /\d+(?:[.,]\d+)?|[\p{L}']+/gu : /\d+(?:\.\d+)?|[\p{L}']+/gu;
-    return t.match(chyslo)?.map((s) => s.replace(',', '.')) || [];
+    // Мінус перед числом (не між числами, як у «10-15») — частина числа: «−2» і «2» різні відповіді.
+    const chyslo = desiatkova
+      ? /(?:(?<![\d\p{L}])[-−])?\d+(?:[.,]\d+)?|[\p{L}']+/gu
+      : /(?:(?<![\d\p{L}])[-−])?\d+(?:\.\d+)?|[\p{L}']+/gu;
+    return t.match(chyslo)?.map((s) => s.replace(',', '.').replace('−', '-')) || [];
   }
-  const chysla = (s: string[]) => s.filter((x) => /^\d/.test(x)).join(' ');
+  const chysla = (s: string[]) => s.filter((x) => /^-?\d/.test(x)).join(' ');
 
   function pravylno(vvid: string, vidpovidi: string[]) {
+    // Відповідь без букв і цифр (знаки «>», «<», «=») порівнюємо як є.
+    if (vidpovidi.some((pr) => pr.trim() === vvid.trim())) return true;
     return [true, false].some((desiatkova) => {
       const v = slova(vvid, desiatkova);
       if (!v.length) return false;

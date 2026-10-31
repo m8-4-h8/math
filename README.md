@@ -77,6 +77,12 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `SpilnyiZnamennyk` | два дроби до спільного знаменника, порівняння, `+` або `−` | `<SpilnyiZnamennyk a={[3, 4]} b={[5, 6]} dia="+" />` |
   | `DobutokDrobiv` | множення дробів на квадраті: стовпчики × рядки | `<DobutokDrobiv a={[3, 4]} b={[2, 3]} />` |
   | `Proportsiia` | пряма чи обернена пропорційність: табличка зі стрілками і пропорція | `<Proportsiia nazvy={['Робітники', 'Дні']} a={[3, 8]} x0={6} typ="obernena" />` |
+  | `KruhovaDiahrama` | кругова діаграма з відсотками і градусами (1% = 3,6°) | `<KruhovaDiahrama dani={[['Футбол', 40], ['Плавання', 25], ['Танці', 35]]} />` |
+  | `KoordynatnaPriama` | координатна пряма з від'ємними числами, точки, модуль, стрибок-додавання (`strybok`) | `<KoordynatnaPriama min={-6} max={6} tochky={[{ nazva: 'A', x: -4 }]} modul />` |
+  | `KoordynatnaPloshchyna` | координатна площина: осі x і y, чверті, точки з пунктиром від осей | `<KoordynatnaPloshchyna rozmir={5} tochky={[{ nazva: 'A', x: 3, y: 2 }]} />` |
+  | `RozkryttiaDuzhok` | розкриття дужок: множник «дістає» до кожного доданка, змінені знаки виділено | `<RozkryttiaDuzhok mnozhnyk={-1} dodanky={[{ k: 1, b: 'a' }, { k: -5 }]} />` |
+  | `PerenosDodankiv` | рівняння ax + b = cx + d: перенесення доданків зі зміною знака і розв'язок | `<PerenosDodankiv a={5} b={3} c={2} d={12} />` |
+  | `PeretynPriamykh` | перпендикулярні, паралельні й просто прямі, що перетинаються, на клітинках | `<PeretynPriamykh vydy={['perpendykuliarni', 'paralelni']} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |

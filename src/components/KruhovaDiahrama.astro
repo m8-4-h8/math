@@ -1,0 +1,98 @@
+---
+// Кругова діаграма: кожна частина — сектор, кут сектора = відсоток · 3,6°.
+// Під кругом — легенда з відсотками й градусами.
+//   <KruhovaDiahrama dani={[['Футбол', 40], ['Плавання', 25], ['Танці', 35]]} />
+interface Props {
+  dani: [string, number][]; // [підпис, відсоток]; разом 100
+  hradusy?: boolean; // показати в легенді, скільки градусів у секторі
+}
+const { dani, hradusy = true } = Astro.props;
+
+const R = 80;
+const cx = 100;
+const cy = 95;
+const kolory = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)', 'var(--ill-4)', 'var(--ill-muted)'];
+const fmt = (x: number) => String(Math.round(x * 10) / 10).replace('.', ',');
+let pochatok = -90; // починаємо згори, за годинниковою стрілкою
+const sektory = dani.map(([pidpys, vidsotok], i) => {
+  const kut = vidsotok * 3.6;
+  const a0 = (pochatok * Math.PI) / 180;
+  const a1 = ((pochatok + kut) * Math.PI) / 180;
+  const sered = ((pochatok + kut / 2) * Math.PI) / 180;
+  pochatok += kut;
+  const p = (a: number) => `${(cx + R * Math.cos(a)).toFixed(2)} ${(cy + R * Math.sin(a)).toFixed(2)}`;
+  const d =
+    vidsotok >= 100
+      ? `M ${cx - R} ${cy} A ${R} ${R} 0 1 1 ${cx + R} ${cy} A ${R} ${R} 0 1 1 ${cx - R} ${cy} Z`
+      : `M ${cx} ${cy} L ${p(a0)} A ${R} ${R} 0 ${kut > 180 ? 1 : 0} 1 ${p(a1)} Z`;
+  return {
+    pidpys,
+    vidsotok,
+    kut,
+    d,
+    kolir: kolory[i % kolory.length],
+    tx: cx + R * 0.62 * Math.cos(sered),
+    ty: cy + R * 0.62 * Math.sin(sered),
+  };
+});
+const opys = dani.map(([p, v]) => `${p} ${fmt(v)}%`).join(', ');
+---
+
+<figure class="ill not-content kd">
+  <div class="ill-scroll">
+    <svg viewBox="0 0 200 190" width="200" height="190" role="img" aria-label={`Кругова діаграма: ${opys}`}>
+      {
+        sektory.map((s) => (
+          <path d={s.d} fill={s.kolir} fill-opacity="0.75" stroke="var(--ill-paper)" stroke-width="2" />
+        ))
+      }
+      {
+        sektory.map(
+          (s) =>
+            s.vidsotok >= 7 && (
+              <text x={s.tx} y={s.ty} text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="var(--ill-ink)">
+                {fmt(s.vidsotok)}%
+              </text>
+            ),
+        )
+      }
+    </svg>
+  </div>
+  <ul class="kd-legenda">
+    {
+      sektory.map((s) => (
+        <li>
+          <span class="kd-kv" style={`background: ${s.kolir}`} />
+          {s.pidpys} — <b>{fmt(s.vidsotok)}%</b>
+          {hradusy && <span class="muted"> · {fmt(s.vidsotok)} · 3,6° = {fmt(s.kut)}°</span>}
+        </li>
+      ))
+    }
+  </ul>
+</figure>
+
+<style>
+  .kd svg {
+    display: block;
+    margin-inline: auto;
+  }
+  .kd-legenda {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem auto 0;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .kd-legenda li {
+    margin: 0.2rem 0;
+  }
+  .kd-kv {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border-radius: 3px;
+    margin-right: 0.4em;
+    vertical-align: -0.1em;
+    opacity: 0.75;
+  }
+</style>
