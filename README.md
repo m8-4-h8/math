@@ -84,6 +84,8 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `RozkryttiaDuzhok` | розкриття дужок: множник «дістає» до кожного доданка, змінені знаки виділено | `<RozkryttiaDuzhok mnozhnyk={-1} dodanky={[{ k: 1, b: 'a' }, { k: -5 }]} />` |
   | `PerenosDodankiv` | рівняння ax + b = cx + d: перенесення доданків зі зміною знака і розв'язок | `<PerenosDodankiv a={5} b={3} c={2} d={12} />` |
   | `PeretynPriamykh` | перпендикулярні, паралельні й просто прямі, що перетинаються, на клітинках | `<PeretynPriamykh vydy={['perpendykuliarni', 'paralelni']} />` |
+  | `SotniDesiatky` | трицифрове число «в кубиках»: сотні-квадрати, десятки-смужки, одиниці і розрядні доданки | `<SotniDesiatky chyslo={352} />` |
+  | `RozkladDilennia` | позатабличне ділення: ділене розбито на зручні доданки, кожен ділимо окремо | `<RozkladDilennia a={48} b={3} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |

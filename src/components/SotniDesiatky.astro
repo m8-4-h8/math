@@ -1,0 +1,100 @@
+---
+// Трицифрове число «в кубиках»: сотні — квадрати 10×10, десятки — смужки по 10, одиниці — окремі кубики.
+// Під кожною групою — скільки їх і яка це цифра, під малюнком — розрядні доданки.
+//   <SotniDesiatky chyslo={352} />
+interface Props {
+  chyslo: number; // від 0 до 999
+}
+const { chyslo } = Astro.props;
+if (chyslo < 0 || chyslo > 999 || !Number.isInteger(chyslo)) throw new Error(`SotniDesiatky: ${chyslo} — не трицифрове`);
+
+const s = Math.floor(chyslo / 100);
+const d = Math.floor(chyslo / 10) % 10;
+const o = chyslo % 10;
+
+const forma = (n: number, [odna, dvi, bahato]: [string, string, string]) => {
+  const n10 = n % 10;
+  const n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return odna;
+  if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return dvi;
+  return bahato;
+};
+
+const k = 5; // клітинка
+const sotnia = 10 * k;
+const krok = sotnia + 6;
+const vRiad = 3;
+const sW = Math.max(1, Math.min(s, vRiad)) * krok - 6;
+const sH = Math.max(1, Math.ceil(s / vRiad)) * krok - 6;
+const dKrok = 9;
+const dW = Math.max(44, d * dKrok);
+const oK = 10;
+const oW = 3 * (oK + 3);
+const gap = 26;
+const x0 = 12;
+const xs = [x0, x0 + sW + gap, x0 + sW + gap + dW + gap];
+const shyr = [sW, dW, oW];
+const top = 12;
+const vysota = Math.max(sH, sotnia, 3 * (oK + 3));
+const yPidpys = top + vysota + 22;
+const W = xs[2] + oW + x0;
+const H = yPidpys + 34;
+
+const kolonky = [
+  { n: s, slovo: forma(s, ['сотня', 'сотні', 'сотень']), kol: 'var(--ill-1)' },
+  { n: d, slovo: forma(d, ['десяток', 'десятки', 'десятків']), kol: 'var(--ill-2)' },
+  { n: o, slovo: forma(o, ['одиниця', 'одиниці', 'одиниць']), kol: 'var(--ill-3)' },
+];
+const dodanky = [s * 100, d * 10, o].filter((v) => v > 0);
+const rozklad = dodanky.length > 1 ? `${chyslo} = ${dodanky.join(' + ')}` : String(chyslo);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${chyslo}: ${kolonky.map((c) => `${c.n} ${c.slovo}`).join(', ')}`}>
+      {
+        Array.from({ length: s }, (_, i) => {
+          const x = xs[0] + (i % vRiad) * krok;
+          const y = top + Math.floor(i / vRiad) * krok;
+          return (
+            <g>
+              <rect x={x} y={y} width={sotnia} height={sotnia} fill="var(--ill-1)" fill-opacity="0.22" stroke="var(--ill-1)" stroke-width="1.5" />
+              {Array.from({ length: 9 }, (_, j) => (
+                <g stroke="var(--ill-1)" stroke-width="0.6" opacity="0.6">
+                  <line x1={x + (j + 1) * k} y1={y} x2={x + (j + 1) * k} y2={y + sotnia} />
+                  <line x1={x} y1={y + (j + 1) * k} x2={x + sotnia} y2={y + (j + 1) * k} />
+                </g>
+              ))}
+            </g>
+          );
+        })
+      }
+      {
+        Array.from({ length: d }, (_, i) => (
+          <g>
+            <rect x={xs[1] + i * dKrok} y={top} width={k + 1} height={sotnia} fill="var(--ill-2)" fill-opacity="0.3" stroke="var(--ill-2)" stroke-width="1.3" />
+            {Array.from({ length: 9 }, (_, j) => (
+              <line x1={xs[1] + i * dKrok} y1={top + (j + 1) * k} x2={xs[1] + i * dKrok + k + 1} y2={top + (j + 1) * k} stroke="var(--ill-2)" stroke-width="0.6" opacity="0.7" />
+            ))}
+          </g>
+        ))
+      }
+      {
+        Array.from({ length: o }, (_, i) => (
+          <rect x={xs[2] + (i % 3) * (oK + 3)} y={top + Math.floor(i / 3) * (oK + 3)} width={oK} height={oK} fill="var(--ill-3)" fill-opacity="0.35" stroke="var(--ill-3)" stroke-width="1.3" />
+        ))
+      }
+      {
+        kolonky.map((c, i) => (
+          <g text-anchor="middle">
+            <text x={xs[i] + shyr[i] / 2} y={yPidpys} font-size="22" font-weight="800" fill={c.kol}>{c.n}</text>
+            <text x={xs[i] + shyr[i] / 2} y={yPidpys + 18} font-size="11" fill="var(--ill-muted)">{c.slovo}</text>
+          </g>
+        ))
+      }
+    </svg>
+  </div>
+  <p class="ill-caption">
+    <b class="num">{rozklad}</b>
+  </p>
+</figure>
