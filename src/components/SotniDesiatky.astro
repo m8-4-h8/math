@@ -2,6 +2,7 @@
 // Трицифрове число «в кубиках»: сотні — квадрати 10×10, десятки — смужки по 10, одиниці — окремі кубики.
 // Під кожною групою — скільки їх і яка це цифра, під малюнком — розрядні доданки.
 //   <SotniDesiatky chyslo={352} />
+//   <SotniDesiatky chyslo={47} />   — двоцифрове: стовпчика сотень немає
 interface Props {
   chyslo: number; // від 0 до 999
 }
@@ -11,6 +12,7 @@ if (chyslo < 0 || chyslo > 999 || !Number.isInteger(chyslo)) throw new Error(`So
 const s = Math.floor(chyslo / 100);
 const d = Math.floor(chyslo / 10) % 10;
 const o = chyslo % 10;
+const bezSoten = chyslo < 100;
 
 const forma = (n: number, [odna, dvi, bahato]: [string, string, string]) => {
   const n10 = n % 10;
@@ -24,13 +26,13 @@ const k = 5; // клітинка
 const sotnia = 10 * k;
 const krok = sotnia + 6;
 const vRiad = 3;
-const sW = Math.max(1, Math.min(s, vRiad)) * krok - 6;
+const gap = 26;
+const sW = bezSoten ? -gap : Math.max(1, Math.min(s, vRiad)) * krok - 6;
 const sH = Math.max(1, Math.ceil(s / vRiad)) * krok - 6;
 const dKrok = 9;
 const dW = Math.max(44, d * dKrok);
 const oK = 10;
 const oW = 3 * (oK + 3);
-const gap = 26;
 const x0 = 12;
 const xs = [x0, x0 + sW + gap, x0 + sW + gap + dW + gap];
 const shyr = [sW, dW, oW];
@@ -40,11 +42,14 @@ const yPidpys = top + vysota + 22;
 const W = xs[2] + oW + x0;
 const H = yPidpys + 34;
 
-const kolonky = [
+const vsi = [
   { n: s, slovo: forma(s, ['сотня', 'сотні', 'сотень']), kol: 'var(--ill-1)' },
   { n: d, slovo: forma(d, ['десяток', 'десятки', 'десятків']), kol: 'var(--ill-2)' },
   { n: o, slovo: forma(o, ['одиниця', 'одиниці', 'одиниць']), kol: 'var(--ill-3)' },
 ];
+const kolonky = bezSoten ? vsi.slice(1) : vsi;
+const kx = bezSoten ? xs.slice(1) : xs;
+const kw = bezSoten ? shyr.slice(1) : shyr;
 const dodanky = [s * 100, d * 10, o].filter((v) => v > 0);
 const rozklad = dodanky.length > 1 ? `${chyslo} = ${dodanky.join(' + ')}` : String(chyslo);
 ---
@@ -87,8 +92,8 @@ const rozklad = dodanky.length > 1 ? `${chyslo} = ${dodanky.join(' + ')}` : Stri
       {
         kolonky.map((c, i) => (
           <g text-anchor="middle">
-            <text x={xs[i] + shyr[i] / 2} y={yPidpys} font-size="22" font-weight="800" fill={c.kol}>{c.n}</text>
-            <text x={xs[i] + shyr[i] / 2} y={yPidpys + 18} font-size="11" fill="var(--ill-muted)">{c.slovo}</text>
+            <text x={kx[i] + kw[i] / 2} y={yPidpys} font-size="22" font-weight="800" fill={c.kol}>{c.n}</text>
+            <text x={kx[i] + kw[i] / 2} y={yPidpys + 18} font-size="11" fill="var(--ill-muted)">{c.slovo}</text>
           </g>
         ))
       }

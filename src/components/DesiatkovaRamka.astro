@@ -1,0 +1,109 @@
+---
+// Перехід через десяток на двох «десяткових рамках» (по 10 віконець).
+// «+»: спершу доповнюємо першу рамку до 10, решту кладемо в другу: 8 + 5 = 8 + 2 + 3.
+// «−»: спершу забираємо все з другої рамки (до 10), решту — з першої: 13 − 5 = 13 − 3 − 2.
+//   <DesiatkovaRamka a={8} b={5} />
+//   <DesiatkovaRamka a={13} b={5} dia="−" />
+interface Props {
+  a: number;
+  b: number;
+  dia?: '+' | '−';
+}
+const { a, b, dia = '+' } = Astro.props;
+const plus = dia === '+';
+const vsogo = plus ? a + b : a;
+if (vsogo > 20 || (plus && (a >= 10 || a + b <= 10)) || (!plus && (a <= 10 || a - b >= 10 || b > a))) {
+  throw new Error(`DesiatkovaRamka: ${a} ${dia} ${b} — тут немає переходу через десяток у межах 20`);
+}
+const vidpovid = plus ? a + b : a - b;
+// Розклад другого числа на дві частини: до десятка і решта.
+const pershaChastyna = plus ? 10 - a : a - 10;
+const druhaChastyna = b - pershaChastyna;
+
+const c = 28; // віконце
+const ramkaW = 5 * c;
+const gap = 22;
+const x0 = 12;
+const y0 = 12;
+const W = 2 * ramkaW + gap + 2 * x0;
+const H = 2 * c + 2 * y0;
+const pozytsiia = (i: number) => {
+  const r = Math.floor(i / 10);
+  const j = i % 10;
+  return { x: x0 + r * (ramkaW + gap) + (j % 5) * c + c / 2, y: y0 + Math.floor(j / 5) * c + c / 2 };
+};
+// Для кожного віконця: що в ньому — перше число, перша частина другого, друга частина або закреслене.
+type Stan = 'a' | 'b1' | 'b2' | 'x1' | 'x2' | null;
+const stan = (i: number): Stan => {
+  if (plus) {
+    if (i < a) return 'a';
+    if (i < 10) return 'b1';
+    if (i < a + b) return 'b2';
+    return null;
+  }
+  if (i >= a) return null;
+  if (i >= 10) return 'x1'; // спершу прибираємо з другої рамки
+  if (i >= vidpovid) return 'x2';
+  return 'a';
+};
+const KOL = { a: 'var(--ill-1)', b1: 'var(--ill-2)', b2: 'var(--ill-4)', x1: 'var(--ill-2)', x2: 'var(--ill-4)' };
+const opys = plus
+  ? `${a} + ${b} = ${a} + ${pershaChastyna} + ${druhaChastyna} = 10 + ${druhaChastyna} = ${vidpovid}`
+  : `${a} − ${b} = ${a} − ${pershaChastyna} − ${druhaChastyna} = 10 − ${druhaChastyna} = ${vidpovid}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      {
+        [0, 1].map((r) => (
+          <g>
+            <rect x={x0 + r * (ramkaW + gap)} y={y0} width={ramkaW} height={2 * c} rx="4" fill="none" stroke="var(--ill-ink)" stroke-width="2" />
+            {Array.from({ length: 4 }, (_, j) => (
+              <line x1={x0 + r * (ramkaW + gap) + (j + 1) * c} y1={y0} x2={x0 + r * (ramkaW + gap) + (j + 1) * c} y2={y0 + 2 * c} stroke="var(--ill-line)" />
+            ))}
+            <line x1={x0 + r * (ramkaW + gap)} y1={y0 + c} x2={x0 + r * (ramkaW + gap) + ramkaW} y2={y0 + c} stroke="var(--ill-line)" />
+          </g>
+        ))
+      }
+      {
+        Array.from({ length: 20 }, (_, i) => {
+          const s = stan(i);
+          if (!s) return null;
+          const p = pozytsiia(i);
+          const zakresleno = s === 'x1' || s === 'x2';
+          return (
+            <g>
+              <circle cx={p.x} cy={p.y} r="10" fill={zakresleno ? 'none' : KOL[s]} stroke={KOL[s]} stroke-width="2" stroke-dasharray={zakresleno ? '3 2' : undefined} />
+              {zakresleno && <path d={`M ${p.x - 7} ${p.y - 7} L ${p.x + 7} ${p.y + 7} M ${p.x + 7} ${p.y - 7} L ${p.x - 7} ${p.y + 7}`} stroke={KOL[s]} stroke-width="2" />}
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    {
+      plus ? (
+        <>
+          <li>
+            Доповнюємо до десятка: <b class="c1">{a}</b> + <b class="c2">{pershaChastyna}</b> = <b class="num">10</b>.
+          </li>
+          <li>
+            Решту кладемо в другу рамку: <b class="num">10 + <span class="c4">{druhaChastyna}</span> = {vidpovid}</b>.
+          </li>
+        </>
+      ) : (
+        <>
+          <li>
+            Спершу забираємо до десятка: <b class="c1">{a}</b> − <b class="c2">{pershaChastyna}</b> = <b class="num">10</b>.
+          </li>
+          <li>
+            Потім решту: <b class="num">10 − <span class="c4">{druhaChastyna}</span> = {vidpovid}</b>.
+          </li>
+        </>
+      )
+    }
+  </ol>
+  <p class="ill-caption"><b class="num">{opys}</b></p>
+</figure>
