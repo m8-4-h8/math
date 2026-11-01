@@ -3,6 +3,7 @@
 // дію виконуємо в кожному розряді окремо, потім складаємо результати.
 // Якщо в розряді вийшло 10 і більше — це вже наступний розряд (підказка під таблицею).
 //   <RozriadnaSuma a={346} b={252} />
+//   <RozriadnaSuma a={34} b={25} />   — двоцифрові: рядка сотень немає
 //   <RozriadnaSuma a={785} b={432} dia="−" />   — без «позичання» (кожна цифра a не менша за цифру b)
 interface Props {
   a: number;
@@ -27,7 +28,7 @@ const dodanky = rez.filter((x) => x > 0);
   <table aria-label={`${a} ${dia} ${b} = ${vidpovid}`}>
     <tbody>
       {
-        NAZVY.map((nazva, i) => (
+        NAZVY.map((nazva, i) => (i > 0 || ra[0] > 0 || rb[0] > 0) && (
           <tr>
             <th style={`color:${KOLORY[i]}`}>{nazva}</th>
             <td>{ra[i]}</td>
