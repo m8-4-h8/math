@@ -1,0 +1,82 @@
+---
+// Плоскі фігури для 1 класу: круг, трикутник, квадрат, прямокутник, п'ятикутник.
+// Кутові фігури показують вершини крапками. `nomery` — замість назв номери (для задач «знайди фігуру»).
+//   <PloskiFihury fihury={['kruh', 'trykutnyk', 'kvadrat', 'priamokutnyk']} />
+//   <PloskiFihury fihury={['kvadrat', 'kruh', 'trykutnyk']} nomery />
+type Fihura = 'kruh' | 'trykutnyk' | 'kvadrat' | 'priamokutnyk' | 'piatykutnyk';
+interface Props {
+  fihury: Fihura[];
+  nomery?: boolean;
+}
+const { fihury, nomery = false } = Astro.props;
+
+const NAZVY: Record<Fihura, string> = {
+  kruh: 'круг',
+  trykutnyk: 'трикутник',
+  kvadrat: 'квадрат',
+  priamokutnyk: 'прямокутник',
+  piatykutnyk: "п'ятикутник",
+};
+const KOLORY = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)', 'var(--ill-4)'];
+const S = 64; // розмір клітинки під фігуру
+const krok = S + 26;
+const W = fihury.length * krok + 6;
+const H = S + 40;
+// Вершини кожної фігури в межах квадрата S×S.
+const vershyny = (f: Fihura): [number, number][] => {
+  const m = 6;
+  switch (f) {
+    case 'trykutnyk':
+      return [[S / 2, m], [S - m, S - m], [m, S - m]];
+    case 'kvadrat':
+      return [[m + 4, m + 4], [S - m - 4, m + 4], [S - m - 4, S - m - 4], [m + 4, S - m - 4]];
+    case 'priamokutnyk':
+      return [[0, S / 2 - 16], [S + 10, S / 2 - 16], [S + 10, S / 2 + 16], [0, S / 2 + 16]];
+    case 'piatykutnyk':
+      return Array.from({ length: 5 }, (_, i) => {
+        const a = (-90 + i * 72) * (Math.PI / 180);
+        return [S / 2 + (S / 2 - m) * Math.cos(a), S / 2 + 3 + (S / 2 - m) * Math.sin(a)] as [number, number];
+      });
+    default:
+      return [];
+  }
+};
+---
+
+<figure class="ill not-content pf">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={fihury.map((f, i) => (nomery ? `${i + 1}` : NAZVY[f])).join(', ')}>
+      {
+        fihury.map((f, i) => {
+          const x = 8 + i * krok - (f === 'priamokutnyk' ? 5 : 0);
+          const kol = KOLORY[i % KOLORY.length];
+          const v = vershyny(f);
+          return (
+            <g transform={`translate(${x} 6)`}>
+              {f === 'kruh' ? (
+                <circle cx={S / 2} cy={S / 2} r={S / 2 - 6} fill={kol} fill-opacity="0.25" stroke={kol} stroke-width="3" />
+              ) : (
+                <>
+                  <polygon points={v.map((p) => p.join(',')).join(' ')} fill={kol} fill-opacity="0.25" stroke={kol} stroke-width="3" stroke-linejoin="round" />
+                  {v.map(([px, py]) => (
+                    <circle cx={px} cy={py} r="3.5" fill="var(--ill-ink)" />
+                  ))}
+                </>
+              )}
+              <text x={S / 2} y={S + 24} text-anchor="middle" font-size={nomery ? 16 : 12} font-weight="700" fill="var(--ill-ink)">
+                {nomery ? i + 1 : NAZVY[f]}
+              </text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+</figure>
+
+<style>
+  .pf svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>

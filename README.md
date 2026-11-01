@@ -92,6 +92,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `DesiatkovaRamka` | перехід через десяток на двох десяткових рамках: доповнити до 10 / забрати до 10 | `<DesiatkovaRamka a={8} b={5} />` |
   | `Hodynnyk` | годинник зі стрілками (години й хвилини), можна без підпису часу для задач | `<Hodynnyk hodyny={7} khvylyny={30} />` |
   | `SkladChysla` | число до 10 на десятковій рамці: склад числа, додавання/віднімання, «будиночок» | `<SkladChysla chyslo={7} chastyna={3} />` |
+  | `PloskiFihury` | плоскі фігури (круг, трикутник, квадрат, прямокутник, п'ятикутник) з вершинами; можна з номерами замість назв | `<PloskiFihury fihury={['kruh', 'trykutnyk', 'kvadrat']} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |
