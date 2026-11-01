@@ -1,0 +1,122 @@
+---
+// Число до 10 на десятковій рамці (10 віконець) — для 1 класу.
+//   <SkladChysla chyslo={7} />                 — просто 7 кружечків
+//   <SkladChysla chyslo={7} chastyna={3} />    — 7 = 3 + 4 (дві частини різними кольорами)
+//   <SkladChysla chyslo={7} chastyna={3} dia="−" />  — 7 − 3: останні 3 закреслено, лишається 4
+//   <SkladChysla chyslo={6} budynochok />      — «будиночок»: усі пари, що разом дають 6
+interface Props {
+  chyslo: number; // 0–10
+  chastyna?: number;
+  dia?: '+' | '−';
+  budynochok?: boolean;
+}
+const { chyslo, chastyna, dia = '+', budynochok = false } = Astro.props;
+if (chyslo < 0 || chyslo > 10) throw new Error(`SkladChysla: ${chyslo} — лише від 0 до 10`);
+const minus = dia === '−';
+const insha = chastyna !== undefined ? chyslo - chastyna : undefined;
+
+const c = 30;
+const x0 = 10;
+const y0 = 10;
+const W = 5 * c + 2 * x0;
+const H = 2 * c + 2 * y0;
+const pozytsiia = (i: number) => ({ x: x0 + (i % 5) * c + c / 2, y: y0 + Math.floor(i / 5) * c + c / 2 });
+// Додавання: перші `chastyna` — синім, решта — помаранчевим. Віднімання: останні `chastyna` закреслено.
+const stan = (i: number) => {
+  if (i >= chyslo) return null;
+  if (chastyna === undefined) return 'odyn';
+  if (minus) return i >= chyslo - chastyna ? 'x' : 'odyn';
+  return i < chastyna ? 'odyn' : 'dva';
+};
+const pary = Array.from({ length: chyslo + 1 }, (_, a) => [a, chyslo - a]);
+const opys =
+  chastyna === undefined
+    ? String(chyslo)
+    : minus
+      ? `${chyslo} − ${chastyna} = ${insha}`
+      : `${chyslo} = ${chastyna} + ${insha}`;
+---
+
+<figure class="ill not-content sk">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <rect x={x0} y={y0} width={5 * c} height={2 * c} rx="4" fill="none" stroke="var(--ill-ink)" stroke-width="2" />
+      {Array.from({ length: 4 }, (_, j) => <line x1={x0 + (j + 1) * c} y1={y0} x2={x0 + (j + 1) * c} y2={y0 + 2 * c} stroke="var(--ill-line)" />)}
+      <line x1={x0} y1={y0 + c} x2={x0 + 5 * c} y2={y0 + c} stroke="var(--ill-line)" />
+      {
+        Array.from({ length: 10 }, (_, i) => {
+          const s = stan(i);
+          if (!s) return null;
+          const p = pozytsiia(i);
+          const kol = s === 'dva' ? 'var(--ill-2)' : s === 'x' ? 'var(--ill-4)' : 'var(--ill-1)';
+          return (
+            <g>
+              <circle cx={p.x} cy={p.y} r="11" fill={s === 'x' ? 'none' : kol} stroke={kol} stroke-width="2" stroke-dasharray={s === 'x' ? '3 2' : undefined} />
+              {s === 'x' && <path d={`M ${p.x - 8} ${p.y - 8} L ${p.x + 8} ${p.y + 8} M ${p.x + 8} ${p.y - 8} L ${p.x - 8} ${p.y + 8}`} stroke={kol} stroke-width="2" />}
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  {
+    budynochok ? (
+      <table class="budynochok" aria-label={`Склад числа ${chyslo}`}>
+        <thead>
+          <tr>
+            <th colspan="2">{chyslo}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pary.map(([a, b]) => (
+            <tr>
+              <td class="c1">{a}</td>
+              <td class="c2">{b}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      chastyna !== undefined && (
+        <p class="ill-caption">
+          {minus ? (
+            <b class="num">
+              {chyslo} − <span class="c4">{chastyna}</span> = <span class="c1">{insha}</span>
+            </b>
+          ) : (
+            <b class="num">
+              {chyslo} = <span class="c1">{chastyna}</span> + <span class="c2">{insha}</span>
+            </b>
+          )}
+        </p>
+      )
+    )
+  }
+</figure>
+
+<style>
+  .sk svg {
+    display: block;
+    margin-inline: auto;
+  }
+  .budynochok {
+    margin: 0.6rem auto 0;
+    border-collapse: collapse;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .budynochok th {
+    background: var(--ill-accent);
+    color: var(--ill-paper);
+    padding: 0.2rem 0;
+    clip-path: polygon(50% 0, 100% 45%, 100% 100%, 0 100%, 0 45%);
+    padding-top: 0.9rem;
+  }
+  .budynochok td {
+    width: 2.6rem;
+    text-align: center;
+    border: 1px solid var(--ill-line);
+    padding: 0.15rem 0;
+  }
+</style>
