@@ -1,0 +1,83 @@
+---
+// Одночлен стандартного вигляду, розкладений на частини: коефіцієнт і букви зі степенями.
+// Під ним — степінь одночлена (сума показників).
+//   <Odnochlen koef={-3} zminni={{ a: 2, b: 3 }} />   — −3a²b³, степінь 5
+//   <Odnochlen koef={1} zminni={{ x: 1, y: 1 }} />    — xy, коефіцієнт 1
+interface Props {
+  koef: number;
+  zminni: Record<string, number>;
+}
+const { koef, zminni } = Astro.props;
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const st = (k: number) => (k === 1 ? '' : String(k).split('').map((c) => SUP[+c]).join(''));
+const ch = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const bukvy = Object.entries(zminni);
+const stepin = bukvy.reduce((s, [, k]) => s + k, 0);
+const koefZapys = koef === 1 ? '' : koef === -1 ? '−' : ch(koef);
+const zapys = `${koefZapys}${bukvy.map(([b, k]) => b + st(k)).join('')}`;
+const nevydymyi = koef === 1 || koef === -1;
+---
+
+<figure class="ill not-content odn">
+  <div class="odn-riad" role="img" aria-label={`${zapys}: коефіцієнт ${ch(koef)}, степінь ${stepin}`}>
+    <div class="odn-chastyna k">
+      <span class="odn-znach">{ch(koef)}</span>
+      <span class="odn-pidpys">коефіцієнт{nevydymyi ? ' (не пишемо 1)' : ''}</span>
+    </div>
+    {
+      bukvy.map(([b, k]) => (
+        <div class="odn-chastyna z">
+          <span class="odn-znach">
+            {b}
+            <sup>{k}</sup>
+          </span>
+          <span class="odn-pidpys">показник {k}</span>
+        </div>
+      ))
+    }
+  </div>
+  <p class="ill-caption">
+    <b class="num">{zapys}</b>: коефіцієнт <b class="c1">{ch(koef)}</b>, степінь{' '}
+    <b class="c2">{bukvy.length > 1 ? `${bukvy.map(([, k]) => k).join(' + ')} = ${stepin}` : stepin}</b>
+  </p>
+</figure>
+
+<style>
+  .odn-riad {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+  .odn-chastyna {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 4.2rem;
+    padding: 0.35rem 0.5rem;
+    border: 2px solid;
+    border-radius: 0.6rem;
+  }
+  .odn-chastyna.k {
+    border-color: var(--ill-1);
+    color: var(--ill-1);
+  }
+  .odn-chastyna.z {
+    border-color: var(--ill-2);
+    color: var(--ill-2);
+  }
+  .odn-znach {
+    font-size: 1.6rem;
+    font-weight: 800;
+    font-style: italic;
+    color: var(--ill-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .odn-chastyna.k .odn-znach {
+    font-style: normal;
+  }
+  .odn-pidpys {
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+// Лінійне рівняння a·x = b: три можливі випадки. Підсвічено той, що підходить до заданих a і b,
+// а під картками — розв'язок саме цього рівняння.
+//   <KorinRivniannia a={3} b={12} />   — один корінь
+//   <KorinRivniannia a={0} b={5} />    — коренів немає
+//   <KorinRivniannia a={0} b={0} />    — безліч коренів
+interface Props {
+  a: number;
+  b: number;
+  zminna?: string;
+}
+const { a, b, zminna = 'x' } = Astro.props;
+const ch = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const duzhky = (v: number) => (v < 0 ? `(${ch(v)})` : ch(v));
+const vypadok = a !== 0 ? 0 : b !== 0 ? 1 : 2;
+const korin = a !== 0 ? Math.round((b / a) * 1000) / 1000 : 0;
+const kartky = [
+  { umova: 'a ≠ 0', nazva: 'один корінь', formula: `${zminna} = b : a`, kol: 'c1' },
+  { umova: 'a = 0, b ≠ 0', nazva: 'коренів немає', formula: `0 · ${zminna} = b`, kol: 'c4' },
+  { umova: 'a = 0, b = 0', nazva: 'безліч коренів', formula: `0 · ${zminna} = 0`, kol: 'c2' },
+];
+const rivniannia = `${a === 0 ? '0 · ' : a === 1 ? '' : a === -1 ? '−' : ch(a)}${zminna} = ${ch(b)}`;
+const poiasnennia = [
+  `ділимо на ${duzhky(a)}: ${zminna} = ${ch(b)} : ${duzhky(a)} = ${ch(korin)}`,
+  `нуль, помножений на будь-що, — це 0, а не ${ch(b)}. Коренів немає`,
+  `0 · ${zminna} = 0 при будь-якому ${zminna}. Коренем є будь-яке число`,
+][vypadok];
+---
+
+<figure class="ill not-content kr">
+  <div class="kr-kartky">
+    {
+      kartky.map((k, i) => (
+        <div class:list={['kr-kartka', { aktyvna: i === vypadok }]}>
+          <span class="kr-umova">{k.umova}</span>
+          <b class={k.kol}>{k.nazva}</b>
+          <span class="kr-formula">{k.formula}</span>
+        </div>
+      ))
+    }
+  </div>
+  <p class="ill-caption">
+    <b class="num">{rivniannia}</b>: {poiasnennia}
+  </p>
+</figure>
+
+<style>
+  .kr-kartky {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    font-size: 0.9rem;
+  }
+  .kr-kartka {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.45rem 0.25rem;
+    border: 2px dashed var(--ill-line);
+    border-radius: 0.6rem;
+    color: var(--ill-muted);
+    text-align: center;
+  }
+  .kr-kartka.aktyvna {
+    border: 3px solid var(--ill-accent);
+    background: var(--ill-paper);
+    color: var(--ill-ink);
+  }
+  .kr-kartka:not(.aktyvna) b {
+    opacity: 0.65;
+  }
+  .kr-umova {
+    font-size: 0.78rem;
+  }
+  .kr-formula {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+</style>

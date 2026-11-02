@@ -1,0 +1,101 @@
+---
+// Дії зі степенями однакової основи — множниками-плитками.
+//   <DiiZiStepeniamy osnova="a" m={3} n={2} />                — a³ · a² = a⁵ (показники додаємо)
+//   <DiiZiStepeniamy osnova="a" m={5} n={2} dia="dilennia" />  — a⁵ : a² = a³ (віднімаємо)
+//   <DiiZiStepeniamy osnova="2" m={3} n={2} dia="stepin" />    — (2³)² = 2⁶ (множимо)
+interface Props {
+  osnova: string;
+  m: number;
+  n: number;
+  dia?: 'mnozhennia' | 'dilennia' | 'stepin';
+}
+const { osnova, m, n, dia = 'mnozhennia' } = Astro.props;
+if (dia === 'dilennia' && n >= m) throw new Error('DiiZiStepeniamy: для ділення потрібно m > n');
+const vsogo = dia === 'stepin' ? m * n : m + n;
+if (vsogo > 14) throw new Error('DiiZiStepeniamy: забагато плиток (більше 14)');
+
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const st = (k: number) => String(k).split('').map((c) => SUP[+c]).join('');
+const pokaznyk = dia === 'mnozhennia' ? m + n : dia === 'dilennia' ? m - n : m * n;
+const zapys =
+  dia === 'mnozhennia'
+    ? `${osnova}${st(m)} · ${osnova}${st(n)} = ${osnova}${st(m + n)}`
+    : dia === 'dilennia'
+      ? `${osnova}${st(m)} : ${osnova}${st(n)} = ${osnova}${st(m - n)}`
+      : `(${osnova}${st(m)})${st(n)} = ${osnova}${st(m * n)}`;
+const dzn = osnova.length > 1 ? 34 : 28;
+
+// Групи плиток: [кількість, колір, підпис, закреслено]
+type Hrupa = { k: number; kol: string; pidpys: string; x: boolean };
+const KOL = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)'];
+const hrupy: Hrupa[] =
+  dia === 'mnozhennia'
+    ? [
+        { k: m, kol: KOL[0], pidpys: `${osnova}${st(m)}`, x: false },
+        { k: n, kol: KOL[1], pidpys: `${osnova}${st(n)}`, x: false },
+      ]
+    : dia === 'dilennia'
+      ? [
+          { k: m - n, kol: KOL[0], pidpys: `лишається ${osnova}${st(m - n)}`, x: false },
+          { k: n, kol: 'var(--ill-4)', pidpys: `скорочуємо ${osnova}${st(n)}`, x: true },
+        ]
+      : Array.from({ length: n }, (_, i) => ({ k: m, kol: KOL[i % 2], pidpys: `${osnova}${st(m)}`, x: false }));
+
+const t = dzn;
+const krok = t + 4;
+const gap = dia === 'dilennia' ? 6 : 16;
+const pad = 10;
+const shyr = hrupy.map((h) => Math.max(h.k * krok - 4, h.pidpys.length * 8));
+const xs = shyr.map((_, i) => pad + shyr.slice(0, i).reduce((s, w) => s + w + gap, 0));
+const W = xs[xs.length - 1] + shyr[shyr.length - 1] + pad;
+const yT = 34;
+const H = yT + t + 30;
+---
+
+<figure class="ill not-content dzs">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={zapys}>
+      {
+        hrupy.map((h, g) => {
+          const x0 = xs[g] + (shyr[g] - (h.k * krok - 4)) / 2;
+          return (
+            <g>
+              <text x={xs[g] + shyr[g] / 2} y={18} text-anchor="middle" font-size="14" font-weight="700" fill={h.kol}>
+                {h.pidpys}
+              </text>
+              <path
+                d={`M ${x0} ${yT - 6} v -4 H ${x0 + h.k * krok - 4} v 4`}
+                fill="none"
+                stroke={h.kol}
+                stroke-width="1.5"
+              />
+              {Array.from({ length: h.k }, (_, i) => {
+                const x = x0 + i * krok;
+                return (
+                  <g>
+                    <rect x={x} y={yT} width={t} height={t} rx="5" fill={h.x ? 'none' : h.kol} fill-opacity="0.22" stroke={h.kol} stroke-width="2" stroke-dasharray={h.x ? '4 3' : undefined} />
+                    <text x={x + t / 2} y={yT + t / 2} text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="700" fill="var(--ill-ink)" opacity={h.x ? 0.45 : 1}>
+                      {osnova}
+                    </text>
+                    {h.x && <path d={`M ${x + 3} ${yT + 3} L ${x + t - 3} ${yT + t - 3} M ${x + t - 3} ${yT + 3} L ${x + 3} ${yT + t - 3}`} stroke={h.kol} stroke-width="2" />}
+                  </g>
+                );
+              })}
+            </g>
+          );
+        })
+      }
+      <text x={W / 2} y={yT + t + 22} text-anchor="middle" font-size="13" fill="var(--ill-muted)">
+        {dia === 'dilennia' ? `${m} − ${n} = ${pokaznyk} множників` : dia === 'stepin' ? `${n} групи по ${m} = ${pokaznyk} множників` : `${m} + ${n} = ${pokaznyk} множників`}
+      </text>
+    </svg>
+  </div>
+  <p class="ill-caption"><b class="num">{zapys}</b></p>
+</figure>
+
+<style>
+  .dzs svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>

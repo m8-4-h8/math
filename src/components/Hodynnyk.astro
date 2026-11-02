@@ -1,0 +1,65 @@
+---
+// Годинник зі стрілками: коротка (годинна) і довга (хвилинна). Під ним — час цифрами.
+// `bez_chasu` — без підпису, щоб дитина сама визначила час (для «Перевір себе»).
+//   <Hodynnyk hodyny={3} khvylyny={15} />
+interface Props {
+  hodyny: number; // 0–23
+  khvylyny?: number; // 0–59
+  bez_chasu?: boolean;
+}
+const { hodyny, khvylyny = 0, bez_chasu = false } = Astro.props;
+
+const R = 82;
+const c = R + 12;
+const W = 2 * c;
+const kut = (deg: number) => ((deg - 90) * Math.PI) / 180;
+const tochka = (deg: number, r: number) => ({ x: c + r * Math.cos(kut(deg)), y: c + r * Math.sin(kut(deg)) });
+const kutHod = ((hodyny % 12) + khvylyny / 60) * 30;
+const kutKhv = khvylyny * 6;
+const hod = tochka(kutHod, R * 0.45);
+const khv = tochka(kutKhv, R * 0.66);
+const chas = `${hodyny}:${String(khvylyny).padStart(2, '0')}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${W}`} width={W} height={W} role="img" aria-label={bez_chasu ? 'Годинник' : `Годинник показує ${chas}`}>
+      <circle cx={c} cy={c} r={R} fill="var(--ill-paper)" stroke="var(--ill-ink)" stroke-width="3" />
+      {
+        Array.from({ length: 60 }, (_, i) => {
+          const velyka = i % 5 === 0;
+          const a = tochka(i * 6, R - (velyka ? 9 : 4));
+          const b = tochka(i * 6, R - 1);
+          return <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--ill-ink)" stroke-width={velyka ? 2.5 : 1} />;
+        })
+      }
+      {
+        Array.from({ length: 12 }, (_, i) => {
+          const p = tochka((i + 1) * 30, R - 22);
+          return (
+            <text x={p.x} y={p.y} text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="700" fill="var(--ill-ink)">
+              {i + 1}
+            </text>
+          );
+        })
+      }
+      <line x1={c} y1={c} x2={khv.x} y2={khv.y} stroke="var(--ill-2)" stroke-width="4" stroke-linecap="round" />
+      <line x1={c} y1={c} x2={hod.x} y2={hod.y} stroke="var(--ill-1)" stroke-width="7" stroke-linecap="round" />
+      <circle cx={c} cy={c} r="5" fill="var(--ill-ink)" />
+    </svg>
+  </div>
+  {
+    !bez_chasu && (
+      <p class="ill-caption">
+        <b class="c1">коротка</b> — години, <b class="c2">довга</b> — хвилини: <b class="num">{chas}</b>
+      </p>
+    )
+  }
+</figure>
+
+<style>
+  svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>
