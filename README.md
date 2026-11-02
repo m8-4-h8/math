@@ -98,6 +98,9 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Odnochlen` | одночлен стандартного вигляду: коефіцієнт, букви з показниками, степінь | `<Odnochlen koef={-3} zminni={{ a: 2, b: 3 }} />` |
   | `PodibniChleny` | многочлен: подібні члени одним кольором, зведення по групах і стандартний вигляд | `<PodibniChleny chleny={[{ k: 3, b: 'x²' }, { k: -5, b: 'x' }, { k: 1, b: 'x²' }, { k: 7 }]} />` |
   | `PloshchaDobutku` | множення многочленів «площею»: клітинка — добуток членів, подібні одним кольором, зведення | `<PloshchaDobutku a={[{ k: 1, s: 1 }, { k: 3, s: 0 }]} b={[{ k: 1, s: 1 }, { k: 2, s: 0 }]} />` |
+  | `RiznytsiaKvadrativ` | різниця квадратів: куточок a² − b² перекладено в прямокутник (a + b)(a − b) | `<RiznytsiaKvadrativ a={7} b={3} />` |
+  | `VynesenniaMnozhnyka` | винесення спільного множника: НСД, найменший показник, ділення кожного члена | `<VynesenniaMnozhnyka chleny={[{ k: 6, s: 2 }, { k: -15, s: 1 }]} />` |
+  | `Hrupuvannia` | розкладання групуванням xy + px + qy + pq: дві групи, спільна дужка | `<Hrupuvannia p={3} q={2} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |

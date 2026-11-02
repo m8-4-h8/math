@@ -1,0 +1,68 @@
+---
+// Різниця квадратів на малюнку: з квадрата a×a вирізали квадрат b×b, а залишок («куточок»)
+// розрізали й переклали в прямокутник (a + b) × (a − b).
+//   <RiznytsiaKvadrativ a={7} b={3} />   — 49 − 9 = 10 · 4 = 40
+interface Props {
+  a: number;
+  b: number;
+}
+const { a, b } = Astro.props;
+if (!(a > b && b > 0)) throw new Error('RiznytsiaKvadrativ: потрібно a > b > 0');
+const k = Math.min(18, 150 / a); // клітинка
+const pad = 14;
+const A = a * k;
+const B = b * k;
+const D = A - B; // a − b
+// Ліва фігура: куточок. Частина 1 (синя) — смуга a × (a − b) знизу, частина 2 (помаранчева) — b × (a − b) праворуч зверху.
+const lx = pad;
+const ly = pad + 16;
+// Права фігура: прямокутник (a + b) × (a − b) — синя смуга і поруч помаранчева, повернута.
+const gap = 40;
+const rx = lx + A + gap;
+const ry = ly + B;
+const W = rx + (a + b) * k + pad;
+const H = ly + A + 30;
+const opys = `${a}² − ${b}² = (${a} − ${b}) · (${a} + ${b}) = ${a - b} · ${a + b} = ${a * a - b * b}`;
+---
+
+<figure class="ill not-content rk">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <defs>
+        <pattern id={`rk-${a}-${b}`} width={k} height={k} patternUnits="userSpaceOnUse">
+          <path d={`M ${k} 0 L 0 0 0 ${k}`} fill="none" stroke="var(--ill-grid)" stroke-width="1" />
+        </pattern>
+      </defs>
+      <!-- ліва: квадрат a×a з вирізаним b×b -->
+      <rect x={lx} y={ly} width={A} height={A} fill={`url(#rk-${a}-${b})`} stroke="var(--ill-line)" stroke-dasharray="4 3" />
+      <rect x={lx} y={ly + B} width={A} height={D} fill="var(--ill-1)" fill-opacity="0.3" stroke="var(--ill-1)" stroke-width="2" />
+      <rect x={lx} y={ly} width={D} height={B} fill="var(--ill-2)" fill-opacity="0.3" stroke="var(--ill-2)" stroke-width="2" />
+      <rect x={lx + D} y={ly} width={B} height={B} fill="none" stroke="var(--ill-4)" stroke-width="2" stroke-dasharray="5 3" />
+      <text x={lx + D + B / 2} y={ly + B / 2} text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="700" fill="var(--ill-4)">−{b}²</text>
+      <text x={lx + A / 2} y={ly - 6} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">{a}</text>
+      <text x={lx + D + B / 2} y={ly + A + 18} text-anchor="middle" font-size="12" fill="var(--ill-muted)">{a}² − {b}²</text>
+      <!-- стрілка -->
+      <path d={`M ${lx + A + 8} ${ly + A / 2} h ${gap - 16}`} stroke="var(--ill-muted)" stroke-width="2" marker-end="url(#rk-str)" />
+      <defs>
+        <marker id="rk-str" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ill-muted)" />
+        </marker>
+      </defs>
+      <!-- права: прямокутник (a + b) × (a − b) -->
+      <rect x={rx} y={ry} width={A} height={D} fill="var(--ill-1)" fill-opacity="0.3" stroke="var(--ill-1)" stroke-width="2" />
+      <rect x={rx + A} y={ry} width={B} height={D} fill="var(--ill-2)" fill-opacity="0.3" stroke="var(--ill-2)" stroke-width="2" />
+      <text x={rx + (A + B) / 2} y={ry - 8} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">{a} + {b} = {a + b}</text>
+      <text x={rx + (A + B) / 2} y={ry + D + 18} text-anchor="middle" font-size="12" fill="var(--ill-muted)">висота {a} − {b} = {a - b}</text>
+    </svg>
+  </div>
+  <p class="ill-caption">
+    <b class="num">{a}² − {b}² = ({a} − {b})({a} + {b}) = {a - b} · {a + b} = {a * a - b * b}</b>
+  </p>
+</figure>
+
+<style>
+  .rk svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>

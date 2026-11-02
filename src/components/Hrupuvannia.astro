@@ -1,0 +1,56 @@
+---
+// Розкладання на множники групуванням: xy + p·x + q·y + p·q = x(y + p) + q(y + p) = (y + p)(x + q).
+// Дві групи — двома кольорами, спільна дужка — третім.
+//   <Hrupuvannia p={3} q={2} />            — xy + 3x + 2y + 6
+//   <Hrupuvannia p={-4} q={5} zminni={['a', 'b']} />
+interface Props {
+  p: number;
+  q: number;
+  zminni?: [string, string];
+}
+const { p, q, zminni = ['x', 'y'] } = Astro.props;
+const [x, y] = zminni;
+const ch = (v: number) => String(Math.abs(v));
+const zn = (v: number) => (v < 0 ? '−' : '+');
+const pq = p * q;
+const duzhka = `(${y} ${zn(p)} ${ch(p)})`;
+const chleny = [`${x}${y}`, `${zn(p)} ${ch(p)}${x}`, `${zn(q)} ${ch(q)}${y}`, `${zn(pq)} ${ch(pq)}`];
+const opys = `${chleny.join(' ')} = ${x}${duzhka} ${zn(q)} ${ch(q)}${duzhka} = ${duzhka}(${x} ${zn(q)} ${ch(q)})`;
+---
+
+<figure class="ill not-content hr">
+  <p class="hr-riad" role="img" aria-label={opys}>
+    <span class="hr-hrupa c1">{chleny[0]} {chleny[1]}</span>
+    <span class="hr-hrupa c2">{chleny[2]} {chleny[3]}</span>
+  </p>
+  <ol class="ill-steps">
+    <li>
+      З першої групи виносимо <b class="c1">{x}</b>: <b class="num">{x}<span class="c3">{duzhka}</span></b>. З другої —{' '}
+      <b class="c2">{q < 0 ? `−${ch(q)}` : ch(q)}</b>: <b class="num">{q < 0 ? '−' : ''}{ch(q)}<span class="c3">{duzhka}</span></b>.
+    </li>
+    <li>
+      Дужка <b class="c3">{duzhka}</b> вийшла однакова — виносимо її: <b class="num"><span class="c3">{duzhka}</span>(<span class="c1">{x}</span> <span class="c2">{zn(q)} {ch(q)}</span>)</b>.
+    </li>
+  </ol>
+  <p class="ill-caption">
+    <b class="num">{opys}</b>
+  </p>
+</figure>
+
+<style>
+  .hr-riad {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+  .hr-hrupa {
+    padding: 0.2rem 0.6rem;
+    border: 2px solid currentColor;
+    border-radius: 0.6rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+</style>
