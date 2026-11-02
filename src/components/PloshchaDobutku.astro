@@ -1,0 +1,83 @@
+---
+// Множення многочленів «площею»: прямокутник, поділений на клітинки. Рядки — члени першого множника,
+// стовпці — другого; у кожній клітинці — їхній добуток. Потім зводимо подібні.
+// Член задаємо як { k, s } — це k · x^s (s = 0 — просто число).
+//   <PloshchaDobutku a={[{ k: 1, s: 1 }, { k: 3, s: 0 }]} b={[{ k: 1, s: 1 }, { k: 2, s: 0 }]} />   — (x + 3)(x + 2)
+//   <PloshchaDobutku a={[{ k: 2, s: 1 }]} b={[{ k: 1, s: 2 }, { k: -3, s: 1 }, { k: 5, s: 0 }]} />  — 2x(x² − 3x + 5)
+type Chlen = { k: number; s: number };
+interface Props {
+  a: Chlen[];
+  b: Chlen[];
+  zminna?: string;
+}
+const { a, b, zminna = 'x' } = Astro.props;
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const st = (s: number) => (s <= 1 ? '' : String(s).split('').map((c) => SUP[+c]).join(''));
+const dzn = (v: number) => String(Math.abs(v)).replace('.', ',');
+const zapys = (c: Chlen, pershyi: boolean) => {
+  const znak = c.k < 0 ? '−' : pershyi ? '' : '+';
+  const chyslo = c.s > 0 && Math.abs(c.k) === 1 ? '' : dzn(c.k);
+  return `${znak}${znak && !pershyi ? ' ' : ''}${chyslo}${c.s > 0 ? zminna + st(c.s) : ''}`;
+};
+const okremo = (c: Chlen) => zapys(c, true);
+const mnohochlen = (cs: Chlen[]) => cs.map((c, i) => zapys(c, i === 0)).join(' ');
+const dobutok = (p: Chlen, q: Chlen): Chlen => ({ k: Math.round(p.k * q.k * 1000) / 1000, s: p.s + q.s });
+const klitynky = a.map((p) => b.map((q) => dobutok(p, q)));
+const usi = klitynky.flat();
+const stepeni = [...new Set(usi.map((c) => c.s))].sort((x, y) => y - x);
+const zvedeno = stepeni.map((s) => ({ s, k: Math.round(usi.filter((c) => c.s === s).reduce((t, c) => t + c.k, 0) * 1000) / 1000 })).filter((c) => c.k !== 0);
+const KOL = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)', 'var(--ill-4)'];
+const kolSt = (s: number) => KOL[stepeni.indexOf(s) % KOL.length];
+const duzhky = (cs: Chlen[]) => (cs.length > 1 ? `(${mnohochlen(cs)})` : mnohochlen(cs));
+const zavdannia = `${duzhky(a)} · ${duzhky(b)}`;
+const vsiDobutky = mnohochlen(usi);
+const rezultat = zvedeno.length ? mnohochlen(zvedeno) : '0';
+const podibni = usi.length > zvedeno.length;
+
+const cw = 78;
+const chh = 46;
+const lw = 52;
+const top = 30;
+const W = lw + b.length * cw + 10;
+const H = top + a.length * chh + 10;
+---
+
+<figure class="ill not-content pdob">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${zavdannia} = ${vsiDobutky}${podibni ? ` = ${rezultat}` : ''}`}>
+      <g font-weight="700" text-anchor="middle" dominant-baseline="central">
+        {b.map((q, j) => <text x={lw + j * cw + cw / 2} y={top / 2} font-size="16" fill="var(--ill-ink)">{okremo(q)}</text>)}
+        {a.map((p, i) => <text x={lw / 2} y={top + i * chh + chh / 2} font-size="16" fill="var(--ill-ink)">{okremo(p)}</text>)}
+        {
+          klitynky.map((riad, i) =>
+            riad.map((c, j) => (
+              <g>
+                <rect x={lw + j * cw} y={top + i * chh} width={cw} height={chh} fill={kolSt(c.s)} fill-opacity="0.18" stroke="var(--ill-ink)" stroke-width="1.5" />
+                <text x={lw + j * cw + cw / 2} y={top + i * chh + chh / 2} font-size="17" fill={kolSt(c.s)}>{okremo(c)}</text>
+              </g>
+            ))
+          )
+        }
+      </g>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Кожен член множимо на кожен: <b class="num">{zavdannia} = {vsiDobutky}</b>.
+    </li>
+    {
+      podibni && (
+        <li>
+          Зводимо подібні (однаковий колір): <b class="num">{rezultat}</b>.
+        </li>
+      )
+    }
+  </ol>
+</figure>
+
+<style>
+  .pdob svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>
