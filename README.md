@@ -93,6 +93,9 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Hodynnyk` | годинник зі стрілками (години й хвилини), можна без підпису часу для задач | `<Hodynnyk hodyny={7} khvylyny={30} />` |
   | `SkladChysla` | число до 10 на десятковій рамці: склад числа, додавання/віднімання, «будиночок» | `<SkladChysla chyslo={7} chastyna={3} />` |
   | `PloskiFihury` | плоскі фігури (круг, трикутник, квадрат, прямокутник, п'ятикутник) з вершинами; можна з номерами замість назв | `<PloskiFihury fihury={['kruh', 'trykutnyk', 'kvadrat']} />` |
+  | `KorinRivniannia` | лінійне рівняння ax = b: три випадки (один корінь, немає, безліч), підсвічено потрібний і розв'язок | `<KorinRivniannia a={0} b={5} />` |
+  | `DiiZiStepeniamy` | множення, ділення степенів з однаковою основою і степінь степеня — множниками-плитками | `<DiiZiStepeniamy osnova="a" m={3} n={2} dia="mnozhennia" />` |
+  | `Odnochlen` | одночлен стандартного вигляду: коефіцієнт, букви з показниками, степінь | `<Odnochlen koef={-3} zminni={{ a: 2, b: 3 }} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |
