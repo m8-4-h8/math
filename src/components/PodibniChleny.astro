@@ -1,0 +1,72 @@
+---
+// Многочлен: подібні члени (однакова буквена частина) — одним кольором, під ними — зведення.
+// `b` — буквена частина як рядок ('x²', 'ab', '' — просто число).
+//   <PodibniChleny chleny={[{ k: 3, b: 'x²' }, { k: -5, b: 'x' }, { k: 1, b: 'x²' }, { k: 2, b: 'x' }, { k: 7 }]} />
+type Chlen = { k: number; b?: string };
+interface Props {
+  chleny: Chlen[];
+}
+const { chleny } = Astro.props;
+const dzn = (v: number) => String(Math.abs(v)).replace('.', ',');
+const zapys = (c: Chlen, pershyi: boolean) => {
+  const znak = c.k < 0 ? '−' : pershyi ? '' : '+';
+  const chyslo = c.b && Math.abs(c.k) === 1 ? '' : dzn(c.k);
+  return `${znak}${znak && !pershyi ? ' ' : ''}${chyslo}${c.b ?? ''}`;
+};
+// Групи подібних — у порядку першої появи.
+const hrupy: string[] = [];
+for (const c of chleny) if (!hrupy.includes(c.b ?? '')) hrupy.push(c.b ?? '');
+const KOL = ['c1', 'c2', 'c3', 'c4'];
+const kolir = (b?: string) => KOL[hrupy.indexOf(b ?? '') % KOL.length];
+const zvedeno = hrupy
+  .map((b) => ({ b, k: Math.round(chleny.filter((c) => (c.b ?? '') === b).reduce((s, c) => s + c.k, 0) * 1000) / 1000 }))
+  .filter((c) => c.k !== 0);
+const kroky = hrupy
+  .map((b) => {
+    const chl = chleny.filter((c) => (c.b ?? '') === b);
+    if (chl.length < 2) return null;
+    const suma = chl.reduce((s, c) => s + c.k, 0);
+    const kk = chl.map((c, i) => (i === 0 ? (c.k < 0 ? `−${dzn(c.k)}` : dzn(c.k)) : `${c.k < 0 ? '−' : '+'} ${dzn(c.k)}`)).join(' ');
+    return { b, tekst: `(${kk})${b} = ${zapys({ k: Math.round(suma * 1000) / 1000, b }, true) || '0'}` };
+  })
+  .filter((k) => k !== null);
+const rezultat = zvedeno.length ? zvedeno.map((c, i) => zapys(c, i === 0)).join(' ') : '0';
+const opys = `${chleny.map((c, i) => zapys(c, i === 0)).join(' ')} = ${rezultat}`;
+---
+
+<figure class="ill not-content pch">
+  <p class="pch-riad" role="img" aria-label={opys}>
+    {chleny.map((c, i) => <span class:list={['pch-chlen', kolir(c.b)]}>{zapys(c, i === 0)}</span>)}
+  </p>
+  <ol class="ill-steps">
+    {
+      kroky.map((k) => (
+        <li>
+          <b class={kolir(k.b)}>{k.b || 'числа'}</b>: <b class="num">{k.tekst}</b>
+        </li>
+      ))
+    }
+  </ol>
+  <p class="ill-caption">
+    Стандартний вигляд: <b class="num">{rezultat}</b>
+  </p>
+</figure>
+
+<style>
+  .pch-riad {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+    margin: 0;
+  }
+  .pch-chlen {
+    padding: 0.15rem 0.5rem;
+    border: 2px solid currentColor;
+    border-radius: 0.5rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+</style>
