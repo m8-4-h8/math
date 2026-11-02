@@ -121,7 +121,7 @@ const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', '
       }
     </svg>
   </div>
-  <p class="ill-caption">спершу <b>x</b> — праворуч чи ліворуч, потім <b>y</b> — вгору чи вниз</p>
+  {shliakh && <p class="ill-caption">спершу <b>x</b> — праворуч чи ліворуч, потім <b>y</b> — вгору чи вниз</p>}
 </figure>
 
 <style>

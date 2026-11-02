@@ -101,6 +101,8 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `RiznytsiaKvadrativ` | різниця квадратів: куточок a² − b² перекладено в прямокутник (a + b)(a − b) | `<RiznytsiaKvadrativ a={7} b={3} />` |
   | `VynesenniaMnozhnyka` | винесення спільного множника: НСД, найменший показник, ділення кожного члена | `<VynesenniaMnozhnyka chleny={[{ k: 6, s: 2 }, { k: -15, s: 1 }]} />` |
   | `Hrupuvannia` | розкладання групуванням xy + px + qy + pq: дві групи, спільна дужка | `<Hrupuvannia p={3} q={2} />` |
+  | `TablytsiaZnachen` | функція як таблиця значень x → y за формулою-многочленом, з підстановкою для виділеного x | `<TablytsiaZnachen koef={[2, -1]} x={[-2, -1, 0, 1, 2]} vydilyty={1} />` |
+  | `LiniinaFunktsiia` | графік y = kx + b: дві цілі точки, табличка і пряма на координатній площині | `<LiniinaFunktsiia k={2} b={-1} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |
