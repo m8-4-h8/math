@@ -80,7 +80,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Proportsiia` | пряма чи обернена пропорційність: табличка зі стрілками і пропорція | `<Proportsiia nazvy={['Робітники', 'Дні']} a={[3, 8]} x0={6} typ="obernena" />` |
   | `KruhovaDiahrama` | кругова діаграма з відсотками і градусами (1% = 3,6°) | `<KruhovaDiahrama dani={[['Футбол', 40], ['Плавання', 25], ['Танці', 35]]} />` |
   | `KoordynatnaPriama` | координатна пряма з від'ємними числами, точки, модуль, стрибок-додавання (`strybok`) | `<KoordynatnaPriama min={-6} max={6} tochky={[{ nazva: 'A', x: -4 }]} modul />` |
-  | `KoordynatnaPloshchyna` | координатна площина: осі x і y, чверті, точки з пунктиром від осей | `<KoordynatnaPloshchyna rozmir={5} tochky={[{ nazva: 'A', x: 3, y: 2 }]} />` |
+  | `KoordynatnaPloshchyna` | координатна площина: осі x і y, чверті, точки з пунктиром від осей, прямі через точки (`priami`), точки-опори без позначки (`skhovaty`) | `<KoordynatnaPloshchyna rozmir={5} tochky={[{ nazva: 'A', x: 3, y: 2 }]} />` |
   | `RozkryttiaDuzhok` | розкриття дужок: множник «дістає» до кожного доданка, змінені знаки виділено | `<RozkryttiaDuzhok mnozhnyk={-1} dodanky={[{ k: 1, b: 'a' }, { k: -5 }]} />` |
   | `PerenosDodankiv` | рівняння ax + b = cx + d: перенесення доданків зі зміною знака і розв'язок | `<PerenosDodankiv a={5} b={3} c={2} d={12} />` |
   | `PeretynPriamykh` | перпендикулярні, паралельні й просто прямі, що перетинаються, на клітинках | `<PeretynPriamykh vydy={['perpendykuliarni', 'paralelni']} />` |
@@ -103,6 +103,8 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Hrupuvannia` | розкладання групуванням xy + px + qy + pq: дві групи, спільна дужка | `<Hrupuvannia p={3} q={2} />` |
   | `TablytsiaZnachen` | функція як таблиця значень x → y за формулою-многочленом, з підстановкою для виділеного x | `<TablytsiaZnachen koef={[2, -1]} x={[-2, -1, 0, 1, 2]} vydilyty={1} />` |
   | `LiniinaFunktsiia` | графік y = kx + b: дві цілі точки, табличка і пряма на координатній площині | `<LiniinaFunktsiia k={2} b={-1} />` |
+  | `HrafikRivnian` | графіки рівнянь ax + by = c: одне — пряма з точками-розв'язками, система — дві прямі й точка перетину (або паралельні) | `<HrafikRivnian rivniannia={[[1, 1, 5], [1, -1, 1]]} />` |
+  | `Pidstanovka` | система двох лінійних рівнянь способом підстановки по кроках | `<Pidstanovka r1={[1, 1, 7]} r2={[2, -1, 5]} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |

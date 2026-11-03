@@ -2,7 +2,7 @@
 // Координатна площина: дві осі (x — праворуч, y — вгору), сітка і точки з координатами.
 // Пунктиром показано, як «дійти» до точки: спершу по x, потім по y.
 //   <KoordynatnaPloshchyna rozmir={5} tochky={[{ nazva: 'A', x: 3, y: 2 }, { nazva: 'B', x: -2, y: -4 }]} />
-type Tochka = { nazva: string; x: number; y: number };
+type Tochka = { nazva: string; x: number; y: number; skhovaty?: boolean }; // skhovaty — точка лише для прямої, не малюється
 interface Props {
   rozmir?: number; // осі від −rozmir до rozmir
   tochky?: Tochka[];
@@ -40,7 +40,7 @@ const liniia = ([p, q]: [string, string]) => {
   return { x1: X(a.x - (b.x - a.x) * d), y1: Y(a.y - (b.y - a.y) * d), x2: X(b.x + (b.x - a.x) * d), y2: Y(b.y + (b.y - a.y) * d) };
 };
 const ramkaId = `kpl-${rozmir}-${tochky.map((t) => t.nazva).join('')}`;
-const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', ');
+const opys = tochky.filter((t) => !t.skhovaty).map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', ');
 ---
 
 <figure class="ill not-content kpl">
@@ -98,6 +98,7 @@ const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', '
       {
         tochky.map((t, i) => {
           const kol = kolory[i % kolory.length];
+          if (t.skhovaty) return null;
           return (
             <g>
               {shliakh && (
