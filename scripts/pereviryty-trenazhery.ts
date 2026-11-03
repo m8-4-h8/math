@@ -163,8 +163,11 @@ function rivnostiVTeksti(tekst: string): { perevireno: number; pomylky: string[]
     const pochatok = t.indexOf(syryi);
     const pered = t.slice(Math.max(0, pochatok - 2), pochatok);
     const pislia = t.slice(pochatok + syryi.length, pochatok + syryi.length + 2);
-    // Шматок, вирваний із довшого запису (перед ним «?», знак дії, буква-змінна), не перевіряємо.
-    if (/[?□+\-−·×/=^a-z]\s*$/i.test(pered) || /^\s*[?□+\-−·×/^=a-z]/i.test(pislia)) continue;
+    // Шматок, вирваний із довшого запису (перед ним «?», знак дії, буква-змінна, двокрапка пропорції
+    // «x : 3 = 4 : 6»), не перевіряємо.
+    // Але «x = 240 · 7 : 4 = 420» перевіряємо: змінна лише називає результат.
+    const pislia_zminnoi = /(?:^|[\s;,(])[a-z]\s*=\s*$/i.test(t.slice(Math.max(0, pochatok - 6), pochatok));
+    if ((/[?□+\-−·×/=^:a-z]\s*$/i.test(pered) && !pislia_zminnoi) || /^\s*[?□+\-−·×/^=:a-z]/i.test(pislia)) continue;
     const chastyny = syryi.split('=').map((x) => x.trim());
     if (chastyny.some((x) => !x)) continue;
     // «57 : 6 = 9 (ост. 3)»: перевіряємо 57 = 6 · 9 + 3 і 3 < 6.

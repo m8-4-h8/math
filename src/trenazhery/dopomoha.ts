@@ -190,6 +190,23 @@ export function rivnyiDrib(n: number, d: number) {
   };
 }
 
+/** Як rivnyiDrib, але дріб у відповіді має бути нескоротним: «2/3» і «1 1/2» — так, «4/6» — ні. */
+export function neskorotnyiDrib(n: number, d: number) {
+  const rivnyi = rivnyiDrib(n, d);
+  return (vvid: string) => {
+    const m = vvid.match(/(\d+)\s*\/\s*(\d+)\s*$/);
+    return rivnyi(vvid) && (!m || nsd(Number(m[1]), Number(m[2])) === 1);
+  };
+}
+
+/** Випадковий нескоротний дріб a/b із заданим знаменником (a < b). */
+export function neskorotnyiChyselnyk(r: Vypadok, b: number) {
+  for (;;) {
+    const a = r.chyslo(1, b - 1);
+    if (nsd(a, b) === 1) return a;
+  }
+}
+
 // ——— Слова ———
 
 /** Форма слова після числа: mnozh(1, 'яблуко', 'яблука', 'яблук') → «яблуко», 3 → «яблука», 5 → «яблук». */

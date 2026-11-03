@@ -113,3 +113,48 @@ export function kut(gradusy: number, pidpys = '') {
     `</svg>`
   );
 }
+
+export interface TochkaPloshchyny {
+  nazva: string;
+  x: number;
+  y: number;
+}
+
+/**
+ * Координатна площина від −m до m по обох осях: сітка, осі зі стрілками, числа на осях, точки з назвами.
+ * Координати точок не підписуємо — їх треба прочитати.
+ */
+export function ploshchyna(tochky: TochkaPloshchyny[], m = 5) {
+  const k = 24;
+  const W = (2 * m + 2) * k;
+  const c = W / 2;
+  const X = (x: number) => c + x * k;
+  const Y = (y: number) => c - y * k;
+  const sitka = Array.from({ length: 2 * m + 1 }, (_, i) => {
+    const v = i - m;
+    return (
+      `<line x1="${X(v)}" y1="${Y(m)}" x2="${X(v)}" y2="${Y(-m)}" stroke="var(--ill-line)" stroke-width="0.6" opacity="0.6"/>` +
+      `<line x1="${X(-m)}" y1="${Y(v)}" x2="${X(m)}" y2="${Y(v)}" stroke="var(--ill-line)" stroke-width="0.6" opacity="0.6"/>` +
+      (v !== 0
+        ? `<text x="${X(v)}" y="${c + 14}" text-anchor="middle" font-size="10" fill="var(--ill-muted)">${v < 0 ? '−' + -v : v}</text>` +
+          `<text x="${c - 5}" y="${Y(v) + 3.5}" text-anchor="end" font-size="10" fill="var(--ill-muted)">${v < 0 ? '−' + -v : v}</text>`
+        : '')
+    );
+  }).join('');
+  const osi =
+    `<line x1="4" y1="${c}" x2="${W - 6}" y2="${c}" stroke="var(--ill-ink)" stroke-width="1.8"/>` +
+    `<path d="M ${W - 4} ${c} l -8 -4 v 8 z" fill="var(--ill-ink)"/>` +
+    `<line x1="${c}" y1="${W - 4}" x2="${c}" y2="6" stroke="var(--ill-ink)" stroke-width="1.8"/>` +
+    `<path d="M ${c} 4 l -4 8 h 8 z" fill="var(--ill-ink)"/>` +
+    `<text x="${W - 10}" y="${c - 8}" font-size="13" font-style="italic" fill="var(--ill-ink)">x</text>` +
+    `<text x="${c + 8}" y="14" font-size="13" font-style="italic" fill="var(--ill-ink)">y</text>` +
+    `<text x="${c - 5}" y="${c + 14}" text-anchor="end" font-size="10" fill="var(--ill-muted)">0</text>`;
+  const t = tochky
+    .map(
+      (tt, i) =>
+        `<circle cx="${X(tt.x)}" cy="${Y(tt.y)}" r="5" fill="var(--ill-${(i % 3) + 2})"/>` +
+        `<text x="${X(tt.x) + 7}" y="${Y(tt.y) - 7}" font-size="14" font-weight="700" fill="var(--ill-${(i % 3) + 2})">${tt.nazva}</text>`,
+    )
+    .join('');
+  return `<svg viewBox="0 0 ${W} ${W}" width="${W}" height="${W}" role="img" aria-label="Координатна площина з точками ${tochky.map((tt) => tt.nazva).join(', ')}">${sitka}${osi}${t}</svg>`;
+}
