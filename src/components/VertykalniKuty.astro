@@ -1,0 +1,78 @@
+---
+// Дві прямі перетинаються в точці O й утворюють чотири кути: ∠1 і ∠3 — вертикальні (один колір),
+// ∠2 і ∠4 — теж вертикальні (другий колір). Сусідні кути — суміжні.
+//   <VertykalniKuty kut={50} />                     — усі чотири кути з градусами
+//   <VertykalniKuty kut={62} vidomi={[1]} />        — для задачі: решта кутів зі знаком «?»
+//   <VertykalniKuty kut={70} povorot={60} />        — повернути малюнок (вертикальні кути не обов'язково «вгорі й унизу»)
+interface Props {
+  kut: number; // ∠1, від 1 до 179
+  vidomi?: number[]; // номери кутів (1–4), у яких показати градуси
+  povorot?: number; // поворот малюнка в градусах
+  /** Підпис з рівностями під малюнком. */
+  pidpys?: boolean;
+}
+const { kut, vidomi = [1, 2, 3, 4], povorot = 0 } = Astro.props;
+const { pidpys = vidomi.length === 4 } = Astro.props;
+if (kut <= 0 || kut >= 180) throw new Error('VertykalniKuty: kut має бути від 1 до 179');
+const inshyi = 180 - kut;
+
+const W = 300;
+const H = 220;
+const O = { x: W / 2, y: H / 2 };
+const rad = (g: number) => (g * Math.PI) / 180;
+const tochka = (g: number, r: number) => ({ x: O.x + r * Math.cos(rad(g + povorot)), y: O.y - r * Math.sin(rad(g + povorot)) });
+const f = (v: number) => v.toFixed(1);
+const sektor = (g1: number, g2: number, r: number) => {
+  const a = tochka(g1, r);
+  const b = tochka(g2, r);
+  return `M ${O.x} ${O.y} L ${f(a.x)} ${f(a.y)} A ${r} ${r} 0 0 0 ${f(b.x)} ${f(b.y)} Z`;
+};
+// Кути: [від, до, величина, колір]
+const kuty = [
+  { n: 1, vid: 0, do: kut, g: kut, kolir: 'var(--ill-1)' },
+  { n: 2, vid: kut, do: 180, g: inshyi, kolir: 'var(--ill-2)' },
+  { n: 3, vid: 180, do: 180 + kut, g: kut, kolir: 'var(--ill-1)' },
+  { n: 4, vid: 180 + kut, do: 360, g: inshyi, kolir: 'var(--ill-2)' },
+];
+const L = 105; // половина довжини прямої
+const a1 = tochka(0, L);
+const a2 = tochka(180, L);
+const b1 = tochka(kut, L);
+const b2 = tochka(180 + kut, L);
+const opys = `Дві прямі перетинаються в точці O. ${kuty
+  .map((k) => `Кут ${k.n}: ${vidomi.includes(k.n) ? `${k.g}°` : 'невідомий'}`)
+  .join(', ')}. Кути 1 і 3 вертикальні, кути 2 і 4 вертикальні.`;
+---
+
+<figure class="ill not-content">
+  <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+    {kuty.map((k) => <path d={sektor(k.vid, k.do, k.n % 2 ? 36 : 30)} fill={k.kolir} fill-opacity="0.2" stroke={k.kolir} stroke-width="2" />)}
+    <line x1={f(a1.x)} y1={f(a1.y)} x2={f(a2.x)} y2={f(a2.y)} stroke="var(--ill-ink)" stroke-width="2.5" stroke-linecap="round" />
+    <line x1={f(b1.x)} y1={f(b1.y)} x2={f(b2.x)} y2={f(b2.y)} stroke="var(--ill-ink)" stroke-width="2.5" stroke-linecap="round" />
+    <circle cx={O.x} cy={O.y} r="3" fill="var(--ill-ink)" />
+    {
+      kuty.map((k) => {
+        const shyryna = k.do - k.vid;
+        const p = tochka((k.vid + k.do) / 2, shyryna < 45 ? 80 : 64);
+        const n = tochka((k.vid + k.do) / 2, shyryna < 45 ? 50 : 21);
+        return (
+          <>
+            <text x={f(n.x)} y={f(n.y)} font-size="12" font-weight="700" fill="var(--ill-ink)" text-anchor="middle" dominant-baseline="central">
+              {k.n}
+            </text>
+            <text x={f(p.x)} y={f(p.y)} font-size="14" font-weight="700" fill={k.kolir} text-anchor="middle" dominant-baseline="central">
+              {vidomi.includes(k.n) ? `${k.g}°` : '?'}
+            </text>
+          </>
+        );
+      })
+    }
+  </svg>
+  {
+    pidpys && (
+      <p class="ill-caption">
+        <span class="c1">∠1 = ∠3 = {kut}°</span>, <span class="c2">∠2 = ∠4 = {inshyi}°</span>
+      </p>
+    )
+  }
+</figure>

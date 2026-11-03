@@ -1,0 +1,83 @@
+---
+// Перпендикуляр і похилі з точки A до прямої a на клітчастому папері. AH — перпендикуляр (з квадратиком
+// прямого кута), AB, AC… — похилі. Довжини підписуємо в клітинках, якщо вони цілі (наприклад, 3–4–5).
+//   <Perpendykuliar h={4} pokhyli={[3]} />        — AH = 4, AB = 5
+//   <Perpendykuliar h={3} pokhyli={[-4, 4]} />    — дві похилі по різні боки
+interface Props {
+  h: number; // висота точки A над прямою, у клітинках
+  pokhyli?: number[]; // зсуви кінців похилих від H, у клітинках (± — праворуч/ліворуч)
+  /** Підписати довжини (у клітинках) перпендикуляра й цілих похилих. */
+  dovzhyny?: boolean;
+}
+const { h, pokhyli = [], dovzhyny = true } = Astro.props;
+
+const k = 22;
+const min = Math.min(0, ...pokhyli) - 2;
+const max = Math.max(0, ...pokhyli) + 2;
+const W = (max - min) * k;
+const H = (h + 2) * k;
+const x = (c: number) => (c - min) * k;
+const y = (r: number) => (h + 1 - r) * k;
+const NAZVY = ['B', 'C', 'D', 'E'];
+const vidrizky = pokhyli.map((o, i) => {
+  const d = Math.hypot(o, h);
+  return { o, nazva: NAZVY[i], d, tsila: Math.abs(d - Math.round(d)) < 1e-9 };
+});
+const kv = 9;
+const opys = `Пряма a, точка A на ${h} клітинок вище. AH — перпендикуляр завдовжки ${h}.${vidrizky
+  .map((v) => ` A${v.nazva} — похила${v.tsila ? ` завдовжки ${Math.round(v.d)}` : ''}.`)
+  .join('')}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      {Array.from({ length: max - min + 1 }, (_, i) => <line x1={i * k} y1="0" x2={i * k} y2={H} stroke="var(--ill-grid)" />)}
+      {Array.from({ length: h + 3 }, (_, i) => <line x1="0" y1={i * k} x2={W} y2={i * k} stroke="var(--ill-grid)" />)}
+      <line x1="0" y1={y(0)} x2={W} y2={y(0)} stroke="var(--ill-ink)" stroke-width="2.5" />
+      <text x={W - 8} y={y(0) - 8} font-size="14" font-style="italic" font-weight="700" fill="var(--ill-ink)" text-anchor="end">a</text>
+      {
+        vidrizky.map((v) => (
+          <>
+            <line x1={x(0)} y1={y(h)} x2={x(v.o)} y2={y(0)} stroke="var(--ill-2)" stroke-width="2.5" stroke-dasharray="7 4" />
+            <circle cx={x(v.o)} cy={y(0)} r="3" fill="var(--ill-ink)" />
+            <text x={x(v.o)} y={y(0) + 18} font-size="14" font-weight="700" fill="var(--ill-ink)" text-anchor="middle">
+              {v.nazva}
+            </text>
+            {dovzhyny && v.tsila && (
+              <text
+                x={(x(0) + x(v.o)) / 2 + (v.o > 0 ? 14 : -14)}
+                y={(y(h) + y(0)) / 2 - 6}
+                font-size="14"
+                font-weight="700"
+                fill="var(--ill-2)"
+                text-anchor="middle"
+              >
+                {Math.round(v.d)}
+              </text>
+            )}
+          </>
+        ))
+      }
+      <line x1={x(0)} y1={y(h)} x2={x(0)} y2={y(0)} stroke="var(--ill-1)" stroke-width="3" />
+      <path d={`M ${x(0) + kv} ${y(0)} V ${y(0) - kv} H ${x(0)}`} fill="none" stroke="var(--ill-1)" stroke-width="2" />
+      {dovzhyny && (
+        <text x={x(0) - 10} y={(y(h) + y(0)) / 2} font-size="14" font-weight="700" fill="var(--ill-1)" text-anchor="end" dominant-baseline="central">
+          {h}
+        </text>
+      )}
+      <circle cx={x(0)} cy={y(h)} r="3.5" fill="var(--ill-ink)" />
+      <circle cx={x(0)} cy={y(0)} r="3" fill="var(--ill-ink)" />
+      <text x={x(0)} y={y(h) - 9} font-size="14" font-weight="700" fill="var(--ill-ink)" text-anchor="middle">A</text>
+      <text x={x(0) - 9} y={y(0) + 18} font-size="14" font-weight="700" fill="var(--ill-ink)" text-anchor="middle">H</text>
+    </svg>
+  </div>
+  <p class="ill-caption">
+    <span class="c1">AH — перпендикуляр</span>
+    {vidrizky.length > 0 && (
+      <>
+        , <span class="c2">{vidrizky.map((v) => `A${v.nazva}`).join(', ')} — {vidrizky.length > 1 ? 'похилі' : 'похила'}</span>
+      </>
+    )}
+  </p>
+</figure>
