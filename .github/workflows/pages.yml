@@ -25,6 +25,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Генератори тренажерів: сотні завдань кожного з незалежно перерахованою відповіддю.
+      - run: npm test
       - run: npm run build
       - if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3

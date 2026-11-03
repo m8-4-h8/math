@@ -11,6 +11,7 @@ sidebar:
 
 import Pravylo from '../../../components/Pravylo.astro';
 import Zavdannia from '../../../components/Zavdannia.astro';
+import Trenazher from '../../../components/Trenazher.astro';
 
 <Pravylo>Головне правило теми — одне-два речення, які треба запам'ятати. **Ключові слова** — жирним.</Pravylo>
 
@@ -97,6 +98,13 @@ $$
 
   <span slot="rozviazok">Яка це тема і розв'язок.</span>
 </Zavdannia>
+
+## Потренуйся
+
+Тренажер щоразу складає нові завдання, тож тренуватися можна скільки завгодно. Обери рівень і розв'яжи 10 завдань.
+
+{/* Потрібен генератор src/trenazhery/<клас>/<тема>.ts — див. README, «Тренажери». */}
+<Trenazher />
 
 ## Пов'язані теми
 

@@ -1,38 +1,78 @@
 ---
-// Гра-тренажер «Швидкий рахунок»: 10 прикладів на обрані дії, серія правильних відповідей,
-// у кінці — від 1 до 3 зірок. Найкращий результат запам'ятовується в браузері.
-//   <Trenazher />                         — дитина сама обирає дії та рівень
-//   <Trenazher dii={['×']} riven="seredno" /> — одразу таблиця множення
+// Тренажер: 10 завдань, які щоразу складаються заново з випадкових чисел, три рівні, серія правильних
+// відповідей і від 1 до 3 зірок у кінці. Найкращий результат запам'ятовується в браузері.
+// Завдання пише генератор теми — `src/trenazhery/<N>-klas/<тема>.ts` (див. `src/trenazhery/dopomoha.ts`).
+//
+//   <Trenazher />                        — тренажер теми, на сторінці якої він стоїть
+//   <Trenazher tema="5-klas/vidsotky" /> — тренажер іншої теми
+//   <Trenazher klas={5} />               — усі теми класу впереміш, дитина може обрати, які саме
+//   <Trenazher temy={['5-klas/vidsotky', '6-klas/proportsii']} /> — обрані теми впереміш
+//
+// «Показати відповідь» відмикається лише після першої спроби (як у <Zavdannia>): спершу дитина пробує сама.
+import { getCollection } from 'astro:content';
+import type { Henerator } from '../trenazhery/dopomoha';
+
 interface Props {
-  dii?: ('+' | '−' | '×' | ':')[];
-  riven?: 'lehko' | 'seredno' | 'skladno';
+  tema?: string;
+  temy?: string[];
+  klas?: number;
+  riven?: 1 | 2 | 3;
 }
-const { dii = ['+', '−'], riven = 'lehko' } = Astro.props;
-const VSI_DII = [
-  { znak: '+', nazva: 'Додавання' },
-  { znak: '−', nazva: 'Віднімання' },
-  { znak: '×', nazva: 'Множення' },
-  { znak: ':', nazva: 'Ділення' },
-];
+const { tema, temy, klas, riven = 1 } = Astro.props;
+
+const heneratory = import.meta.glob<{ default: Henerator }>('../trenazhery/*-klas/*.ts', { eager: true });
+const henerator = new Map(
+  Object.entries(heneratory).map(([shliakh, modul]) => [shliakh.replace('../trenazhery/', '').replace(/\.ts$/, ''), modul.default]),
+);
+const baza = import.meta.env.BASE_URL.replace(/\/$/, '');
+const storinky = await getCollection('docs');
+const poriadok = (id: string) => storinky.find((s) => s.id === id)?.data.sidebar.order ?? Infinity;
+
+let ids: string[];
+if (klas !== undefined) {
+  ids = [...henerator.keys()].filter((id) => id.startsWith(`${klas}-klas/`)).sort((a, b) => poriadok(a) - poriadok(b));
+} else if (temy) {
+  ids = temy;
+} else {
+  ids = [tema ?? Astro.url.pathname.slice(baza.length + 1).replace(/\/$/, '')];
+}
+if (!ids.length) throw new Error(`Trenazher: для ${klas} класу ще немає жодного генератора.`);
+
+const spysok = ids.map((id) => {
+  const h = henerator.get(id);
+  const s = storinky.find((x) => x.id === id);
+  if (!h) throw new Error(`Trenazher: немає генератора src/trenazhery/${id}.ts`);
+  if (!s) throw new Error(`Trenazher: немає теми src/content/docs/${id}.mdx`);
+  return { id, nazva: s.data.title, ikonka: s.data.ikonka || '📘', shliakh: `${baza}/${id}/`, rivni: h.rivni };
+});
+const kilka = spysok.length > 1;
 const RIVNI = [
-  { kod: 'lehko', nazva: '🐣 Легко' },
-  { kod: 'seredno', nazva: '🦊 Середньо' },
-  { kod: 'skladno', nazva: '🦁 Складно' },
+  { kod: 1, nazva: '🐣 Легко' },
+  { kod: 2, nazva: '🦊 Середньо' },
+  { kod: 3, nazva: '🦁 Складно' },
 ];
 ---
 
-<math-trenazher class="tren not-content" data-riven={riven}>
+<math-trenazher class="tren not-content" data-temy={JSON.stringify(spysok)} data-riven={riven} data-pagefind-ignore>
   <div class="tren-ekran tren-start">
-    <p class="tren-pidpys">Що будемо рахувати?</p>
-    <div class="tren-vybir" role="group" aria-label="Дії">
-      {
-        VSI_DII.map(({ znak, nazva }) => (
-          <button type="button" class="tren-dia" data-znak={znak} aria-pressed={dii.includes(znak as never) ? 'true' : 'false'} title={nazva}>
-            {znak}
-          </button>
-        ))
-      }
-    </div>
+    {
+      kilka && (
+        <>
+          <p class="tren-pidpys">Які теми тренуємо?</p>
+          <div class="tren-vybir tren-temy" role="group" aria-label="Теми">
+            {spysok.map((t) => (
+              <button type="button" class="tren-tema" data-id={t.id} aria-pressed="true">
+                <span aria-hidden="true">{t.ikonka}</span> {t.nazva}
+              </button>
+            ))}
+          </div>
+          <p class="tren-vsi">
+            <button type="button" class="tren-usi">Усі теми</button>
+            <button type="button" class="tren-zhodnoi">Зняти всі</button>
+          </p>
+        </>
+      )
+    }
     <p class="tren-pidpys">Рівень</p>
     <div class="tren-vybir" role="group" aria-label="Рівень">
       {
@@ -43,7 +83,8 @@ const RIVNI = [
         ))
       }
     </div>
-    <button type="button" class="tren-hraty">▶ Почати гру</button>
+    {!kilka && <p class="tren-opys-rivnia" aria-live="polite">{spysok[0].rivni[riven - 1]}</p>}
+    <button type="button" class="tren-hraty">▶ Почати</button>
     <p class="tren-rekord" hidden></p>
   </div>
 
@@ -52,50 +93,68 @@ const RIVNI = [
       <ol class="tren-krapky" aria-label="Прогрес"></ol>
       <span class="tren-seriia" title="Правильних підряд"></span>
     </div>
+    <div class="tren-malunok"></div>
+    <p class="tren-pytannia"></p>
     <form class="tren-forma" autocomplete="off">
-      <label class="tren-pryklad" for=""></label>
-      <input class="tren-pole" type="text" inputmode="numeric" pattern="[0-9]*" aria-label="Відповідь" />
+      <label class="tren-vyraz" for=""></label>
+      <span class="tren-vvid">
+        <input class="tren-pole" type="text" aria-label="Відповідь" />
+        <span class="tren-odynytsi"></span>
+      </span>
       <button type="submit" class="tren-ok">OK</button>
     </form>
+    <div class="tren-varianty" role="group" aria-label="Варіанти відповіді" hidden></div>
     <p class="tren-vidhuk" aria-live="polite"></p>
+    <div class="tren-rozviazok" hidden></div>
+    <div class="tren-dii">
+      <button type="button" class="tren-pokazaty" disabled>🔒 Відповідь — після твоєї спроби</button>
+      <button type="button" class="tren-dali" hidden>Далі →</button>
+    </div>
   </div>
 
   <div class="tren-ekran tren-kinets" hidden>
     <p class="tren-zirky" aria-hidden="true"></p>
     <p class="tren-rezultat"></p>
+    <details class="tren-pomylky" hidden>
+      <summary></summary>
+      <ol></ol>
+    </details>
     <button type="button" class="tren-znovu">🔄 Ще раз</button>
-    <button type="button" class="tren-nalashtuvannia">⚙️ Інші приклади</button>
+    <button type="button" class="tren-nalashtuvannia">⚙️ Змінити рівень</button>
   </div>
 </math-trenazher>
 
 <script>
   import { salut } from '../scripts/zirky';
+  import { pravylno } from '../scripts/perevirka';
+  import { stvorytyVypadok, type Henerator, type Riven, type TrenZavdannia } from '../trenazhery/dopomoha';
 
   const KILKIST = 10;
-  const vypadk = (vid: number, do_: number) => vid + Math.floor(Math.random() * (do_ - vid + 1));
+  // Кожен генератор — окремий маленький файл, який завантажується лише тоді, коли потрібен.
+  const moduli = import.meta.glob<{ default: Henerator }>('../trenazhery/*-klas/*.ts');
+  const zavantazhyty = (id: string) => moduli[`../trenazhery/${id}.ts`]().then((m) => m.default);
 
-  // Приклад: текст і відповідь. Межі залежать від рівня, відповідь завжди ціла й невід'ємна.
-  function pryklad(znak: string, riven: string): [string, number] {
-    const mezha = { lehko: 20, seredno: 100, skladno: 1000 }[riven] ?? 20;
-    if (znak === '+') {
-      const a = vypadk(1, mezha - 1);
-      const b = vypadk(1, mezha - a);
-      return [`${a} + ${b}`, a + b];
-    }
-    if (znak === '−') {
-      const a = vypadk(2, mezha);
-      const b = vypadk(1, a);
-      return [`${a} − ${b}`, a - b];
-    }
-    const [a, b] =
-      riven === 'lehko'
-        ? [vypadk(1, 5), vypadk(1, 10)]
-        : riven === 'seredno'
-          ? [vypadk(2, 10), vypadk(2, 10)]
-          : [vypadk(11, 99), vypadk(2, 9)];
-    if (znak === '×') return Math.random() < 0.5 ? [`${a} × ${b}`, a * b] : [`${b} × ${a}`, a * b];
-    return [`${a * b} : ${b}`, a];
+  // KaTeX потрібен лише для завдань з формулами ($...$), тож вантажимо його за потреби.
+  type Katex = typeof import('katex').default;
+  let katexObitsianka: Promise<Katex> | null = null;
+  let katex: Katex | null = null;
+  const pidhotuvatyKatex = () => (katexObitsianka ??= import('katex').then((m) => (katex = m.default)));
+
+  // 30400 → «30 400», як у розв'язку (чотирицифрові не розбиваємо).
+  const rozbyty = (v: string) => (/^-?\d{5,}$/.test(v) ? v.replace(/\B(?=(\d{3})+$)/g, '\u00a0') : v);
+  const ekran = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+  function html(tekst: string) {
+    return tekst
+      .split(/(\$[^$]+\$)/)
+      .map((chastyna) =>
+        chastyna.length > 2 && chastyna.startsWith('$') && chastyna.endsWith('$') && katex
+          ? katex.renderToString(chastyna.slice(1, -1), { throwOnError: false })
+          : ekran(chastyna),
+      )
+      .join('');
   }
+  const tekstyZavdannia = (z: TrenZavdannia) =>
+    [z.pytannia, z.vyraz, z.rozviazok, z.pidkazka, z.pokaz, ...(z.varianty || []).map(String)].filter(Boolean).join(' ');
 
   function chytaty(kluch: string) {
     try {
@@ -112,131 +171,301 @@ const RIVNI = [
     }
   }
 
+  interface Tema {
+    id: string;
+    nazva: string;
+    shliakh: string;
+    rivni: [string, string, string];
+  }
+  interface Krok {
+    tema: Tema;
+    z: TrenZavdannia;
+    vidpovidi: string[];
+    sprob: number;
+    sproba?: string; // остання відповідь дитини: з нею порівнюємо правильну
+    pidsumok?: 'tak' | 'maizhe' | 'ne';
+  }
+
   class MathTrenazher extends HTMLElement {
     connectedCallback() {
       const $ = <T extends HTMLElement>(s: string) => this.querySelector<T>(s)!;
       const ekrany = { start: $('.tren-start'), hra: $('.tren-hra'), kinets: $('.tren-kinets') };
       const pokazaty = (nazva: keyof typeof ekrany) =>
         Object.entries(ekrany).forEach(([k, el]) => (el.hidden = k !== nazva));
-      const dii = [...this.querySelectorAll<HTMLButtonElement>('.tren-dia')];
+      const temy: Tema[] = JSON.parse(this.dataset.temy || '[]');
+      const knopkyTem = [...this.querySelectorAll<HTMLButtonElement>('.tren-tema')];
       const rivni = [...this.querySelectorAll<HTMLButtonElement>('.tren-riven')];
+      const opysRivnia = this.querySelector<HTMLElement>('.tren-opys-rivnia');
+      const hraty = $<HTMLButtonElement>('.tren-hraty');
       const krapky = $('.tren-krapky');
-      const prykladEl = $('.tren-pryklad');
+      const malunokEl = $('.tren-malunok');
+      const pytanniaEl = $('.tren-pytannia');
+      const vyrazEl = $('.tren-vyraz');
+      const forma = $<HTMLFormElement>('.tren-forma');
       const pole = $<HTMLInputElement>('.tren-pole');
+      const odynytsiEl = $('.tren-odynytsi');
+      const variantyEl = $('.tren-varianty');
       const vidhuk = $('.tren-vidhuk');
+      const rozviazokEl = $('.tren-rozviazok');
+      const pokazatyVidpovid = $<HTMLButtonElement>('.tren-pokazaty');
+      const dali = $<HTMLButtonElement>('.tren-dali');
       const seriiaEl = $('.tren-seriia');
       const rekordEl = $('.tren-rekord');
 
       const id = 'tren-' + Math.random().toString(36).slice(2);
       pole.id = id;
-      prykladEl.setAttribute('for', id);
+      vyrazEl.setAttribute('for', id);
 
-      let pryklady: [string, number][] = [];
+      let kroky: Krok[] = [];
       let krok = 0;
-      let virno = 0;
       let seriia = 0;
-      let pershaSproba = true;
+      let zakinchene = false;
 
-      const obrani = () => dii.filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.znak!);
-      const riven = () => rivni.find((b) => b.getAttribute('aria-pressed') === 'true')?.dataset.kod || 'lehko';
-      const kluchRekordu = () => `math-trenazher:${obrani().join('')}:${riven()}`;
-      const onovytyRekord = () => {
+      const obrani = () =>
+        knopkyTem.length ? temy.filter((t) => knopkyTem.find((b) => b.dataset.id === t.id)?.getAttribute('aria-pressed') === 'true') : temy;
+      const riven = () => Number(rivni.find((b) => b.getAttribute('aria-pressed') === 'true')?.dataset.kod || 1) as Riven;
+      const kluchRekordu = () => `math-trenazher:${obrani().map((t) => t.id).join('+')}:${riven()}`;
+      const onovyty = () => {
         const r = chytaty(kluchRekordu());
         rekordEl.hidden = !r;
         rekordEl.textContent = `🏆 Твій рекорд тут: ${r} з ${KILKIST}`;
+        if (opysRivnia) opysRivnia.textContent = temy[0].rivni[riven() - 1];
+        hraty.disabled = !obrani().length;
+        hraty.textContent = obrani().length ? '▶ Почати' : 'Обери хоча б одну тему';
       };
 
-      dii.forEach((b) =>
+      knopkyTem.forEach((b) =>
         b.addEventListener('click', () => {
-          const uvimk = b.getAttribute('aria-pressed') === 'true';
-          if (uvimk && obrani().length === 1) return; // хоча б одна дія має лишитися
-          b.setAttribute('aria-pressed', String(!uvimk));
-          onovytyRekord();
+          b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+          onovyty();
         }),
       );
+      this.querySelector('.tren-usi')?.addEventListener('click', () => {
+        knopkyTem.forEach((b) => b.setAttribute('aria-pressed', 'true'));
+        onovyty();
+      });
+      this.querySelector('.tren-zhodnoi')?.addEventListener('click', () => {
+        knopkyTem.forEach((b) => b.setAttribute('aria-pressed', 'false'));
+        onovyty();
+      });
       rivni.forEach((b) =>
         b.addEventListener('click', () => {
           rivni.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-          onovytyRekord();
+          onovyty();
         }),
       );
 
-      const nastupnyi = () => {
-        if (krok >= KILKIST) return kinets();
-        prykladEl.textContent = pryklady[krok][0] + ' =';
-        pole.value = '';
-        pershaSproba = true;
-        krapky.children[krok].classList.add('zaraz');
-        pole.focus({ preventScroll: true });
+      const krapka = () => krapky.children[krok];
+      const zakinchytyKrok = (pidsumok: 'tak' | 'maizhe' | 'ne') => {
+        kroky[krok].pidsumok = pidsumok;
+        krapka().classList.remove('zaraz');
+        krapka().classList.add(pidsumok);
+        zakinchene = true;
+        pole.disabled = true;
+        variantyEl.querySelectorAll('button').forEach((b) => (b.disabled = true));
+        pokazatyVidpovid.hidden = true;
+      };
+      const vidkrytyRozviazok = (zVidpovid: boolean) => {
+        const { z, vidpovidi } = kroky[krok];
+        const chastyny = [];
+        if (zVidpovid) chastyny.push(`<strong>Відповідь:</strong> ${html(z.pokaz ?? rozbyty(vidpovidi[0]))}${z.odynytsi ? ' ' + ekran(z.odynytsi) : ''}`);
+        if (z.rozviazok) chastyny.push(html(z.rozviazok));
+        rozviazokEl.innerHTML = chastyny.join('<br />');
+        rozviazokEl.hidden = !chastyny.length;
+        dali.hidden = false;
+        dali.focus({ preventScroll: true });
       };
 
-      const pochaty = () => {
-        const znaky = obrani();
-        pryklady = Array.from({ length: KILKIST }, () => pryklad(znaky[vypadk(0, znaky.length - 1)], riven()));
-        krok = virno = seriia = 0;
+      const nastupnyi = () => {
+        if (krok >= KILKIST) return kinets();
+        const { z, vidpovidi } = kroky[krok];
+        zakinchene = false;
+        malunokEl.innerHTML = z.malunok || '';
+        malunokEl.hidden = !z.malunok;
+        pytanniaEl.innerHTML = z.pytannia ? html(z.pytannia) : '';
+        pytanniaEl.hidden = !z.pytannia;
+        vyrazEl.innerHTML = z.vyraz ? html(z.vyraz) : '';
+        vyrazEl.hidden = !z.vyraz;
+        vidhuk.textContent = '';
+        vidhuk.classList.remove('dobre', 'pohano');
+        rozviazokEl.hidden = true;
+        // Кнопка видна одразу, але відмикається лише після першої власної спроби.
+        pokazatyVidpovid.hidden = false;
+        pokazatyVidpovid.disabled = true;
+        pokazatyVidpovid.textContent = '🔒 Відповідь — після твоєї спроби';
+        dali.hidden = true;
+        krapka().classList.add('zaraz');
+        if (z.varianty) {
+          forma.hidden = true;
+          variantyEl.hidden = false;
+          variantyEl.innerHTML = '';
+          for (const v of z.varianty) {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'tren-variant';
+            b.innerHTML = html(String(v));
+            b.addEventListener('click', () => vidpovisty(String(v), b));
+            variantyEl.append(b);
+          }
+          (variantyEl.firstElementChild as HTMLElement | null)?.focus({ preventScroll: true });
+        } else {
+          forma.hidden = false;
+          variantyEl.hidden = true;
+          pole.disabled = false;
+          pole.value = '';
+          // Клавіатура на телефоні: цифри, цифри з комою або повна (для дробів, мінуса, слів).
+          const persha = vidpovidi[0];
+          pole.inputMode = /^\d+$/.test(persha) ? 'numeric' : /^\d+[.,]\d+$/.test(persha) ? 'decimal' : 'text';
+          odynytsiEl.textContent = z.odynytsi || '';
+          odynytsiEl.hidden = !z.odynytsi;
+          pole.blur();
+          pole.focus({ preventScroll: true });
+        }
+      };
+
+      const vidpovisty = (vvid: string, knopka?: HTMLButtonElement) => {
+        if (zakinchene) return;
+        const k = kroky[krok];
+        // Кнопка — це рівно один із варіантів, тож порівнюємо точно (у «поділити на 3» і «відняти 3»
+        // однакові числа, і перевірка «досить тих самих чисел» їх би не розрізнила).
+        const virno = knopka ? k.vidpovidi.includes(vvid) : pravylno(vvid, k.vidpovidi) || !!k.z.perevirka?.(vvid);
+        if (virno) {
+          knopka?.classList.add('virno');
+          const pershaSproba = k.sprob === 0;
+          zakinchytyKrok(pershaSproba ? 'tak' : 'maizhe');
+          if (pershaSproba) seriia++;
+          seriiaEl.textContent = seriia >= 3 ? `🔥 ${seriia} підряд` : '';
+          vidhuk.textContent = pershaSproba ? '✅ Так!' : '✅ Тепер правильно!';
+          vidhuk.classList.add('dobre');
+          if (pershaSproba) {
+            setTimeout(() => {
+              krok++;
+              nastupnyi();
+            }, 600);
+          } else {
+            vidkrytyRozviazok(false);
+          }
+          return;
+        }
+        k.sprob++;
+        k.sproba = vvid.trim();
+        seriia = 0;
+        seriiaEl.textContent = '';
+        if (knopka) {
+          knopka.classList.add('nevirno');
+          knopka.disabled = true;
+        } else {
+          pole.select();
+        }
+        if (k.sprob >= 2 && k.z.pidkazka) vidhuk.innerHTML = '💡 Підказка: ' + html(k.z.pidkazka);
+        else vidhuk.textContent = 'Ой, ні. Подумай ще раз!';
+        vidhuk.classList.add('pohano');
+        // Відповідь можна підглянути лише після власної спроби.
+        pokazatyVidpovid.disabled = false;
+        pokazatyVidpovid.textContent = 'Показати відповідь';
+        // Серед двох варіантів після помилки лишився один — показуємо розв'язок одразу.
+        if (knopka && variantyEl.querySelectorAll('button:not(:disabled)').length <= 1) pokazatyVidpovid.click();
+      };
+
+      forma.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const vvid = pole.value.trim();
+        if (vvid) vidpovisty(vvid);
+      });
+      pokazatyVidpovid.addEventListener('click', () => {
+        if (zakinchene || !kroky[krok].sprob) return;
+        zakinchytyKrok('ne');
+        vidhuk.textContent = `Порівняй зі своєю відповіддю «${kroky[krok].sproba}» і розбери розв'язок — наступне вийде! 🙂`;
+        vidhuk.classList.remove('pohano');
+        vidkrytyRozviazok(true);
+      });
+      dali.addEventListener('click', () => {
+        krok++;
+        nastupnyi();
+      });
+
+      const pochaty = async () => {
+        const vybrani = obrani();
+        if (!vybrani.length) return;
+        hraty.disabled = true;
+        const r = stvorytyVypadok();
+        const rv = riven();
+        const heneratory = new Map(await Promise.all(vybrani.map(async (t) => [t.id, await zavantazhyty(t.id)] as const)));
+        // Теми по черзі (кожна приблизно порівну), потім перемішуємо — так завдання йдуть упереміш.
+        const cherha: Tema[] = [];
+        while (cherha.length < KILKIST) cherha.push(...r.peremishaty(vybrani));
+        const bachyly = new Set<string>();
+        kroky = r.peremishaty(cherha.slice(0, KILKIST)).map((tema) => {
+          let z: TrenZavdannia | undefined;
+          for (let sproba = 0; sproba < 30; sproba++) {
+            try {
+              z = heneratory.get(tema.id)!.zavdannia(r, rv);
+            } catch (pomylka) {
+              console.error(`Тренажер ${tema.id}:`, pomylka);
+              continue;
+            }
+            const kluch = `${z.pytannia}|${z.vyraz}|${z.malunok ?? ''}`;
+            if (!bachyly.has(kluch)) {
+              bachyly.add(kluch);
+              break;
+            }
+          }
+          const vidpovidi = (Array.isArray(z!.vidpovid) ? z!.vidpovid : [z!.vidpovid]).map(String);
+          return { tema, z: z!, vidpovidi, sprob: 0 };
+        });
+        if (kroky.some((k) => tekstyZavdannia(k.z).includes('$') || k.vidpovidi[0].includes('$'))) await pidhotuvatyKatex();
+        krok = seriia = 0;
         krapky.innerHTML = '<li></li>'.repeat(KILKIST);
         seriiaEl.textContent = '';
-        vidhuk.textContent = '';
+        hraty.disabled = false;
         pokazaty('hra');
         nastupnyi();
       };
 
       const kinets = () => {
+        const virno = kroky.filter((k) => k.pidsumok === 'tak').length;
         const zirok = virno === KILKIST ? 3 : virno >= 7 ? 2 : virno >= 4 ? 1 : 0;
         $('.tren-zirky').textContent = '⭐'.repeat(zirok) + '☆'.repeat(3 - zirok);
         const stary = chytaty(kluchRekordu());
         const tekst =
           virno === KILKIST
-            ? 'Усі приклади правильно з першої спроби! Ти чемпіон! 🏆'
+            ? 'Усі завдання правильно з першої спроби! Ти чемпіон! 🏆'
             : virno >= 7
               ? 'Дуже добре! Ще трішки — і буде ідеально.'
               : virno >= 4
                 ? 'Непогано! Зіграй ще раз, і вийде краще.'
-                : 'Не здавайся! Спробуй рівень легше або зіграй ще раз 💪';
+                : 'Не здавайся! Розбери помилки або спробуй рівень легше 💪';
         $('.tren-rezultat').textContent =
           `Правильно з першої спроби: ${virno} з ${KILKIST}. ${tekst}` + (virno > stary && stary ? ' Новий рекорд!' : '');
         if (virno > stary) zapysaty(kluchRekordu(), virno);
+
+        // Розбір: завдання, де була помилка, з правильною відповіддю і розв'язком.
+        const pomylky = kroky.filter((k) => k.pidsumok !== 'tak');
+        const rozbir = $<HTMLDetailsElement>('.tren-pomylky');
+        rozbir.hidden = !pomylky.length;
+        rozbir.open = pomylky.length > 0 && pomylky.length <= 3;
+        rozbir.querySelector('summary')!.textContent = `Розбери помилки (${pomylky.length})`;
+        rozbir.querySelector('ol')!.innerHTML = pomylky
+          .map(({ tema, z, vidpovidi }) => {
+            const umova = (z.malunok || '') + [z.pytannia, z.vyraz].filter(Boolean).map((t) => html(t!)).join(' ');
+            const vidpovid = html(z.pokaz ?? rozbyty(vidpovidi[0])) + (z.odynytsi ? ' ' + ekran(z.odynytsi) : '');
+            const posylannia = temy.length > 1 ? ` <a href="${tema.shliakh}">Повторити тему «${ekran(tema.nazva)}» →</a>` : '';
+            return `<li><div>${umova}</div><div><strong>Відповідь:</strong> ${vidpovid}</div>${
+              z.rozviazok ? `<div class="tren-poyasnennia">${html(z.rozviazok)}</div>` : ''
+            }${posylannia}</li>`;
+          })
+          .join('');
         pokazaty('kinets');
         if (zirok === 3) salut($('.tren-zirky'));
       };
 
-      $('.tren-forma').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const vvid = pole.value.replace(/\s/g, '');
-        if (!vvid) return;
-        const [, pravylna] = pryklady[krok];
-        const krapka = krapky.children[krok];
-        if (Number(vvid) === pravylna) {
-          if (pershaSproba) {
-            virno++;
-            seriia++;
-            krapka.classList.add('tak');
-          } else {
-            krapka.classList.add('maizhe');
-          }
-          krapka.classList.remove('zaraz');
-          vidhuk.textContent = pershaSproba ? '✅ Так!' : '✅ Тепер правильно!';
-          vidhuk.className = 'tren-vidhuk dobre';
-          seriiaEl.textContent = seriia >= 3 ? `🔥 ${seriia} підряд` : '';
-          krok++;
-          setTimeout(nastupnyi, 450);
-        } else {
-          if (pershaSproba) seriia = 0;
-          pershaSproba = false;
-          seriiaEl.textContent = '';
-          vidhuk.textContent = 'Ой, ні. Подумай ще раз!';
-          vidhuk.className = 'tren-vidhuk pohano';
-          pole.select();
-        }
-      });
-
-      $('.tren-hraty').addEventListener('click', pochaty);
+      hraty.addEventListener('click', pochaty);
       $('.tren-znovu').addEventListener('click', pochaty);
       $('.tren-nalashtuvannia').addEventListener('click', () => {
-        onovytyRekord();
+        onovyty();
         pokazaty('start');
       });
-      onovytyRekord();
+      onovyty();
     }
   }
   if (!customElements.get('math-trenazher')) customElements.define('math-trenazher', MathTrenazher);
@@ -256,8 +485,9 @@ const RIVNI = [
     box-shadow: var(--dt-shadow);
     text-align: center;
   }
-  .tren-ekran[hidden] {
-    display: none;
+  .tren-ekran[hidden],
+  .tren [hidden] {
+    display: none !important;
   }
   .tren-pidpys {
     margin: 0 0 0.5rem;
@@ -282,40 +512,61 @@ const RIVNI = [
   .tren button:active {
     transform: translateY(2px);
   }
-  .tren-dia {
-    width: 3.5rem;
-    height: 3.5rem;
-    font-size: 1.7rem !important;
-    background: var(--sl-color-accent-low);
-    color: var(--sl-color-text-accent);
-    box-shadow: 0 4px 0 var(--dt-card-border);
+  .tren button:disabled {
+    cursor: default;
   }
-  .tren-riven {
+  .tren-riven,
+  .tren-tema {
     padding: 0.55rem 1rem;
     background: var(--sl-color-accent-low);
     color: var(--sl-color-text-accent);
     box-shadow: 0 4px 0 var(--dt-card-border);
   }
-  .tren-dia[aria-pressed='true'],
-  .tren-riven[aria-pressed='true'] {
+  .tren-tema {
+    padding: 0.45rem 0.85rem;
+    font-weight: 700 !important;
+    font-size: 0.95rem;
+  }
+  .tren-riven[aria-pressed='true'],
+  .tren-tema[aria-pressed='true'] {
     background: var(--dt-h-1);
     color: #fff;
     box-shadow: 0 4px 0 color-mix(in srgb, var(--dt-h-1) 60%, #000);
   }
+  .tren-vsi {
+    margin: -0.25rem 0 1rem;
+  }
+  .tren-pokazaty:disabled {
+    opacity: 0.55;
+    text-decoration: none;
+  }
+  .tren-usi,
+  .tren-zhodnoi,
+  .tren-nalashtuvannia,
+  .tren-pokazaty {
+    padding: 0.4rem 0.8rem;
+    background: transparent;
+    color: var(--sl-color-text-accent);
+    font-weight: 700 !important;
+    text-decoration: underline dotted;
+  }
+  .tren-opys-rivnia {
+    margin: -0.4rem 0 1rem;
+    color: var(--sl-color-gray-3);
+    font-size: 0.95rem;
+  }
   .tren-hraty,
   .tren-ok,
-  .tren-znovu {
+  .tren-znovu,
+  .tren-dali {
     padding: 0.8rem 1.6rem;
     font-size: 1.15rem !important;
     background: var(--dt-h-2);
     color: #fff;
     box-shadow: 0 5px 0 color-mix(in srgb, var(--dt-h-2) 60%, #000);
   }
-  .tren-nalashtuvannia {
-    margin: 0.5rem;
-    padding: 0.8rem 1.2rem;
-    background: transparent;
-    color: var(--sl-color-text-accent);
+  .tren-hraty:disabled {
+    opacity: 0.6;
   }
   .tren-rekord {
     margin: 0.85rem 0 0;
@@ -353,9 +604,32 @@ const RIVNI = [
   .tren-krapky :global(li.maizhe) {
     background: var(--dt-6);
   }
+  .tren-krapky :global(li.ne) {
+    background: var(--dt-err);
+  }
   .tren-seriia {
     font-weight: 800;
     color: var(--dt-2);
+  }
+  .tren-malunok {
+    margin-top: 1rem;
+  }
+  .tren-malunok :global(svg),
+  .tren-pomylky :global(svg) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+  .tren-pomylky :global(svg) {
+    max-width: 9rem;
+  }
+  .tren-pytannia {
+    max-width: 34rem;
+    margin: 1.1rem auto 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-wrap: balance;
   }
   .tren-forma {
     display: flex;
@@ -363,29 +637,79 @@ const RIVNI = [
     justify-content: center;
     align-items: center;
     gap: 0.75rem;
-    margin-top: 1.25rem;
+    margin-top: 1rem;
   }
-  .tren-pryklad {
-    font-size: clamp(2rem, 8vw, 3rem);
+  .tren-vyraz {
+    font-size: clamp(1.75rem, 7vw, 2.75rem);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     color: var(--sl-color-white);
+    overflow-wrap: anywhere;
+  }
+  .tren-vyraz :global(.katex) {
+    font-size: 1em;
+  }
+  .tren-vvid {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .tren-odynytsi {
+    font-size: 1.3rem;
+    font-weight: 800;
   }
   .tren-pole {
-    width: 7rem;
+    width: 7.5rem;
     padding: 0.4rem 0.6rem;
     border: 3px solid var(--dt-card-border);
     border-radius: 1rem;
     background: var(--sl-color-bg);
     color: var(--sl-color-white);
     font: inherit;
-    font-size: clamp(1.75rem, 7vw, 2.5rem);
+    font-size: clamp(1.5rem, 6vw, 2.25rem);
     font-weight: 800;
     text-align: center;
   }
   .tren-pole:focus {
     outline: none;
     border-color: var(--sl-color-accent);
+  }
+  .tren-varianty {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+  /* Кнопки варіантів створює скрипт, тож стилі для них — глобальні всередині тренажера. */
+  .tren :global(.tren-variant) {
+    min-width: 3.5rem;
+    padding: 0.7rem 1.2rem;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-text-accent);
+    box-shadow: 0 4px 0 var(--dt-card-border);
+  }
+  .tren :global(.tren-variant:active) {
+    transform: translateY(2px);
+  }
+  .tren :global(.tren-variant:disabled) {
+    cursor: default;
+  }
+  .tren :global(.tren-variant.nevirno) {
+    background: var(--dt-err-bg);
+    color: var(--dt-err);
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+  .tren :global(.tren-variant.virno) {
+    background: var(--dt-h-3);
+    color: #fff;
   }
   .tren-vidhuk {
     min-height: 1.5em;
@@ -399,6 +723,22 @@ const RIVNI = [
   .tren-vidhuk.pohano {
     color: var(--dt-err);
   }
+  .tren-rozviazok {
+    max-width: 34rem;
+    margin: 0.75rem auto 0;
+    padding: 0.7rem 1rem;
+    border-radius: 0.9rem;
+    background: var(--sl-color-accent-low);
+    text-align: start;
+  }
+  .tren-dii {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
   .tren-zirky {
     margin: 0;
     font-size: 3rem;
@@ -409,6 +749,30 @@ const RIVNI = [
     margin: 0.5rem auto 1.25rem;
     max-width: 30rem;
     font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .tren-pomylky {
+    max-width: 34rem;
+    margin: 0 auto 1.25rem;
+    text-align: start;
+  }
+  .tren-pomylky summary {
+    cursor: pointer;
+    font-weight: 800;
+    color: var(--sl-color-text-accent);
+    text-align: center;
+  }
+  .tren-pomylky ol {
+    margin: 0.5rem 0 0;
+    padding-inline-start: 1.5rem;
+  }
+  .tren-pomylky :global(li) {
+    margin: 0.6rem 0;
+  }
+  .tren-pomylky :global(.tren-poyasnennia) {
+    color: var(--sl-color-gray-2);
+  }
+  .tren-pomylky :global(a) {
     font-weight: 700;
   }
 </style>
