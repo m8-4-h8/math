@@ -1,0 +1,56 @@
+---
+// Винесення спільного множника за дужки. Члени — { k, s } = k · x^s.
+// Спільний множник: НСД коефіцієнтів і змінна з найменшим показником. Якщо перший член від'ємний — виносимо з мінусом.
+//   <VynesenniaMnozhnyka chleny={[{ k: 6, s: 2 }, { k: -15, s: 1 }]} />   — 6x² − 15x = 3x(2x − 5)
+interface Props {
+  chleny: { k: number; s: number }[];
+  zminna?: string;
+}
+const { chleny, zminna = 'x' } = Astro.props;
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const st = (s: number) => (s <= 1 ? '' : String(s).split('').map((c) => SUP[+c]).join(''));
+const nsd = (p: number, q: number): number => (q === 0 ? p : nsd(q, p % q));
+const kNsd = chleny.reduce((g, c) => nsd(g, Math.abs(c.k)), 0);
+const sMin = Math.min(...chleny.map((c) => c.s));
+const znakSp = chleny[0].k < 0 ? -1 : 1;
+const spilnyi = { k: znakSp * kNsd, s: sMin };
+const reshta = chleny.map((c) => ({ k: c.k / spilnyi.k, s: c.s - sMin }));
+const zapys = (c: { k: number; s: number }, pershyi: boolean) => {
+  const znak = c.k < 0 ? '−' : pershyi ? '' : '+';
+  const chyslo = c.s > 0 && Math.abs(c.k) === 1 ? '' : String(Math.abs(c.k));
+  return `${znak}${znak && !pershyi ? ' ' : ''}${chyslo}${c.s > 0 ? zminna + st(c.s) : ''}`;
+};
+const okremo = (c: { k: number; s: number }) => zapys(c, true);
+const poch = chleny.map((c, i) => zapys(c, i === 0)).join(' ');
+const spZ = okremo(spilnyi);
+const vDuzhkakh = reshta.map((c, i) => zapys(c, i === 0)).join(' ');
+const rezultat = `${spZ}(${vDuzhkakh})`;
+const spZDuzhky = spilnyi.k < 0 ? `(${spZ})` : spZ;
+const duzhkyR = (c: { k: number; s: number }) => (c.k < 0 ? `(${okremo(c)})` : okremo(c));
+---
+
+<figure class="ill not-content vm">
+  <ol class="ill-steps">
+    <li>
+      Число: НСД коефіцієнтів = <b class="c1">{kNsd}</b>{znakSp < 0 ? ', перший член від’ємний — виносимо з мінусом' : ''}. Буква: найменший показник{' '}
+      <b class="c1">{sMin > 0 ? zminna + st(sMin) : '— букви немає в кожному члені'}</b>. Спільний множник: <b class="c1 num">{spZ}</b>.
+    </li>
+    <li>
+      Кожен член ділимо на нього:
+      <ul>
+        {chleny.map((c, i) => (
+          <li>
+            <b class="num">
+              {okremo(c)} = <span class="c1">{spZDuzhky}</span> · <span class="c2">{duzhkyR(reshta[i])}</span>
+            </b>
+          </li>
+        ))}
+      </ul>
+    </li>
+  </ol>
+  <p class="ill-caption">
+    <b class="num">
+      {poch} = <span class="c1">{spZ}</span>(<span class="c2">{vDuzhkakh}</span>)
+    </b>
+  </p>
+</figure>

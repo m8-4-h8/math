@@ -1,0 +1,68 @@
+---
+// Графік лінійної функції y = kx + b: дві «цілі» точки з таблички і пряма через них.
+//   <LiniinaFunktsiia k={2} b={-1} />
+//   <LiniinaFunktsiia k={0.5} b={1} rozmir={6} />
+import KoordynatnaPloshchyna from './KoordynatnaPloshchyna.astro';
+interface Props {
+  k: number;
+  b: number;
+  rozmir?: number;
+}
+const { k, b, rozmir = 5 } = Astro.props;
+const ch = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const f = (x: number) => Math.round((k * x + b) * 1000) / 1000;
+// Шукаємо дві точки з цілими координатами в межах сітки, якомога далі одна від одної.
+const kandydaty = [];
+for (let x = -rozmir; x <= rozmir; x++) {
+  const y = f(x);
+  if (Number.isInteger(y) && Math.abs(y) <= rozmir) kandydaty.push({ x, y });
+}
+if (kandydaty.length < 2) throw new Error(`LiniinaFunktsiia: для y = ${k}x + ${b} немає двох цілих точок у межах ${rozmir}`);
+const vybir = kandydaty.find((p) => p.x === 0) ?? kandydaty[0];
+const insha = kandydaty.reduce((best, p) => (Math.abs(p.x - vybir.x) > Math.abs(best.x - vybir.x) ? p : best), kandydaty[0] === vybir ? kandydaty[1] : kandydaty[0]);
+const [A, B] = [vybir, insha].sort((p, q) => p.x - q.x);
+const formula = `y = ${k === 0 ? '' : k === 1 ? 'x' : k === -1 ? '−x' : ch(k) + 'x'}${b === 0 ? (k === 0 ? '0' : '') : k === 0 ? ch(b) : b < 0 ? ` − ${ch(-b)}` : ` + ${ch(b)}`}`;
+const kharakter = k > 0 ? 'зростає' : k < 0 ? 'спадає' : 'стала (пряма горизонтальна)';
+---
+
+<figure class="ill not-content lf">
+  <p class="lf-formula"><b class="num">{formula}</b></p>
+  <table class="lf-tablytsia" aria-label="Дві точки графіка">
+    <tr><th class="c1">x</th><td>{ch(A.x)}</td><td>{ch(B.x)}</td></tr>
+    <tr><th class="c2">y</th><td>{ch(A.y)}</td><td>{ch(B.y)}</td></tr>
+  </table>
+  <KoordynatnaPloshchyna rozmir={rozmir} tochky={[{ nazva: 'A', x: A.x, y: A.y }, { nazva: 'B', x: B.x, y: B.y }]} priami={[['A', 'B']]} shliakh={false} />
+  <p class="ill-caption">
+    Пряма перетинає вісь <i>y</i> у точці <b class="num">(0; {ch(b)})</b>. Коефіцієнт <b>k = {ch(k)}</b>: функція <b>{kharakter}</b>.
+  </p>
+</figure>
+
+<style>
+  .lf-formula {
+    text-align: center;
+    font-size: 1.2rem;
+    margin: 0 0 0.3rem;
+  }
+  .lf-tablytsia {
+    margin: 0 auto 0.4rem;
+    border-collapse: collapse;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .lf-tablytsia th,
+  .lf-tablytsia td {
+    border: 1px solid var(--ill-line);
+    padding: 0.2rem 0.6rem;
+    text-align: center;
+    min-width: 2.2rem;
+  }
+  .lf-tablytsia th {
+    font-style: italic;
+  }
+  .lf :global(figure.ill) {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+// Розв'язування системи двох лінійних рівнянь способом підстановки — по кроках.
+// Рівняння задаємо як [a, b, c] — це ax + by = c. Виражаємо ту змінну, коефіцієнт при якій 1 або −1.
+//   <Pidstanovka r1={[1, 1, 7]} r2={[2, -1, 5]} />   — x + y = 7, 2x − y = 5
+type R = [number, number, number];
+interface Props {
+  r1: R;
+  r2: R;
+}
+const { r1, r2 } = Astro.props;
+const ch = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const duzh = (v: number) => (v < 0 ? `(${ch(v)})` : ch(v));
+const chlen = (k: number, z: string, pershyi: boolean) => {
+  if (k === 0) return '';
+  const znak = k < 0 ? '−' : pershyi ? '' : '+';
+  const chyslo = Math.abs(k) === 1 && z ? '' : ch(Math.abs(k));
+  return `${znak}${znak && !pershyi ? ' ' : ''}${chyslo}${z}`;
+};
+const vyraz = (ch1: [number, string][]) => {
+  const n = ch1.filter(([k]) => k !== 0);
+  return n.length ? n.map(([k, z], i) => chlen(k, z, i === 0)).join(' ') : '0';
+};
+const rivn = ([a, b, c]: R) => `${vyraz([[a, 'x'], [b, 'y']])} = ${ch(c)}`;
+// Що виражаємо: [номер рівняння, змінна]
+const variants: [number, 'x' | 'y'][] = [[0, 'y'], [0, 'x'], [1, 'y'], [1, 'x']];
+const rr = [r1, r2];
+const vybir = variants.find(([i, z]) => Math.abs(rr[i][z === 'x' ? 0 : 1]) === 1);
+if (!vybir) throw new Error('Pidstanovka: потрібен коефіцієнт 1 або −1 при одній зі змінних');
+const [ni, zm] = vybir;
+const insha = zm === 'x' ? 'y' : 'x';
+const [a, b, c] = rr[ni];
+const [a2, b2, c2] = rr[1 - ni];
+// zm = p + q·insha
+const kz = zm === 'x' ? a : b; // ±1
+const ki = zm === 'x' ? b : a;
+const p = c / kz;
+const q = -ki / kz;
+const kz2 = zm === 'x' ? a2 : b2;
+const ki2 = zm === 'x' ? b2 : a2;
+const vyrazZm = vyraz([[p, ''], [q, insha]]);
+// kz2·(p + q·insha) + ki2·insha = c2  →  (kz2·q + ki2)·insha = c2 − kz2·p
+const koef = kz2 * q + ki2;
+const prava = c2 - kz2 * p;
+const vInsha = prava / koef;
+const vZm = p + q * vInsha;
+const x = zm === 'x' ? vZm : vInsha;
+const y = zm === 'x' ? vInsha : vZm;
+const qChlen = `${Math.abs(q) === 1 ? '' : ch(Math.abs(q)) + ' · '}${duzh(vInsha)}`;
+const povernennia = p === 0 ? `${q < 0 ? '−' : ''}${qChlen}` : `${ch(p)} ${q < 0 ? '−' : '+'} ${qChlen}`;
+const pidst = `${kz2 === 1 ? '' : kz2 === -1 ? '−' : ch(kz2)}(${vyrazZm}) ${chlen(ki2, insha, false)} = ${ch(c2)}`;
+---
+
+<figure class="ill not-content pidst">
+  <div class="pidst-systema" aria-label={`Система: ${rivn(r1)}; ${rivn(r2)}`}>
+    <span class="pidst-duzhka">{'{'}</span>
+    <span>
+      <b class:list={['num', { c1: ni === 0 }]}>{rivn(r1)}</b>
+      <br />
+      <b class:list={['num', { c1: ni === 1 }]}>{rivn(r2)}</b>
+    </span>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      З {ni === 0 ? 'першого' : 'другого'} рівняння виражаємо <b>{zm}</b>: <b class="num c1">{zm} = {vyrazZm}</b>.
+    </li>
+    <li>
+      Підставляємо в {ni === 0 ? 'друге' : 'перше'}: <b class="num">{pidst}</b>.
+    </li>
+    <li>
+      Розв'язуємо: <b class="num">{chlen(koef, insha, true) || '0'} = {ch(prava)}</b>, <b class="num c2">{insha} = {ch(vInsha)}</b>.
+    </li>
+    <li>
+      Повертаємось: <b class="num">{zm} = {povernennia}</b> = <b class="num c2">{ch(vZm)}</b>.
+    </li>
+  </ol>
+  <p class="ill-caption">
+    Відповідь: <b class="num">({ch(x)}; {ch(y)})</b>
+  </p>
+</figure>
+
+<style>
+  .pidst-systema {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 1.15rem;
+    line-height: 1.5;
+  }
+  .pidst-duzhka {
+    font-size: 3rem;
+    font-weight: 300;
+    line-height: 1;
+  }
+</style>

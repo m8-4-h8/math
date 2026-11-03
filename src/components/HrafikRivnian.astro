@@ -1,0 +1,102 @@
+---
+// Графіки лінійних рівнянь з двома змінними ax + by = c на координатній площині.
+// Одне рівняння — пряма і дві її точки-розв'язки. Два рівняння (система) — дві прямі і точка перетину.
+//   <HrafikRivnian rivniannia={[[1, 1, 5]]} />                  — x + y = 5
+//   <HrafikRivnian rivniannia={[[1, 1, 5], [1, -1, 1]]} />      — система, розв'язок (3; 2)
+import KoordynatnaPloshchyna from './KoordynatnaPloshchyna.astro';
+type R = [number, number, number];
+interface Props {
+  rivniannia: R[];
+  rozmir?: number;
+}
+const { rivniannia, rozmir = 6 } = Astro.props;
+const ch = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const zapys = ([a, b, c]: R) => {
+  const chlen = (k: number, z: string, pershyi: boolean) => {
+    if (k === 0) return '';
+    const znak = k < 0 ? '−' : pershyi ? '' : '+';
+    const chyslo = Math.abs(k) === 1 ? '' : ch(Math.abs(k));
+    return `${znak}${znak && !pershyi ? ' ' : ''}${chyslo}${z}`;
+  };
+  return `${[chlen(a, 'x', true), chlen(b, 'y', a === 0)].filter(Boolean).join(' ')} = ${ch(c)}`;
+};
+// Цілі точки прямої в межах сітки.
+const tsili = ([a, b, c]: R) => {
+  const t: { x: number; y: number }[] = [];
+  for (let v = -rozmir; v <= rozmir; v++) {
+    if (b !== 0) {
+      const y = (c - a * v) / b;
+      if (Number.isInteger(y) && Math.abs(y) <= rozmir) t.push({ x: v, y });
+    } else {
+      const x = c / a;
+      if (Number.isInteger(x) && Math.abs(x) <= rozmir) t.push({ x, y: v });
+    }
+  }
+  if (t.length < 2) throw new Error(`HrafikRivnian: у ${zapys([a, b, c])} немає двох цілих точок у межах ${rozmir}`);
+  return t;
+};
+const dviTochky = (r: R) => {
+  const t = tsili(r);
+  const sered = t.filter((p) => Math.abs(p.x) <= rozmir - 1 && Math.abs(p.y) <= rozmir - 1);
+  const z = sered.length >= 2 ? sered : t;
+  return [z[0], z[z.length - 1]];
+};
+const odne = rivniannia.length === 1;
+const tochky: { nazva: string; x: number; y: number; skhovaty?: boolean }[] = [];
+const priami: [string, string][] = [];
+let rozviazok = '';
+if (odne) {
+  const [p, q] = dviTochky(rivniannia[0]);
+  tochky.push({ nazva: 'A', ...p }, { nazva: 'B', ...q });
+  priami.push(['A', 'B']);
+} else {
+  const [[a1, b1, c1], [a2, b2, c2]] = rivniannia;
+  const d = a1 * b2 - a2 * b1;
+  if (d !== 0) {
+    const x = (c1 * b2 - c2 * b1) / d;
+    const y = (a1 * c2 - a2 * c1) / d;
+    tochky.push({ nazva: 'M', x, y });
+    rozviazok = `Прямі перетинаються в точці M(${ch(x)}; ${ch(y)}) — це і є розв'язок системи: x = ${ch(x)}, y = ${ch(y)}.`;
+  } else {
+    const zbig = a1 * c2 === a2 * c1 && b1 * c2 === b2 * c1;
+    rozviazok = zbig ? 'Прямі збігаються — система має безліч розв’язків.' : 'Прямі паралельні, спільних точок немає — система не має розв’язків.';
+  }
+  rivniannia.forEach((r, i) => {
+    const [p, q] = dviTochky(r);
+    tochky.push({ nazva: `P${i}`, ...p, skhovaty: true }, { nazva: `Q${i}`, ...q, skhovaty: true });
+    priami.push([`P${i}`, `Q${i}`]);
+  });
+}
+const KOL = ['c1', 'c3'];
+---
+
+<figure class="ill not-content hrr">
+  <p class="hrr-rivniannia">
+    {rivniannia.map((r, i) => <b class:list={['num', odne ? 'c1' : KOL[i]]}>{zapys(r)}</b>)}
+  </p>
+  <KoordynatnaPloshchyna rozmir={rozmir} tochky={tochky} priami={priami} shliakh={false} />
+  <p class="ill-caption">
+    {
+      odne
+        ? `Кожна точка прямої — розв'язок. Наприклад, A(${ch(tochky[0].x)}; ${ch(tochky[0].y)}) і B(${ch(tochky[1].x)}; ${ch(tochky[1].y)}).`
+        : rozviazok
+    }
+  </p>
+</figure>
+
+<style>
+  .hrr-rivniannia {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 1.2rem;
+    margin: 0 0 0.3rem;
+    font-size: 1.15rem;
+  }
+  .hrr :global(figure.ill) {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    background: none;
+  }
+</style>

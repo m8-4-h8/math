@@ -1,0 +1,87 @@
+---
+// Функція як «машинка»: беремо x, застосовуємо формулу — отримуємо y. Таблиця значень.
+// Формула — многочлен від x: koef від старшого степеня, напр. [2, -1] — y = 2x − 1, [1, 0, 0] — y = x².
+//   <TablytsiaZnachen koef={[2, -1]} x={[-2, -1, 0, 1, 2]} />
+interface Props {
+  koef: number[];
+  x: number[];
+  vydilyty?: number; // x, стовпчик якого підсвітити разом з обчисленням
+}
+const { koef, x, vydilyty } = Astro.props;
+const SUP = '⁰¹²³⁴⁵⁶⁷⁸⁹';
+const st = (s: number) => (s <= 1 ? '' : String(s).split('').map((c) => SUP[+c]).join(''));
+const ch = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const n = koef.length - 1;
+const chleny = koef
+  .map((k, i) => ({ k, s: n - i }))
+  .filter((c) => c.k !== 0);
+const formula = chleny
+  .map((c, i) => {
+    const znak = c.k < 0 ? '−' : i === 0 ? '' : '+';
+    const chyslo = c.s > 0 && Math.abs(c.k) === 1 ? '' : String(Math.abs(c.k)).replace('.', ',');
+    return `${znak}${znak && i > 0 ? ' ' : ''}${chyslo}${c.s > 0 ? 'x' + st(c.s) : ''}`;
+  })
+  .join(' ') || '0';
+const f = (v: number) => Math.round(koef.reduce((s, k) => s * v + k, 0) * 1000) / 1000;
+const pidstanovka = (v: number) => {
+  const vx = v < 0 ? `(${ch(v)})` : ch(v);
+  return chleny
+    .map((c, i) => {
+      const znak = c.k < 0 ? '−' : i === 0 ? '' : '+';
+      const abs = Math.abs(c.k);
+      const chast = c.s === 0 ? ch(abs) : `${abs === 1 ? '' : ch(abs) + ' · '}${vx}${st(c.s)}`;
+      return `${znak}${znak && i > 0 ? ' ' : ''}${chast}`;
+    })
+    .join(' ');
+};
+---
+
+<figure class="ill not-content tz">
+  <p class="tz-formula"><b class="num">y = {formula}</b></p>
+  <div class="ill-scroll">
+    <table class="tz-tablytsia" aria-label={`Таблиця значень функції y = ${formula}`}>
+      <tr>
+        <th class="c1">x</th>
+        {x.map((v) => <td class:list={['c1', { vyd: v === vydilyty }]}>{ch(v)}</td>)}
+      </tr>
+      <tr>
+        <th class="c2">y</th>
+        {x.map((v) => <td class:list={['c2', { vyd: v === vydilyty }]}>{ch(f(v))}</td>)}
+      </tr>
+    </table>
+  </div>
+  {
+    vydilyty !== undefined && (
+      <p class="ill-caption">
+        При <b class="c1">x = {ch(vydilyty)}</b>: <b class="num">y = {pidstanovka(vydilyty)} = <span class="c2">{ch(f(vydilyty))}</span></b>
+      </p>
+    )
+  }
+</figure>
+
+<style>
+  .tz-formula {
+    text-align: center;
+    font-size: 1.2rem;
+    margin: 0 0 0.4rem;
+  }
+  .tz-tablytsia {
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .tz-tablytsia th,
+  .tz-tablytsia td {
+    border: 1px solid var(--ill-line);
+    padding: 0.25rem 0.55rem;
+    text-align: center;
+    min-width: 2.2rem;
+  }
+  .tz-tablytsia th {
+    font-style: italic;
+  }
+  .tz-tablytsia td.vyd {
+    background: color-mix(in srgb, var(--ill-accent) 18%, transparent);
+  }
+</style>
