@@ -3,12 +3,15 @@
 // Кутові фігури показують вершини крапками. `nomery` — замість назв номери (для задач «знайди фігуру»).
 //   <PloskiFihury fihury={['kruh', 'trykutnyk', 'kvadrat', 'priamokutnyk']} />
 //   <PloskiFihury fihury={['kvadrat', 'kruh', 'trykutnyk']} nomery />
+// `povoroty` — на скільки градусів повернути кожну фігуру: квадрат «ромбиком», трикутник догори дриґом.
+//   <PloskiFihury fihury={['kvadrat', 'trykutnyk']} povoroty={[45, 180]} />
 type Fihura = 'kruh' | 'trykutnyk' | 'kvadrat' | 'priamokutnyk' | 'piatykutnyk';
 interface Props {
   fihury: Fihura[];
   nomery?: boolean;
+  povoroty?: number[];
 }
-const { fihury, nomery = false } = Astro.props;
+const { fihury, nomery = false, povoroty = [] } = Astro.props;
 
 const NAZVY: Record<Fihura, string> = {
   kruh: 'круг',
@@ -21,7 +24,8 @@ const KOLORY = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)', 'var(--ill-4)'];
 const S = 64; // розмір клітинки під фігуру
 const krok = S + 26;
 const W = fihury.length * krok + 6;
-const H = S + 40;
+const dy = povoroty.some(Boolean) ? 12 : 6; // повернутий прямокутник вищий за клітинку
+const H = S + 34 + dy;
 // Вершини кожної фігури в межах квадрата S×S.
 const vershyny = (f: Fihura): [number, number][] => {
   const m = 6;
@@ -51,8 +55,10 @@ const vershyny = (f: Fihura): [number, number][] => {
           const x = 8 + i * krok - (f === 'priamokutnyk' ? 5 : 0);
           const kol = KOLORY[i % KOLORY.length];
           const v = vershyny(f);
+          const tsentr = f === 'priamokutnyk' ? (S + 10) / 2 : S / 2;
           return (
-            <g transform={`translate(${x} 6)`}>
+            <g transform={`translate(${x} ${dy})`}>
+              <g transform={povoroty[i] ? `rotate(${povoroty[i]} ${tsentr} ${S / 2})` : undefined}>
               {f === 'kruh' ? (
                 <circle cx={S / 2} cy={S / 2} r={S / 2 - 6} fill={kol} fill-opacity="0.25" stroke={kol} stroke-width="3" />
               ) : (
@@ -63,6 +69,7 @@ const vershyny = (f: Fihura): [number, number][] => {
                   ))}
                 </>
               )}
+              </g>
               <text x={S / 2} y={S + 24} text-anchor="middle" font-size={nomery ? 16 : 12} font-weight="700" fill="var(--ill-ink)">
                 {nomery ? i + 1 : NAZVY[f]}
               </text>
