@@ -1,0 +1,61 @@
+---
+// Суміжні кути: пряма AB, точка O на ній і промінь OC. Кут COB (праворуч) задаємо, AOC = 180° − COB.
+//   <SumizhniKuty kut={130} />                    — обидва кути з градусами і сума внизу
+//   <SumizhniKuty kut={35} nevidomyi="AOC" />     — для задачі: замість одного кута «?»
+interface Props {
+  kut: number; // ∠COB, від 1 до 179
+  nevidomyi?: 'AOC' | 'COB';
+  /** Підпис «∠AOC + ∠COB = 180°» під малюнком. */
+  suma?: boolean;
+}
+const { kut, nevidomyi, suma = !nevidomyi } = Astro.props;
+if (kut <= 0 || kut >= 180) throw new Error('SumizhniKuty: kut має бути від 1 до 179');
+const inshyi = 180 - kut;
+
+const W = 300;
+const H = 165;
+const O = { x: 150, y: 132 };
+const rad = (g: number) => (g * Math.PI) / 180;
+const tochka = (g: number, r: number) => ({ x: O.x + r * Math.cos(rad(g)), y: O.y - r * Math.sin(rad(g)) });
+const f = (v: number) => v.toFixed(1);
+// Сектор від кута g1 до g2 (за годинниковою — проти), радіус r.
+const sektor = (g1: number, g2: number, r: number) => {
+  const a = tochka(g1, r);
+  const b = tochka(g2, r);
+  const velykyi = g2 - g1 > 180 ? 1 : 0;
+  return `M ${O.x} ${O.y} L ${f(a.x)} ${f(a.y)} A ${r} ${r} 0 ${velykyi} 0 ${f(b.x)} ${f(b.y)} Z`;
+};
+const C = tochka(kut, 115);
+// Підписи градусів — на бісектрисі кута; для вузьких кутів відсуваємо далі.
+const pidpys = (g1: number, g2: number) => {
+  const shyryna = g2 - g1;
+  return tochka((g1 + g2) / 2, shyryna < 40 ? 70 : 52);
+};
+const pCOB = pidpys(0, kut);
+const pAOC = pidpys(kut, 180);
+const tekst = (n: number, nazva: 'AOC' | 'COB') => (nevidomyi === nazva ? '?' : `${n}°`);
+const opys = `Пряма AB, на ній точка O, промінь OC. Кут COB: ${tekst(kut, 'COB')}, кут AOC: ${tekst(inshyi, 'AOC')}. Разом 180°.`;
+---
+
+<figure class="ill not-content">
+  <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+    <path d={sektor(0, kut, 34)} fill="var(--ill-2)" fill-opacity="0.22" stroke="var(--ill-2)" stroke-width="2" />
+    <path d={sektor(kut, 180, 28)} fill="var(--ill-1)" fill-opacity="0.22" stroke="var(--ill-1)" stroke-width="2" />
+    <line x1="18" y1={O.y} x2={W - 18} y2={O.y} stroke="var(--ill-ink)" stroke-width="2.5" stroke-linecap="round" />
+    <line x1={O.x} y1={O.y} x2={f(C.x)} y2={f(C.y)} stroke="var(--ill-ink)" stroke-width="2.5" stroke-linecap="round" />
+    <circle cx={O.x} cy={O.y} r="3" fill="var(--ill-ink)" />
+    <text x="18" y={O.y + 20} font-size="14" font-weight="700" fill="var(--ill-ink)" text-anchor="middle">A</text>
+    <text x={W - 18} y={O.y + 20} font-size="14" font-weight="700" fill="var(--ill-ink)" text-anchor="middle">B</text>
+    <text x={O.x} y={O.y + 20} font-size="14" font-weight="700" fill="var(--ill-ink)" text-anchor="middle">O</text>
+    <text x={f(C.x + 12 * Math.cos(rad(kut)))} y={f(C.y - 12 * Math.sin(rad(kut)))} font-size="14" font-weight="700" fill="var(--ill-ink)" text-anchor="middle" dominant-baseline="central">C</text>
+    <text x={f(pCOB.x)} y={f(pCOB.y)} font-size="14" font-weight="700" fill="var(--ill-2)" text-anchor="middle" dominant-baseline="central">{tekst(kut, 'COB')}</text>
+    <text x={f(pAOC.x)} y={f(pAOC.y)} font-size="14" font-weight="700" fill="var(--ill-1)" text-anchor="middle" dominant-baseline="central">{tekst(inshyi, 'AOC')}</text>
+  </svg>
+  {
+    suma && (
+      <p class="ill-caption">
+        <span class="c1">∠AOC = {inshyi}°</span>, <span class="c2">∠COB = {kut}°</span>: {inshyi}° + {kut}° = 180°
+      </p>
+    )
+  }
+</figure>
