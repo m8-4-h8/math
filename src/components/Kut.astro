@@ -31,7 +31,7 @@ const kv = 12;
 ---
 
 <figure class={ramka ? 'ill not-content kut' : 'not-content kut'}>
-  <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Кут ${hradusy}°: ${nazva}`}>
+  <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={bez_nazvy ? `Кут ${hradusy}°` : `Кут ${hradusy}°: ${nazva}`}>
     {
       hradusy === 90 ? (
         <path d={`M ${vx + kv} ${vy} V ${vy - kv} H ${vx}`} fill="none" stroke="var(--ill-2)" stroke-width="2" />

@@ -24,7 +24,7 @@ const H = modul ? 112 : strybok ? 100 : 92;
 const X = (v: number) => x0 + (v - min) * krok;
 const fmt = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
 const kolory = ['var(--ill-2)', 'var(--ill-1)', 'var(--ill-4)', 'var(--ill-3)'];
-const opys = tochky.map((t) => `${t.nazva}(${fmt(t.x)})`).join(', ');
+const opys = tochky.map((t) => (bez_koordynat ? t.nazva : `${t.nazva}(${fmt(t.x)})`)).join(', ');
 const kinets = strybok ? strybok.vid + strybok.na : 0;
 const kroky = (k: number) => (k % 10 === 1 && k % 100 !== 11 ? 'крок' : k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 10 || k % 100 >= 20) ? 'кроки' : 'кроків');
 const dzn = (v: number) => (v < 0 ? `(${fmt(v)})` : fmt(v));
