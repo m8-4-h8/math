@@ -56,7 +56,7 @@ function normalizuvaty(tekst: string): string | null {
   let t = tekst
     .replace(/\$/g, '')
     .replace(/\\left|\\right/g, '')
-    .replace(/(\d)\\frac\{(\d+)\}\{(\d+)\}/g, '($1+$2/$3)')
+    .replace(/(\d+)\\frac\{(\d+)\}\{(\d+)\}/g, '($1+$2/$3)')
     .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '(($1)/($2))')
     .replace(/\\dfrac/g, '\\frac')
     .replace(/(\d)\{,\}(\d)/g, '$1.$2')
@@ -147,11 +147,13 @@ function vidpovidQ(s: string): Q | null {
 function rivnostiVTeksti(tekst: string): { perevireno: number; pomylky: string[] } {
   const t = tekst
     .replace(/\$/g, ' ')
+    .replace(/(\d)°/g, '$1') // градуси: «15° + 28° = 43°»
+    .replace(/(\d+)\\(?:d|t)?frac\{(\d+)\}\{(\d+)\}/g, '($1 + $2/$3)') // мішане число 3\frac{4}{5}
     .replace(/\\(?:d|t)?frac\{(\d+)\}\{(\d+)\}/g, '($1/$2)')
     .replace(/\\cdot|\\times/g, '·')
     .replace(/\{,\}/g, ',')
     .replace(/(\d)(?:\\ |\u00a0|\u202f)(?=\d{3}(?!\d))/g, '$1')
-    .replace(/(^|[\s;(])\d\)\s/g, '$1 ') // нумерація кроків «1) »
+    .replace(/(^\s*|;\s+|(?<!ост)\.\s+)\d\)\s/g, '$1') // нумерація кроків «1) … ; 2) …», але не «(ост. 1)» і не «(20 − 0)»
     .replace(/(\d|\))\s+:\s+(?=[\d(])/g, '$1 / ') // « : » з пробілами — ділення; «4: 5» і «3:30» — ні
     .replace(/(\d),(\d)/g, '$1.$2');
   const pomylky: string[] = [];
@@ -185,9 +187,59 @@ function rivnostiVTeksti(tekst: string): { perevireno: number; pomylky: string[]
 
 type Nezalezhna = 'tak' | 'nemozhlyvo' | string; // string — опис помилки
 
+// «Округли 3,96 до десятих» / «Округли 7462 до сотень» — округлюємо самі (половину — вгору).
+const ODYNYTSI_OKRUHLENNIA: Record<string, Q> = {
+  цілих: q(1n), десятих: q(1n, 10n), сотих: q(1n, 100n), тисячних: q(1n, 1000n),
+  десятків: q(10n), сотень: q(100n), тисяч: q(1000n), 'десятків тисяч': q(10000n), мільйонів: q(1000000n), гривень: q(1n),
+};
+function okruhlennia(z: TrenZavdannia, vidpovidi: string[]): Nezalezhna | null {
+  const m = (z.pytannia || '').match(/(?:Округли|—)\s+([\d\u00a0\u202f ]+(?:,\d+)?)[^.]*?\. Округли[^.]*?до (десятків тисяч|[а-яії]+)\.|Округли ([\d\u00a0\u202f ]+(?:,\d+)?) до (десятків тисяч|[а-яії]+)\./);
+  if (!m) return null;
+  const chyslo = vidpovidQ((m[1] ?? m[3]).trim());
+  const odynytsia = ODYNYTSI_OKRUHLENNIA[m[2] ?? m[4]];
+  const vidpovid = vidpovidQ(vidpovidi[0]);
+  if (!chyslo || !odynytsia || !vidpovid) return 'nemozhlyvo';
+  const chastka = dil(chyslo, odynytsia);
+  let tsila = chastka[0] / chastka[1];
+  if (porivniaty(vid(chastka, q(tsila)), q(1n, 2n)) >= 0) tsila += 1n;
+  const pravylno = mn(q(tsila), odynytsia);
+  return rivni(pravylno, vidpovid) ? 'tak' : `насправді ${pravylno[0]}/${pravylno[1]}`;
+}
+
+// «Чи ділиться 8712 на 9?», «Чи є 6 дільником числа 42?», «Чи є 25 кратним числа 4?», «Яке число 51?» (просте чи складене).
+function podilnist(z: TrenZavdannia, vidpovidi: string[]): Nezalezhna | null {
+  const p = (z.pytannia || '').replace(/[\u00a0\u202f ](?=\d{3}(?!\d))/g, '');
+  const tak = (umova: boolean) => ((umova ? 'Так' : 'Ні') === vidpovidi[0] ? 'tak' : `насправді ${umova ? 'Так' : 'Ні'}`);
+  let m = p.match(/^Чи ділиться (\d+) на (\d+)\?$/);
+  if (m) return tak(Number(m[1]) % Number(m[2]) === 0);
+  m = p.match(/^Чи є (\d+) дільником числа (\d+)\?$/);
+  if (m) return tak(Number(m[2]) % Number(m[1]) === 0);
+  m = p.match(/^Чи є (\d+) кратним числа (\d+)\?$/);
+  if (m) return tak(Number(m[1]) % Number(m[2]) === 0);
+  m = p.match(/\\text\{(НСД|НСК)\}\((\d+); (\d+)\)/);
+  if (m) {
+    const [a, b] = [Number(m[2]), Number(m[3])];
+    let g = 1;
+    for (let d = 1; d <= Math.min(a, b); d++) if (a % d === 0 && b % d === 0) g = d;
+    const prav = String(m[1] === 'НСД' ? g : (a * b) / g);
+    return prav === vidpovidi[0] ? 'tak' : `насправді ${prav}`;
+  }
+  m = p.match(/^Яке число (\d+)\?$/);
+  if (m && z.varianty?.includes('просте')) {
+    const n = Number(m[1]);
+    let dilnykiv = 0;
+    for (let d = 1; d <= n; d++) if (n % d === 0) dilnykiv++;
+    const prav = dilnykiv === 2 ? 'просте' : dilnykiv > 2 ? 'складене' : 'ні те, ні те';
+    return prav === vidpovidi[0] ? 'tak' : `насправді ${prav}`;
+  }
+  return null;
+}
+
 function nezalezhnaPerevirka(z: TrenZavdannia, vidpovidi: string[]): Nezalezhna {
+  const okr = okruhlennia(z, vidpovidi) ?? podilnist(z, vidpovidi);
+  if (okr) return okr;
   if (!z.vyraz) return 'nemozhlyvo';
-  const v = z.vyraz.replace(/\$/g, '').trim();
+  const v = z.vyraz.replace(/\$/g, '').replace(/\\square/g, '□').trim(); // віконце у формулі — \square
   const pravylna = vidpovidi[0];
   // Порівняння «a □ b», відповідь — знак.
   if (z.varianty && ['>', '<', '='].includes(pravylna) && (v.match(/□/g) || []).length === 1 && !v.includes('=')) {

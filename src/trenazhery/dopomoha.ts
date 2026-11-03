@@ -127,6 +127,13 @@ export function des(cile: number, znakiv: number) {
   return z + ch(Number(tsila)) + (drob ? ',' + drob : '');
 }
 
+/** Десятковий дріб з усіма знаками, навіть нулями в кінці: desZNuliamy(320, 2) → «3,20». */
+export function desZNuliamy(cile: number, znakiv: number) {
+  const z = cile < 0 ? '−' : '';
+  const s = String(Math.abs(cile)).padStart(znakiv + 1, '0');
+  return z + ch(Number(s.slice(0, s.length - znakiv))) + (znakiv ? ',' + s.slice(s.length - znakiv) : '');
+}
+
 /** Те саме для формули: «3{,}25». */
 export function tdes(cile: number, znakiv: number) {
   return des(cile, znakiv).replace('−', '-').replace(/ /g, '\\ ').replace(',', '{,}');
@@ -260,4 +267,28 @@ export function slovamy(n: number): string {
   if (tys) chastyny.push(`${triika(tys, true)} ${mnozh(tys, 'тисяча', 'тисячі', 'тисяч')}`);
   if (od) chastyny.push(triika(od, false));
   return chastyny.join(' ');
+}
+
+// ——— Перевірки для відповідей-списків ———
+
+const chyslaZVvodu = (vvid: string) => (vvid.replace(/(\d)\s+(?=\d{3}(?!\d))/g, '$1').match(/\d+/g) || []).map(Number);
+
+/** Ті самі числа в будь-якому порядку: «1, 2, 4» = «4 2 1». Кожне — один раз. */
+export function tiSamiChysla(spysok: number[]) {
+  const pravylni = [...spysok].sort((a, b) => a - b).join(' ');
+  return (vvid: string) => [...chyslaZVvodu(vvid)].sort((a, b) => a - b).join(' ') === pravylni;
+}
+
+export const proste = (n: number) => {
+  if (n < 2) return false;
+  for (let d = 2; d * d <= n; d++) if (n % d === 0) return false;
+  return true;
+};
+
+/** Розклад на прості множники: 60 → [2, 2, 3, 5]. */
+export function rozklad(n: number) {
+  const out: number[] = [];
+  for (let d = 2; d * d <= n; d++) while (n % d === 0) (out.push(d), (n /= d));
+  if (n > 1) out.push(n);
+  return out;
 }
