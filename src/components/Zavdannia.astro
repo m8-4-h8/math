@@ -1,7 +1,8 @@
 ---
 // Інтерактивне завдання для розділу «Перевір себе»: дитина вводить відповідь (або обирає варіант),
 // одразу бачить, чи правильно, і отримує зірочку. Розв'язок відкривається після правильної відповіді
-// або за кнопкою «Показати відповідь».
+// або за кнопкою «Показати відповідь». Ця кнопка стає доступною лише після першої власної спроби,
+// щоб дитина спершу розв'язала сама, а потім порівняла свою відповідь із правильною.
 //
 //   <Zavdannia vidpovid="6">Знайди $\frac{1}{3}$ від $18$.</Zavdannia>
 //   <Zavdannia vidpovid="гострий" varianty={['гострий', 'прямий', 'тупий']}>Який це кут?</Zavdannia>
@@ -56,7 +57,7 @@ const maRozviazok = Astro.slots.has('rozviazok');
     <span class="zavd-rozv-nazva">Відповідь:</span>
     {maRozviazok ? <slot name="rozviazok" /> : <span>{vidpovidi[0]}</span>}
   </div>
-  <button type="button" class="zavd-pokazaty">Показати відповідь</button>
+  <button type="button" class="zavd-pokazaty" disabled>🔒 Відповідь — після твоєї спроби</button>
 </math-zavdannia>
 
 <script>
@@ -104,8 +105,18 @@ const maRozviazok = Astro.slots.has('rozviazok');
       const pokazaty = this.querySelector<HTMLButtonElement>('.zavd-pokazaty')!;
       const pole = this.querySelector<HTMLInputElement>('.zavd-pole');
       let pomylky = 0;
+      let sproba = ''; // остання відповідь дитини: з нею порівнюємо правильну
 
       this.querySelector<HTMLElement>('.zavd-nomer')!.textContent = String(nomer + 1);
+
+      // Кнопка «Показати відповідь» відмикається лише після першої спроби.
+      const sprobuvav = (vvid: string) => {
+        sproba = vvid.trim();
+        if (pokazaty.disabled) {
+          pokazaty.disabled = false;
+          pokazaty.textContent = 'Показати відповідь';
+        }
+      };
 
       const vidkryty = () => {
         rozviazok.hidden = false;
@@ -140,10 +151,12 @@ const maRozviazok = Astro.slots.has('rozviazok');
       this.querySelector('form')?.addEventListener('submit', (e) => {
         e.preventDefault();
         if (!pole || !pole.value.trim()) return;
+        sprobuvav(pole.value);
         pravylno(pole.value, vidpovidi) ? rozviazano(true) : ne();
       });
       this.querySelectorAll<HTMLButtonElement>('.zavd-variant').forEach((b) =>
         b.addEventListener('click', () => {
+          sprobuvav(b.dataset.variant || '');
           if (pravylno(b.dataset.variant || '', vidpovidi)) {
             b.classList.add('virno');
             rozviazano(true);
@@ -155,8 +168,10 @@ const maRozviazok = Astro.slots.has('rozviazok');
         }),
       );
       pokazaty.addEventListener('click', () => {
+        if (!sproba) return;
         vidkryty();
-        vidhuk.textContent = 'Розбери розв\'язок і спробуй наступне завдання 🙂';
+        this.classList.remove('pomylka');
+        vidhuk.textContent = `Порівняй зі своєю відповіддю «${sproba}», розбери розв'язок і спробуй наступне завдання 🙂`;
       });
     }
   }
@@ -316,6 +331,11 @@ const maRozviazok = Astro.slots.has('rozviazok');
     text-decoration: underline dotted;
     font-weight: 600 !important;
     font-size: 0.9rem;
+    text-align: start;
+  }
+  .zavd-pokazaty:disabled {
+    text-decoration: none;
+    opacity: 0.8;
   }
   .zavd-pokazaty[hidden] {
     display: none;
