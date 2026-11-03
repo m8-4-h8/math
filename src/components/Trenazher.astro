@@ -142,6 +142,8 @@ const RIVNI = [
 
   // 30400 → «30 400», як у розв'язку (чотирицифрові не розбиваємо).
   const rozbyty = (v: string) => (/^-?\d{5,}$/.test(v) ? v.replace(/\B(?=(\d{3})+$)/g, '\u00a0') : v);
+  // «64°» — градус пишемо впритул, решту одиниць — через пробіл: «12 см».
+  const odynytsi = (o?: string) => (o ? (o.startsWith('°') ? '' : ' ') + ekran(o) : '');
   const ekran = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
   function html(tekst: string) {
     return tekst
@@ -268,7 +270,7 @@ const RIVNI = [
       const vidkrytyRozviazok = (zVidpovid: boolean) => {
         const { z, vidpovidi } = kroky[krok];
         const chastyny = [];
-        if (zVidpovid) chastyny.push(`<strong>Відповідь:</strong> ${html(z.pokaz ?? rozbyty(vidpovidi[0]))}${z.odynytsi ? ' ' + ekran(z.odynytsi) : ''}`);
+        if (zVidpovid) chastyny.push(`<strong>Відповідь:</strong> ${html(z.pokaz ?? rozbyty(vidpovidi[0]))}${odynytsi(z.odynytsi)}`);
         if (z.rozviazok) chastyny.push(html(z.rozviazok));
         rozviazokEl.innerHTML = chastyny.join('<br />');
         rozviazokEl.hidden = !chastyny.length;
@@ -448,7 +450,7 @@ const RIVNI = [
         rozbir.querySelector('ol')!.innerHTML = pomylky
           .map(({ tema, z, vidpovidi }) => {
             const umova = (z.malunok || '') + [z.pytannia, z.vyraz].filter(Boolean).map((t) => html(t!)).join(' ');
-            const vidpovid = html(z.pokaz ?? rozbyty(vidpovidi[0])) + (z.odynytsi ? ' ' + ekran(z.odynytsi) : '');
+            const vidpovid = html(z.pokaz ?? rozbyty(vidpovidi[0])) + odynytsi(z.odynytsi);
             const posylannia = temy.length > 1 ? ` <a href="${tema.shliakh}">Повторити тему «${ekran(tema.nazva)}» →</a>` : '';
             return `<li><div>${umova}</div><div><strong>Відповідь:</strong> ${vidpovid}</div>${
               z.rozviazok ? `<div class="tren-poyasnennia">${html(z.rozviazok)}</div>` : ''
