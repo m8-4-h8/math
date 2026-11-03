@@ -1,0 +1,104 @@
+---
+// Сторінка «Тренажер»: для кожного класу — тренажер з усіма його темами впереміш.
+// Дитина сама обирає, які теми тренувати. Новий генератор у `src/trenazhery/<N>-klas/` з'являється тут сам.
+import Trenazher from './Trenazher.astro';
+import { znachokKlasu } from '../klasy.mjs';
+
+const kliuchi = Object.keys(import.meta.glob('../trenazhery/*-klas/*.ts'));
+const kilkist = new Map<number, number>();
+for (const k of kliuchi) {
+  const nomer = parseInt(k.replace('../trenazhery/', ''), 10);
+  kilkist.set(nomer, (kilkist.get(nomer) || 0) + 1);
+}
+const klasy = [...kilkist.entries()].sort(([a], [b]) => a - b);
+
+function tem(n: number) {
+  const a = n % 100;
+  const b = n % 10;
+  if (a >= 11 && a <= 14) return `${n} тем`;
+  if (b === 1) return `${n} тема`;
+  if (b >= 2 && b <= 4) return `${n} теми`;
+  return `${n} тем`;
+}
+---
+
+<div class="tren-klasy not-content">
+  {
+    klasy.map(([nomer, n]) => (
+      <details class="tren-klas" id={`klas-${nomer}`} style={`--shapka: var(--dt-h-${((nomer - 1) % 6) + 1})`}>
+        <summary>
+          <span aria-hidden="true">{znachokKlasu(nomer)}</span> {nomer} клас
+          <span class="tren-klas-kilkist">{tem(n)}</span>
+          <span class="tren-klas-strilka" aria-hidden="true">▼</span>
+        </summary>
+        <Trenazher klas={nomer} />
+      </details>
+    ))
+  }
+</div>
+
+<script>
+  // Відкриваємо клас з адреси (#klas-5).
+  const vidkryty = () => {
+    const el = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+    if (el instanceof HTMLDetailsElement) el.open = true;
+  };
+  vidkryty();
+  addEventListener('hashchange', vidkryty);
+</script>
+
+<style>
+  .tren-klasy {
+    margin-top: 1.5rem;
+  }
+  .tren-klas {
+    margin: 0.75rem 0;
+    border: 2px solid var(--dt-card-border);
+    border-radius: var(--dt-radius);
+    background: var(--dt-card);
+    box-shadow: var(--dt-shadow);
+  }
+  .tren-klas summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: calc(var(--dt-radius) - 2px);
+    background: var(--shapka);
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .tren-klas summary::-webkit-details-marker {
+    display: none;
+  }
+  .tren-klas summary,
+  .tren-klas summary * {
+    color: #fff;
+  }
+  .tren-klas-strilka {
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+  }
+  .tren-klas[open] .tren-klas-strilka {
+    transform: rotate(180deg);
+  }
+  .tren-klas-kilkist {
+    margin-inline-start: auto;
+    font-size: 0.95rem;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+  .tren-klas[open] summary {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+  .tren-klas :global(.tren) {
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    border-radius: 0 0 var(--dt-radius) var(--dt-radius);
+  }
+</style>
