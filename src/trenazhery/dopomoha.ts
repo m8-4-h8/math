@@ -67,12 +67,17 @@ export function stvorytyVypadok(zerno?: number): Vypadok {
           t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
           return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
         };
-  const chyslo = (vid: number, do_: number) => vid + Math.floor(vypadkove() * (do_ - vid + 1));
+  // Порожній чи дробовий проміжок — помилка в генераторі: краще впасти в тестах, ніж тихо дати не те число.
+  const chyslo = (vid: number, do_: number) => {
+    if (!Number.isInteger(vid) || !Number.isInteger(do_) || vid > do_) throw new Error(`chyslo(${vid}, ${do_}): порожній проміжок`);
+    return vid + Math.floor(vypadkove() * (do_ - vid + 1));
+  };
   const r: Vypadok = {
     chyslo,
     krim(vid, do_, zaboroneni) {
       const dozvoleni: number[] = [];
       for (let x = vid; x <= do_; x++) if (!zaboroneni.includes(x)) dozvoleni.push(x);
+      if (!dozvoleni.length) throw new Error(`krim(${vid}, ${do_}): усі числа заборонені`);
       return r.vybir(dozvoleni);
     },
     vybir: (spysok) => spysok[chyslo(0, spysok.length - 1)],
@@ -219,3 +224,40 @@ export const rid = (o: Osoba, cholovichyi: string, zhinochyi: string) => (o.khlo
 
 /** Перша літера велика. */
 export const zVelykoi = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/** Римське число, набране кирилицею (Х, І, С, М), — латиницею і великими літерами: «хvіі» → «XVII». */
+export const rymskeLatynytseiu = (v: string) =>
+  v.trim().toUpperCase().replace(/[ХІСМ]/g, (c) => ({ Х: 'X', І: 'I', С: 'C', М: 'M' })[c as 'Х']);
+
+const ODYNYTSI = ['', 'один', 'два', 'три', 'чотири', "п'ять", 'шість', 'сім', 'вісім', "дев'ять"];
+const NADTSIAT = ['десять', 'одинадцять', 'дванадцять', 'тринадцять', 'чотирнадцять', "п'ятнадцять", 'шістнадцять', 'сімнадцять', 'вісімнадцять', "дев'ятнадцять"];
+const DESIATKY = ['', '', 'двадцять', 'тридцять', 'сорок', "п'ятдесят", 'шістдесят', 'сімдесят', 'вісімдесят', "дев'яносто"];
+const SOTNI = ['', 'сто', 'двісті', 'триста', 'чотириста', "п'ятсот", 'шістсот', 'сімсот', 'вісімсот', "дев'ятсот"];
+
+// Трійка цифр словами; zhinochyi — для тисяч: «одна тисяча», «дві тисячі».
+function triika(n: number, zhinochyi: boolean) {
+  const s = Math.floor(n / 100);
+  const d = Math.floor((n % 100) / 10);
+  const o = n % 10;
+  const slova = [SOTNI[s]];
+  if (d === 1) slova.push(NADTSIAT[o]);
+  else {
+    slova.push(DESIATKY[d]);
+    slova.push(zhinochyi && o === 1 ? 'одна' : zhinochyi && o === 2 ? 'дві' : ODYNYTSI[o]);
+  }
+  return slova.filter(Boolean).join(' ');
+}
+
+/** Число словами (до 999 999 999): 3 200 005 → «три мільйони двісті тисяч п'ять». */
+export function slovamy(n: number): string {
+  if (!Number.isInteger(n) || n < 0 || n > 999_999_999) throw new Error(`slovamy: ${n}`);
+  if (n === 0) return 'нуль';
+  const mln = Math.floor(n / 1_000_000);
+  const tys = Math.floor((n % 1_000_000) / 1000);
+  const od = n % 1000;
+  const chastyny: string[] = [];
+  if (mln) chastyny.push(`${triika(mln, false)} ${mnozh(mln, 'мільйон', 'мільйони', 'мільйонів')}`);
+  if (tys) chastyny.push(`${triika(tys, true)} ${mnozh(tys, 'тисяча', 'тисячі', 'тисяч')}`);
+  if (od) chastyny.push(triika(od, false));
+  return chastyny.join(' ');
+}

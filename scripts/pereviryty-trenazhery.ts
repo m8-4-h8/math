@@ -165,6 +165,16 @@ function rivnostiVTeksti(tekst: string): { perevireno: number; pomylky: string[]
     if (/[?□+\-−·×/=^a-z]\s*$/i.test(pered) || /^\s*[?□+\-−·×/^=a-z]/i.test(pislia)) continue;
     const chastyny = syryi.split('=').map((x) => x.trim());
     if (chastyny.some((x) => !x)) continue;
+    // «57 : 6 = 9 (ост. 3)»: перевіряємо 57 = 6 · 9 + 3 і 3 < 6.
+    const ost = t.slice(pochatok + syryi.length).match(/^\s*\(ост\.?\s*(\d+)\)/);
+    if (ost) {
+      const m = chastyny.length === 2 && chastyny[0].match(/^(\d+)\s*\/\s*(\d+)$/);
+      if (!m || !/^\d+$/.test(chastyny[1])) continue;
+      perevireno++;
+      const [a, d, chastka, o] = [Number(m[1]), Number(m[2]), Number(chastyny[1]), Number(ost[1])];
+      if (a !== d * chastka + o || o >= d) pomylky.push(`хибне ділення з остачею «${syryi.trim()} (ост. ${o})» у тексті «${tekst}»`);
+      continue;
+    }
     const znachennia = chastyny.map((x) => obchyslyty(x));
     if (znachennia.some((x) => !x)) continue;
     perevireno++;
