@@ -1,0 +1,210 @@
+---
+// Розв'язування системи двох лінійних рівнянь способом додавання — рівняння стоять одне під одним,
+// члени з x, з y і праві частини — у своїх стовпчиках, тож видно, яка змінна зникає.
+// Рівняння задаємо як [a, b, c] — це ax + by = c.
+//   <Dodavannia r1={[1, 1, 10]} r2={[1, -1, 2]} />          — коефіцієнти вже протилежні: просто додаємо
+//   <Dodavannia r1={[3, 2, 16]} r2={[1, -1, 2]} />          — множники підбираються самі (тут друге · 2)
+//   <Dodavannia r1={[2, 1, 50]} r2={[2, 3, 90]} mnozhnyky={[-1, 1]} />  — множники вручну
+type R = [number, number, number];
+interface Props {
+  r1: R;
+  r2: R;
+  /** На що множимо перше і друге рівняння. Якщо не задано — підбираємо найменші. */
+  mnozhnyky?: [number, number];
+}
+const { r1, r2 } = Astro.props;
+
+const ch = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const duzh = (v: number) => (v < 0 ? `(${ch(v)})` : ch(v));
+// Перший член рядка: «2x», «−x», «0».
+const pershyi = (k: number, z: string) => (k === 0 ? '0' : `${k < 0 ? '−' : ''}${Math.abs(k) === 1 ? '' : ch(Math.abs(k))}${z}`);
+// Другий член розбиваємо на знак і модуль, щоб знаки стояли в одному стовпчику.
+const znak = (k: number) => (k < 0 ? '−' : '+');
+const modul = (k: number, z: string) => (k === 0 ? '0' : `${Math.abs(k) === 1 ? '' : ch(Math.abs(k))}${z}`);
+const rivn = ([a, b, c]: R) => `${pershyi(a, 'x')} ${znak(b)} ${modul(b, 'y')} = ${ch(c)}`;
+
+const nsd = (m: number, n: number): number => (n === 0 ? m : nsd(n, m % n));
+const nsk = (m: number, n: number) => (m / nsd(m, n)) * n;
+
+// Множники, з якими коефіцієнти при змінній (індекс i: 0 — x, 1 — y) стають протилежними.
+function pidibraty(i: 0 | 1): [number, number] {
+  const k1 = r1[i];
+  const k2 = r2[i];
+  const L = nsk(Math.abs(k1), Math.abs(k2));
+  let m1 = L / Math.abs(k1);
+  let m2 = L / Math.abs(k2);
+  if (Math.sign(k1) === Math.sign(k2)) {
+    // Знаки однакові — одне з рівнянь множимо на від'ємне число: те, де множник більший (при рівних — друге).
+    if (m1 > m2) m1 = -m1;
+    else m2 = -m2;
+  }
+  return [m1, m2];
+}
+let mnozh = Astro.props.mnozhnyky;
+if (!mnozh) {
+  if (r1[1] === 0 || r2[1] === 0 || r1[0] === 0 || r2[0] === 0) throw new Error('Dodavannia: потрібні обидві змінні в обох рівняннях');
+  const [mx, my] = [pidibraty(0), pidibraty(1)];
+  const vaha = ([p, q]: [number, number]) => Math.abs(p) + Math.abs(q);
+  mnozh = vaha(mx) < vaha(my) ? mx : my;
+}
+const [m1, m2] = mnozh;
+const n1: R = [r1[0] * m1, r1[1] * m1, r1[2] * m1];
+const n2: R = [r2[0] * m2, r2[1] * m2, r2[2] * m2];
+const suma: R = [n1[0] + n2[0], n1[1] + n2[1], n1[2] + n2[2]];
+const znykla = suma[1] === 0 ? 'y' : suma[0] === 0 ? 'x' : null;
+if (!znykla || (suma[0] === 0 && suma[1] === 0)) throw new Error('Dodavannia: з цими множниками жодна змінна не зникає');
+const zalyshylas = znykla === 'y' ? 'x' : 'y';
+const kZal = znykla === 'y' ? suma[0] : suma[1];
+const vZal = suma[2] / kZal;
+
+// Підставляємо в те початкове рівняння, де коефіцієнт при другій змінній менший за модулем.
+const iz = znykla === 'y' ? 1 : 0; // індекс змінної, яку шукаємо другою
+const iv = 1 - iz;
+const kudy = Math.abs(r1[iz]) <= Math.abs(r2[iz]) ? 0 : 1;
+const r = kudy === 0 ? r1 : r2;
+const dobutok = (k: number, v: number) => (k === 1 ? duzh(v) : k === -1 ? `−${duzh(v)}` : `${ch(k)} · ${duzh(v)}`);
+const kz = r[iz];
+const pidstZnak = (k: number) => (k < 0 ? '−' : '+');
+const chlenZ = `${Math.abs(kz) === 1 ? '' : ch(Math.abs(kz))}${znykla}`;
+// Порядок членів як у рівнянні: спершу x, потім y.
+const pidst =
+  iv === 0
+    ? `${dobutok(r[0], vZal)} ${pidstZnak(kz)} ${chlenZ} = ${ch(r[2])}`
+    : `${kz < 0 ? '−' : ''}${chlenZ} ${r[1] < 0 ? '−' : '+'} ${dobutok(Math.abs(r[1]), vZal)} = ${ch(r[2])}`;
+const prava = r[2] - r[iv] * vZal;
+const vZn = prava / kz;
+const x = znykla === 'y' ? vZal : vZn;
+const y = znykla === 'y' ? vZn : vZal;
+
+const mnozhyly = m1 !== 1 || m2 !== 1;
+const mPys = (m: number) => (m === 1 ? '' : `· ${duzh(m)}`);
+const ryadky: { r: R; m?: string; plius?: boolean; suma?: boolean }[] = mnozhyly
+  ? [
+      { r: r1, m: mPys(m1) },
+      { r: r2, m: mPys(m2) },
+      { r: n1 },
+      { r: n2, plius: true },
+      { r: suma, suma: true },
+    ]
+  : [{ r: r1 }, { r: r2, plius: true }, { r: suma, suma: true }];
+const koefZnykla = znykla === 'y' ? 1 : 0;
+const kogo = m1 !== 1 && m2 !== 1 ? 'обидва рівняння' : m1 !== 1 ? 'перше рівняння' : 'друге рівняння';
+const krokZal = `${pershyi(kZal, zalyshylas)} = ${ch(suma[2])}`;
+const opys = [
+  `Система: ${rivn(r1)}; ${rivn(r2)}.`,
+  mnozhyly ? `Множимо перше рівняння на ${ch(m1)}, друге — на ${ch(m2)}: ${rivn(n1)}; ${rivn(n2)}.` : '',
+  `Додаємо: ${znykla} зникає, ${pershyi(kZal, zalyshylas)} = ${ch(suma[2])}.`,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<figure class="ill not-content dod" aria-label={opys}>
+  <div class="dod-sitka" aria-hidden="true">
+    {
+      ryadky.map((ryadok, n) => {
+        const dodaiemo = !ryadok.suma && (!mnozhyly || n >= 2);
+        const [a, b, c] = ryadok.r;
+        return (
+          <>
+            {n === 2 && mnozhyly && <span class="dod-rozdil">помножили:</span>}
+            {ryadok.suma && <span class="dod-liniia" />}
+            <span class="dod-plius">{ryadok.plius ? '+' : ''}</span>
+            <span
+              class:list={[
+                'num dod-k',
+                {
+                  c3: dodaiemo && znykla === 'x',
+                  'dod-zn': ryadok.suma && znykla === 'x',
+                  c1: ryadok.suma && znykla === 'y',
+                },
+              ]}
+            >
+              {pershyi(a, 'x')}
+            </span>
+            <span class="num">{znak(b)}</span>
+            <span
+              class:list={[
+                'num dod-k',
+                {
+                  c3: dodaiemo && znykla === 'y',
+                  'dod-zn': ryadok.suma && znykla === 'y',
+                  c1: ryadok.suma && znykla === 'x',
+                },
+              ]}
+            >
+              {modul(b, 'y')}
+            </span>
+            <span class="num">=</span>
+            <span class="num dod-k">{ch(c)}</span>
+            <span class="num dod-m">{ryadok.m}</span>
+          </>
+        );
+      })
+    }
+  </div>
+  <ol class="ill-steps">
+    {
+      mnozhyly && (
+        <li>
+          Множимо {kogo} — <b>усі члени і праву частину</b>, щоб коефіцієнти при <b>{znykla}</b> стали протилежними:{' '}
+          <b class="num c3">{ch(n1[koefZnykla])}</b> і <b class="num c3">{ch(n2[koefZnykla])}</b>.
+        </li>
+      )
+    }
+    <li>
+      Додаємо рівняння: <b>{znykla}</b> зникає, <b class="num">{krokZal}</b>{kZal !== 1 && <>, <b class="num c1">{zalyshylas} = {ch(vZal)}</b></>}.
+    </li>
+    <li>
+      Підставляємо <b class="num">{zalyshylas} = {ch(vZal)}</b> у {kudy === 0 ? 'перше' : 'друге'} рівняння: <b class="num">{pidst}</b>{kz !== 1 && <>, <b class="num">{pershyi(kz, znykla)} = {ch(prava)}</b></>}, <b class="num c2">{znykla} = {ch(vZn)}</b>.
+    </li>
+  </ol>
+  <p class="ill-caption">
+    Відповідь: <b class="num">({ch(x)}; {ch(y)})</b>
+  </p>
+</figure>
+
+<style>
+  .dod-sitka {
+    display: grid;
+    grid-template-columns: repeat(7, auto);
+    justify-content: center;
+    align-items: baseline;
+    column-gap: 0.45rem;
+    row-gap: 0.15rem;
+    font-size: 1.15rem;
+    line-height: 1.5;
+  }
+  .dod-k {
+    text-align: right;
+  }
+  .dod-m {
+    color: var(--ill-accent);
+    font-weight: 700;
+    padding-left: 0.4rem;
+  }
+  .dod-plius {
+    font-weight: 700;
+    color: var(--ill-muted);
+  }
+  .dod-liniia {
+    grid-column: 2 / 7;
+    height: 2px;
+    background: var(--ill-ink);
+  }
+  .dod-zn {
+    color: var(--ill-muted);
+  }
+  .dod-rozdil {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--ill-muted);
+  }
+  @media (max-width: 30rem) {
+    .dod-sitka {
+      font-size: 1rem;
+      column-gap: 0.3rem;
+    }
+  }
+</style>
