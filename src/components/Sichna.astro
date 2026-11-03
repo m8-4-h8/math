@@ -1,0 +1,37 @@
+---
+// Дві прямі a і b та січна c: вісім пронумерованих кутів (біля a — 1–4, біля b — 5–8; непарні ліворуч від січної,
+// 1, 2, 5, 6 — над прямою). Можна зафарбувати пару кутів, підписати градуси й назвати пару під малюнком.
+// Малюнок той самий, що в тренажерах (src/trenazhery/heometriia.ts).
+//   <Sichna />                                             — паралельні прямі, усі вісім номерів
+//   <Sichna para={[3, 6]} nazva />                         — зафарбувати пару і підписати «внутрішні різносторонні»
+//   <Sichna kut={65} pidpysy={{ 2: '65°', 7: '?' }} />      — градуси й «?» для задачі
+//   <Sichna nakhyl={14} para={[2, 6]} />                   — прямі не паралельні
+import { sichna, vydPary } from '../trenazhery/heometriia.ts';
+
+interface Props {
+  kut?: number; // кут між січною і прямою a (це кут 2)
+  nakhyl?: number; // 0 — a ∥ b; інакше b повернута на стільки градусів
+  para?: number[]; // які кути зафарбувати
+  pidpysy?: Record<number, string>;
+  nomery?: boolean;
+  /** Підпис під малюнком: як називається пара. */
+  nazva?: boolean;
+  /** Стрілки паралельності на прямих (лише коли nakhyl = 0). */
+  strilky?: boolean;
+}
+const { kut = 60, nakhyl = 0, para = [], pidpysy = {}, nomery = true, nazva = false } = Astro.props;
+const { strilky = nakhyl === 0 } = Astro.props;
+const svg = sichna({ kut, nakhyl, vydilyty: para, pidpysy, nomery, strilky });
+const vyd = para.length === 2 ? vydPary(para[0], para[1]) : null;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {
+    nazva && vyd && (
+      <p class="ill-caption">
+        <span class="c1">∠{para[0]}</span> і <span class="c2">∠{para[1]}</span> — {vyd}
+      </p>
+    )
+  }
+</figure>
