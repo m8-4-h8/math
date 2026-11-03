@@ -4,13 +4,15 @@
 //   <SkladChysla chyslo={7} chastyna={3} />    — 7 = 3 + 4 (дві частини різними кольорами)
 //   <SkladChysla chyslo={7} chastyna={3} dia="−" />  — 7 − 3: останні 3 закреслено, лишається 4
 //   <SkladChysla chyslo={6} budynochok />      — «будиночок»: усі пари, що разом дають 6
+//   <SkladChysla chyslo={6} bez_chysla />      — для задачі «скільки кружечків?»: число ніде не підписано
 interface Props {
   chyslo: number; // 0–10
   chastyna?: number;
   dia?: '+' | '−';
   budynochok?: boolean;
+  bez_chysla?: boolean; // не називати число навіть у прихованому описі для читалки екрана
 }
-const { chyslo, chastyna, dia = '+', budynochok = false } = Astro.props;
+const { chyslo, chastyna, dia = '+', budynochok = false, bez_chysla = false } = Astro.props;
 if (chyslo < 0 || chyslo > 10) throw new Error(`SkladChysla: ${chyslo} — лише від 0 до 10`);
 const minus = dia === '−';
 const insha = chastyna !== undefined ? chyslo - chastyna : undefined;
@@ -29,8 +31,9 @@ const stan = (i: number) => {
   return i < chastyna ? 'odyn' : 'dva';
 };
 const pary = Array.from({ length: chyslo + 1 }, (_, a) => [a, chyslo - a]);
-const opys =
-  chastyna === undefined
+const opys = bez_chysla
+  ? 'Десяткова рамка з кружечками'
+  : chastyna === undefined
     ? String(chyslo)
     : minus
       ? `${chyslo} − ${chastyna} = ${insha}`

@@ -5,13 +5,16 @@
 //   <PloskiFihury fihury={['kvadrat', 'kruh', 'trykutnyk']} nomery />
 // `povoroty` — на скільки градусів повернути кожну фігуру: квадрат «ромбиком», трикутник догори дриґом.
 //   <PloskiFihury fihury={['kvadrat', 'trykutnyk']} povoroty={[45, 180]} />
+// `bez_nazv` — без жодного підпису (для задач «як називається ця фігура?», «скільки сторін?»).
+//   <PloskiFihury fihury={['kvadrat']} povoroty={[45]} bez_nazv />
 type Fihura = 'kruh' | 'trykutnyk' | 'kvadrat' | 'priamokutnyk' | 'piatykutnyk';
 interface Props {
   fihury: Fihura[];
   nomery?: boolean;
+  bez_nazv?: boolean;
   povoroty?: number[];
 }
-const { fihury, nomery = false, povoroty = [] } = Astro.props;
+const { fihury, nomery = false, bez_nazv = false, povoroty = [] } = Astro.props;
 
 const NAZVY: Record<Fihura, string> = {
   kruh: 'круг',
@@ -25,7 +28,7 @@ const S = 64; // розмір клітинки під фігуру
 const krok = S + 26;
 const W = fihury.length * krok + 6;
 const dy = povoroty.some(Boolean) ? 12 : 6; // повернутий прямокутник вищий за клітинку
-const H = S + 34 + dy;
+const H = S + (bez_nazv ? 12 : 34) + dy; // без підписів — нижче
 // Вершини кожної фігури в межах квадрата S×S.
 const vershyny = (f: Fihura): [number, number][] => {
   const m = 6;
@@ -49,7 +52,7 @@ const vershyny = (f: Fihura): [number, number][] => {
 
 <figure class="ill not-content pf">
   <div class="ill-scroll">
-    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={fihury.map((f, i) => (nomery ? `${i + 1}` : NAZVY[f])).join(', ')}>
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={bez_nazv ? (fihury.length > 1 ? 'Фігури' : 'Фігура') : fihury.map((f, i) => (nomery ? `${i + 1}` : NAZVY[f])).join(', ')}>
       {
         fihury.map((f, i) => {
           const x = 8 + i * krok - (f === 'priamokutnyk' ? 5 : 0);
@@ -70,9 +73,11 @@ const vershyny = (f: Fihura): [number, number][] => {
                 </>
               )}
               </g>
-              <text x={S / 2} y={S + 24} text-anchor="middle" font-size={nomery ? 16 : 12} font-weight="700" fill="var(--ill-ink)">
-                {nomery ? i + 1 : NAZVY[f]}
-              </text>
+              {!bez_nazv && (
+                <text x={S / 2} y={S + 24} text-anchor="middle" font-size={nomery ? 16 : 12} font-weight="700" fill="var(--ill-ink)">
+                  {nomery ? i + 1 : NAZVY[f]}
+                </text>
+              )}
             </g>
           );
         })

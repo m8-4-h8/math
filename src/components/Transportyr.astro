@@ -1,11 +1,13 @@
 ---
 // Транспортир, прикладений до кута: центр — у вершині, одна сторона йде через 0°, друга показує величину.
 //   <Transportyr hradusy={65} />
+//   <Transportyr hradusy={40} nazva="MON" bez_hradusiv />  — без відповіді: для задачі «скільки градусів?»
 interface Props {
   hradusy: number; // від 0 до 180
   nazva?: string; // назва кута, наприклад «AOB»
+  bez_hradusiv?: boolean; // не підписувати величину кута — дитина зчитує її сама
 }
-const { hradusy, nazva = 'AOB' } = Astro.props;
+const { hradusy, nazva = 'AOB', bez_hradusiv = false } = Astro.props;
 
 const R = 170;
 const cx = 210;
@@ -21,7 +23,7 @@ const [A, O, Bn] = [nazva[0], nazva[1], nazva[2]];
 
 <figure class="ill not-content">
   <div class="ill-scroll">
-    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Транспортир показує кут ${hradusy}°`}>
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={bez_hradusiv ? `Транспортир, прикладений до кута ${nazva}` : `Транспортир показує кут ${hradusy}°`}>
       <path d={`M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx + R} ${cy} Z`} fill="var(--ill-1)" fill-opacity="0.1" stroke="var(--ill-1)" stroke-width="2" />
       <path d={`M ${cx - R + 40} ${cy} A ${R - 40} ${R - 40} 0 0 1 ${cx + R - 40} ${cy}`} fill="none" stroke="var(--ill-1)" stroke-opacity="0.4" />
       {
@@ -48,11 +50,17 @@ const [A, O, Bn] = [nazva[0], nazva[1], nazva[2]];
       <text x={cx} y={cy + 20} text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-ink)">{O}</text>
       <text x={cx + R + 4} y={cy + 20} font-size="14" font-weight="700" fill="var(--ill-ink)">{A}</text>
       <text x={B.x + (hradusy > 90 ? -14 : 8)} y={B.y - 6} font-size="14" font-weight="700" fill="var(--ill-2)">{Bn}</text>
-      <text x={tochka(hradusy / 2, 66).x} y={tochka(hradusy / 2, 66).y} text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" fill="var(--ill-2)">{hradusy}°</text>
+      {!bez_hradusiv && <text x={tochka(hradusy / 2, 66).x} y={tochka(hradusy / 2, 66).y} text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" fill="var(--ill-2)">{hradusy}°</text>}
     </svg>
   </div>
   <ol class="ill-steps">
     <li>Центр транспортира — у вершині <b>{O}</b>, сторона <b>{O}{A}</b> іде через <b>0</b>.</li>
-    <li>Друга сторона <b>{O}{Bn}</b> проходить через поділку <b class="num">{hradusy}</b>: <b class="num">∠{nazva} = {hradusy}°</b> — {vid} кут.</li>
+    {
+      bez_hradusiv ? (
+        <li>Подивись, через яку поділку проходить друга сторона <b>{O}{Bn}</b>. Рахуй на тій шкалі, де біля <b>{O}{A}</b> стоїть <b>0</b>.</li>
+      ) : (
+        <li>Друга сторона <b>{O}{Bn}</b> проходить через поділку <b class="num">{hradusy}</b>: <b class="num">∠{nazva} = {hradusy}°</b> — {vid} кут.</li>
+      )
+    }
   </ol>
 </figure>

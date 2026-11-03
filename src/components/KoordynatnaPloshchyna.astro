@@ -40,7 +40,7 @@ const liniia = ([p, q]: [string, string]) => {
   return { x1: X(a.x - (b.x - a.x) * d), y1: Y(a.y - (b.y - a.y) * d), x2: X(b.x + (b.x - a.x) * d), y2: Y(b.y + (b.y - a.y) * d) };
 };
 const ramkaId = `kpl-${rozmir}-${tochky.map((t) => t.nazva).join('')}`;
-const opys = tochky.filter((t) => !t.skhovaty).map((t) => `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`).join(', ');
+const opys = tochky.filter((t) => !t.skhovaty).map((t) => (bez_koordynat ? t.nazva : `${t.nazva}(${fmt(t.x)}; ${fmt(t.y)})`)).join(', ');
 ---
 
 <figure class="ill not-content kpl">
