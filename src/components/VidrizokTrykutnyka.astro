@@ -1,0 +1,21 @@
+---
+// Трикутник і відрізок з вершини: медіана (рисочки на половинках сторони), бісектриса (рівні дуги),
+// висота (прямий кут; у тупокутному — поза трикутником, сторону продовжено штрихом).
+// Малюнок той самий, що в тренажерах (src/trenazhery/trykutnyky.ts).
+//   <VidrizokTrykutnyka vyd="медіана" osnova="M" />
+//   <VidrizokTrykutnyka vyd="висота" forma="tupokutnyi" osnova="H" />
+//   <VidrizokTrykutnyka vyd="бісектриса" osnova="L" pidpysyPolovyn={['35°', '?']} />
+//   forma: hostrokutnyi | hostrokutnyi2 | tupokutnyi (тупий кут B) | priamokutnyi (прямий кут B); z — з якої вершини (0 — A)
+import { vidrizokTrykutnyka, type VidrizokOpts } from '../trenazhery/trykutnyky.ts';
+
+interface Props extends VidrizokOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = vidrizokTrykutnyka(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

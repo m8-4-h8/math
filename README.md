@@ -112,6 +112,11 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `SumizhniKuty` | суміжні кути: пряма AB, промінь OC, обидва кути з градусами і сумою 180° (або «?» для задачі) | `<SumizhniKuty kut={130} />`, `<SumizhniKuty kut={35} nevidomyi="AOC" />` |
   | `VertykalniKuty` | дві прямі перетинаються: 4 кути, вертикальні пари одного кольору; можна сховати градуси (`vidomi`) і повернути малюнок (`povorot`) | `<VertykalniKuty kut={62} vidomi={[1]} />` |
   | `Perpendykuliar` | перпендикуляр і похилі з точки до прямої на клітинках, цілі довжини підписані | `<Perpendykuliar h={4} pokhyli={[3, -5]} />` |
+  | `VidrizokTrykutnyka` | трикутник і медіана (рисочки), бісектриса (дуги) чи висота (прямий кут; у тупокутному — поза трикутником) з будь-якої вершини; підписи частин і «?» | `<VidrizokTrykutnyka vyd="медіана" osnova="M" />`, `<VidrizokTrykutnyka vyd="висота" forma="tupokutnyi" osnova="H" />` |
+  | `KutyTrykutnyka` | кути трикутника з градусами або «?», зовнішній кут, пряма через вершину, паралельна протилежній стороні (доведення суми кутів) | `<KutyTrykutnyka pidpysy={['55°', '70°', '?']} />`, `<KutyTrykutnyka paralelna kolory />` |
+  | `DvaTrykutnyky` | два трикутники (копія повернута/перевернута) з рисочками на рівних сторонах і дугами в рівних кутах — ознаки рівності | `<DvaTrykutnyky rysky={[1, 0, 2]} dugy={[1, 0, 0]} povorot={30} />` |
+  | `Konfihuratsiia` | типові малюнки до ознак: відрізки зі спільною серединою O (`khrest`), спільна сторона BD (`spilna`) | `<Konfihuratsiia vyd="khrest" pidpysy={{ AC: '7 см', BD: '?' }} />` |
+  | `Sichna` | дві прямі й січна: 8 пронумерованих кутів (біля a — 1–4, біля b — 5–8), зафарбована пара (`para`) з назвою під малюнком (`nazva`), градуси й «?» (`pidpysy`), непаралельні прямі (`nakhyl`); той самий малюнок у тренажерах | `<Sichna para={[3, 6]} nazva />`, `<Sichna kut={70} pidpysy={{ 2: '70°', 8: '?' }} />` |
   | `RivniFihury` | рівність фігур накладанням: фігура, копія, накладання | `<RivniFihury fihura="trykutnyk" povorot={110} />` |
   | `StovpchykDodavannia` | додавання / віднімання в стовпчик: перенос, позичання з крапкою, пояснення | `<StovpchykDodavannia a={4508} b={958} dia="−" />` |
 | `ZsuvRozriadiv` | множення / ділення на 10, 100, 1000 як зсув цифр по розрядах | `<ZsuvRozriadiv chyslo={74} dia="·" na={100} />` |

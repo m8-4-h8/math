@@ -1,0 +1,21 @@
+---
+// Два трикутники з позначками рівних сторін (рисочки) і кутів (дуги) — для ознак рівності трикутників.
+// Другий трикутник — повернута (й, можливо, перевернута) копія першого; вершина i другого відповідає вершині i першого.
+// Малюнок той самий, що в тренажерах (src/trenazhery/trykutnyky.ts).
+//   <DvaTrykutnyky rysky={[1, 0, 2]} dugy={[1, 0, 0]} povorot={30} />          — дві сторони і кут між ними
+//   <DvaTrykutnyky rysky={[0, 1, 0]} dugy={[0, 1, 2]} litery2={['M', 'K', 'N']} /> — сторона і два прилеглі кути
+//   pidpysySt1 / pidpysySt2 / pidpysyKut1 / pidpysyKut2 — довжини, градуси або «?» для задачі
+import { dvaTrykutnyky, type DvaOpts } from '../trenazhery/trykutnyky.ts';
+
+interface Props extends DvaOpts {
+  /** Підпис під малюнком. */
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = dvaTrykutnyky(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

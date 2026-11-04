@@ -1,0 +1,20 @@
+---
+// Кути трикутника: підписи градусів або «?», зовнішній кут (основу продовжено за вершину),
+// пряма через вершину A, паралельна BC (доведення суми кутів; kolory — рівні кути одним кольором).
+// Малюнок той самий, що в тренажерах (src/trenazhery/trykutnyky.ts).
+//   <KutyTrykutnyka pidpysy={['55°', '70°', '?']} />
+//   <KutyTrykutnyka paralelna kolory />
+//   <KutyTrykutnyka zovnishnii={{ v: 2, pidpys: '?', litera: 'D' }} pidpysy={['50°', '60°']} />
+import { kutyTrykutnyka, type KutyOpts } from '../trenazhery/trykutnyky.ts';
+
+interface Props extends KutyOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = kutyTrykutnyka(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
