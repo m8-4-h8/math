@@ -1,0 +1,22 @@
+---
+// Коло та його елементи для 7 класу: хорди, діаметри, радіуси, трикутник AOB, діаметр ⊥ хорді, дотичні.
+// Точки на колі задаємо кутом (0° — праворуч, 90° — угору), відрізки — парами букв. Малюнок той самий, що в
+// тренажерах (src/trenazhery/kolo.ts).
+//   <KoloElementy naKoli={{ A: 200, B: 340 }} vidrizky={[{ a: 'O', b: 'A', rysky: 1 }, { a: 'O', b: 'B', rysky: 1 }, { a: 'A', b: 'B' }]} kuty={[{ v: 'A', a: 'O', b: 'B', pidpys: '35°' }]} />
+//   <KoloElementy naKoli={{ A: 270 }} dotychni={['A']} vidrizky={[{ a: 'O', b: 'A' }]} priamiKuty={[['A', 'O', 'дотA']]} />
+//   <KoloElementy zovnishnia={{ l: 'P', d: 2.2, kut: 0, dotyku: ['A', 'B'] }} />   — дві дотичні з точки P
+//   <KoloElementy priamaIKolo />   — три випадки: d < r, d = r, d > r
+import { kolo, priamaIKolo, type KoloOpts } from '../trenazhery/kolo.ts';
+
+interface Props extends KoloOpts {
+  priamaIKolo?: boolean;
+  pidpys?: string;
+}
+const { pidpys, priamaIKolo: tryVypadky, ...opts } = Astro.props;
+const svg = tryVypadky ? priamaIKolo() : kolo(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
