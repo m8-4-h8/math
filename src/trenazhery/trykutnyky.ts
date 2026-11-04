@@ -362,14 +362,17 @@ export function kutyTrykutnyka(o: KutyOpts = {}) {
 }
 
 // ——— Типові конфігурації для ознак рівності ———
-// «khrest»: відрізки AB і CD перетинаються в точці O — середині кожного; трикутники AOC і BOD.
-// «spilna»: трикутники ABD і CBD зі спільною стороною BD, AB = CB, BD ділить кут B навпіл.
+// «khrest»: відрізки AB і CD перетинаються в точці O; трикутники AOC і BOD.
+//   oznaka 1: O — середина AB і CD (AO = OB, CO = OD) + вертикальні кути;
+//   oznaka 2: AO = OB і ∠OAC = ∠OBD + вертикальні кути.
+// «spilna»: трикутники ABD і CBD зі спільною стороною BD.
+//   oznaka 1: AB = CB, ∠ABD = ∠CBD;  oznaka 2: ∠ABD = ∠CBD, ∠ADB = ∠CDB;  oznaka 3: AB = CB, AD = CD.
 // pidpysy: ключ — відрізок ('AC', 'BD', 'AD', 'CD', 'AO'…) або кут ('A', 'C', 'B', 'D' — кут трикутника при цій
-// вершині; для «spilna»: 'A' = ∠BAD, 'C' = ∠BCD, 'ADB', 'CDB'), значення — «7 см», «40°» або «?».
+// вершині; для «spilna»: 'A' = ∠BAD, 'C' = ∠BCD, 'ABD', 'CBD', 'ADB', 'CDB'), значення — «7 см», «40°» або «?».
 
 export type Konfihuratsiia = 'khrest' | 'spilna';
 
-export function konfihuratsiia(vyd: Konfihuratsiia, pidpysy: Record<string, string> = {}) {
+export function konfihuratsiia(vyd: Konfihuratsiia, pidpysy: Record<string, string> = {}, oznaka: 1 | 2 | 3 = 1) {
   const W = 300;
   const H = 210;
   const T: Record<string, P> =
@@ -377,39 +380,137 @@ export function konfihuratsiia(vyd: Konfihuratsiia, pidpysy: Record<string, stri
       ? { A: [40, 42], B: [260, 168], C: [62, 178], D: [238, 32], O: [150, 105] }
       : { B: [150, 24], D: [150, 186], A: [58, 128], C: [242, 128] };
   const pidpysVidrizka = (k: string, c: P) => (pidpysy[k] ? pidpysStorony(T[k[0]], T[k[1]], pidpysy[k], c) : '');
+  // Кут: [вершина, точка, точка, позначка (кількість дуг, 0 — без позначки), радіус]
+  type Kut = [string, string, string, number, number];
   let tilo = '';
   const opys: string[] = [];
+  const kut = ([v, a, b, n, r]: Kut, kliuch: string) => {
+    const p = pidpysy[kliuch];
+    if (n) return duga(T[v], T[a], T[b], { n, r, pidpys: p });
+    return p ? duga(T[v], T[a], T[b], { k: 4, zalyvka: false, r, pidpys: p }) : '';
+  };
   if (vyd === 'khrest') {
     const { A, B, C, D, O } = T;
     tilo += kontur([A, O, C], 1) + kontur([B, O, D], 3);
-    tilo += rysky(A, O, 1) + rysky(O, B, 1) + rysky(C, O, 2) + rysky(O, D, 2);
+    tilo += rysky(A, O, 1) + rysky(O, B, 1);
+    if (oznaka === 1) tilo += rysky(C, O, 2) + rysky(O, D, 2);
     tilo += duga(O, A, C, { r: 18 }) + duga(O, B, D, { r: 18 });
     const c1 = tsentr([A, O, C]);
     const c2 = tsentr([B, O, D]);
-    tilo += pidpysVidrizka('AC', c1) + pidpysVidrizka('BD', c2) + pidpysVidrizka('AO', c1) + pidpysVidrizka('CO', c1) + pidpysVidrizka('BO', c2) + pidpysVidrizka('DO', c2);
-    for (const [v, a, b] of [['A', 'O', 'C'], ['C', 'A', 'O'], ['B', 'D', 'O'], ['D', 'O', 'B']] as const)
-      if (pidpysy[v]) tilo += duga(T[v], T[a], T[b], { k: 4, zalyvka: false, pidpys: pidpysy[v] });
+    for (const k of ['AC', 'AO', 'CO']) tilo += pidpysVidrizka(k, c1);
+    for (const k of ['BD', 'BO', 'DO']) tilo += pidpysVidrizka(k, c2);
+    const n2 = oznaka === 2 ? 2 : 0;
+    const kuty: Record<string, Kut> = { A: ['A', 'O', 'C', n2, 20], B: ['B', 'D', 'O', n2, 20], C: ['C', 'A', 'O', 0, 20], D: ['D', 'O', 'B', 0, 20] };
+    for (const [k, kt] of Object.entries(kuty)) tilo += kut(kt, k);
     for (const [k, vid] of [['A', c1], ['C', c1], ['B', c2], ['D', c2]] as const) tilo += litera(T[k], k, vid);
     tilo += tochka(O) + napys([O[0], O[1] - 17], 'O', { k: 0, rozmir: 15, kursyv: true });
-    opys.push('Відрізки AB і CD перетинаються в точці O; позначено AO = OB, CO = OD');
+    opys.push(
+      `Відрізки AB і CD перетинаються в точці O; позначено ${oznaka === 1 ? 'AO = OB, CO = OD' : 'AO = OB, кут OAC = кут OBD'}`,
+    );
   } else {
     const { A, B, C, D } = T;
     tilo += kontur([A, B, D], 1) + kontur([C, B, D], 3);
     tilo += vidrizok(B, D, { tovshch: 3 });
-    tilo += rysky(A, B, 1) + rysky(B, C, 1);
-    tilo += duga(B, A, D, { r: 26 }) + duga(B, D, C, { r: 26 });
+    if (oznaka !== 2) tilo += rysky(A, B, 1) + rysky(B, C, 1);
+    if (oznaka === 3) tilo += rysky(A, D, 2) + rysky(D, C, 2);
     const c1 = tsentr([A, B, D]);
     const c2 = tsentr([C, B, D]);
     tilo += pidpysVidrizka('AD', c1) + pidpysVidrizka('CD', c2) + pidpysVidrizka('AB', c1) + pidpysVidrizka('BC', c2);
     if (pidpysy.BD) tilo += napys([B[0] + 16, (B[1] + D[1]) / 2 + 22], pidpysy.BD);
-    const kuty: [string, P, P, P][] = [['A', A, B, D], ['C', C, D, B], ['ADB', D, A, B], ['CDB', D, B, C]];
-    for (const [k, v, a, b] of kuty) if (pidpysy[k]) tilo += duga(v, a, b, { k: 4, zalyvka: false, r: k.length > 1 ? 22 : 20, pidpys: pidpysy[k] });
+    const nB = oznaka === 3 ? 0 : 1;
+    const nD = oznaka === 2 ? 2 : 0;
+    const kuty: Record<string, Kut> = {
+      A: ['A', 'B', 'D', 0, 20],
+      C: ['C', 'D', 'B', 0, 20],
+      ABD: ['B', 'A', 'D', nB, 26],
+      CBD: ['B', 'D', 'C', nB, 26],
+      ADB: ['D', 'A', 'B', nD, 22],
+      CDB: ['D', 'B', 'C', nD, 22],
+    };
+    for (const [k, kt] of Object.entries(kuty)) tilo += kut(kt, k);
     tilo += litera(A, 'A', c1) + litera(C, 'C', c2) + napys([B[0], B[1] - 13], 'B', { k: 0, rozmir: 15, kursyv: true }) + napys([D[0], D[1] + 14], 'D', { k: 0, rozmir: 15, kursyv: true });
-    opys.push('Трикутники ABD і CBD зі спільною стороною BD; позначено AB = CB і рівні кути ABD і CBD');
+    const pozn = ['AB = CB і рівні кути ABD і CBD', 'рівні кути ABD і CBD, рівні кути ADB і CDB', 'AB = CB і AD = CD'][oznaka - 1];
+    opys.push(`Трикутники ABD і CBD зі спільною стороною BD; позначено ${pozn}`);
   }
   const vidomi = Object.entries(pidpysy)
     .filter(([, p]) => p && p !== '?')
     .map(([k, p]) => `${k.length === 1 || k.length === 3 ? 'кут ' : ''}${k} = ${p}`);
   if (vidomi.length) opys.push(vidomi.join(', '));
   return svg(W, H, opys.join('. '), tilo);
+}
+
+// ——— Рівнобедрений трикутник ———
+// Вершина B угорі (або повернута), основа AC; бічні сторони з рисочками, кути при основі з дугами.
+
+export interface RivnobedrenyiOpts {
+  /** Кут при вершині — визначає форму малюнка (градуси). */
+  vershyna?: number;
+  /** Повернути малюнок, щоб основа не була знизу. */
+  povorot?: number;
+  litery?: string[]; // [ліва вершина основи, вершина, права вершина основи, основа відрізка з вершини]
+  /** Позначки: рівні бічні сторони, рівні кути при основі. */
+  storony?: boolean;
+  kuty?: boolean;
+  /** Відрізок з вершини до основи: показати рисочки (медіана), дуги (бісектриса), прямий кут (висота). */
+  vidrizok?: { mediana?: boolean; bisektrysa?: boolean; vysota?: boolean } | null;
+  /** Підписи сторін; osnova — лише без відрізка BD (там її довжину дають у тексті). */
+  pidpysySt?: { bichna?: string; bichna2?: string; osnova?: string; polovyna?: string };
+  /** Підписи кутів; vershyna — лише без відрізка BD, polovyna — ∠ABD. */
+  pidpysyKut?: { vershyna?: string; osnova1?: string; osnova2?: string; polovyna?: string; zovnishnii?: string };
+}
+
+export function rivnobedrenyi(o: RivnobedrenyiOpts = {}) {
+  const { vershyna = 50, povorot = 0, litery = ['A', 'B', 'C', 'D'], storony = true, kuty = true, vidrizok: vd = null } = o;
+  const W = 300;
+  const H = 220;
+  const ph = (vershyna * Math.PI) / 360;
+  let t: P[] = [[-Math.sin(ph), Math.cos(ph)], [0, 0], [Math.sin(ph), Math.cos(ph)]];
+  t = pereminyty(t, povorot);
+  const zov = o.pidpysyKut?.zovnishnii;
+  const s = masshtab([t], zov ? 190 : 230, 150);
+  const tt = postavyty(t, s, zov ? 30 : 35, 35, zov ? 190 : 230, 150);
+  const [A, B, C] = tt;
+  const Dp = seredyna(A, C);
+  const c = tsentr(tt);
+  let tilo = kontur(tt, 1);
+  if (storony) tilo += rysky(A, B, 1) + rysky(B, C, 1);
+  if (vd) {
+    tilo += vidrizok(B, Dp, { k: 2 });
+    if (vd.mediana) tilo += rysky(A, Dp, 2) + rysky(Dp, C, 2);
+    if (vd.vysota) tilo += priamyi(Dp, B, C);
+    tilo += tochka(Dp) + litera(Dp, litery[3], B);
+  }
+  const p = o.pidpysyKut ?? {};
+  if (vd?.bisektrysa) tilo += duga(B, A, Dp, { n: 2, r: 30, pidpys: p.polovyna }) + duga(B, Dp, C, { n: 2, r: 30 });
+  else if (p.polovyna && vd) tilo += duga(B, A, Dp, { k: 4, zalyvka: false, r: 30, pidpys: p.polovyna });
+  if (kuty) tilo += duga(A, B, C, { n: 1, pidpys: p.osnova1 }) + duga(C, A, B, { n: 1, pidpys: p.osnova2 });
+  else {
+    if (p.osnova1) tilo += duga(A, B, C, { k: 4, zalyvka: false, pidpys: p.osnova1 });
+    if (p.osnova2) tilo += duga(C, A, B, { k: 4, zalyvka: false, pidpys: p.osnova2 });
+  }
+  // Підпис усього кута при вершині — лише без відрізка BD (інакше його легко сплутати з половинкою).
+  if (p.vershyna && !vd) tilo += duga(B, A, C, { k: 4, zalyvka: false, r: 22, pidpys: p.vershyna });
+  if (zov) {
+    const u = [C[0] - A[0], C[1] - A[1]];
+    const l = Math.hypot(u[0], u[1]);
+    const kin: P = [C[0] + (u[0] / l) * 55, C[1] + (u[1] / l) * 55];
+    tilo += vidrizok(C, kin, { tovshch: 2.5 }) + duga(C, B, kin, { k: 4, r: 24, pidpys: zov });
+  }
+  const st = o.pidpysySt ?? {};
+  if (st.bichna) tilo += pidpysStorony(A, B, st.bichna, c);
+  if (st.bichna2) tilo += pidpysStorony(B, C, st.bichna2, c);
+  if (st.osnova && !vd) tilo += pidpysStorony(A, C, st.osnova, c); // з відрізком BD підпис налазить на букву D
+  if (st.polovyna && vd) tilo += pidpysStorony(A, Dp, st.polovyna, c);
+  tilo += litera(A, litery[0], c) + litera(B, litery[1], c) + litera(C, litery[2], c);
+  const [a, b, cc, d] = litery;
+  const opys = [`Трикутник ${a}${b}${cc}`];
+  if (storony) opys.push(`${a}${b} = ${b}${cc}`);
+  if (kuty) opys.push(`позначено рівні кути ${a} і ${cc}`);
+  if (vd) opys.push(`з вершини ${b} проведено відрізок ${b}${d} до сторони ${a}${cc}`);
+  const vidomi = [
+    ...Object.entries(p).filter(([, v]) => v && v !== '?').map(([k, v]) => `${k === 'vershyna' ? `кут ${b}` : k === 'osnova1' ? `кут ${a}` : k === 'osnova2' ? `кут ${cc}` : k === 'zovnishnii' ? 'зовнішній кут' : `кут ${a}${b}${d}`} = ${v}`),
+    ...Object.entries(st).filter(([, v]) => v && v !== '?').map(([k, v]) => `${k === 'bichna' ? `${a}${b}` : k === 'bichna2' ? `${b}${cc}` : k === 'osnova' ? `${a}${cc}` : `${a}${d}`} = ${v}`),
+  ];
+  if (vidomi.length) opys.push(vidomi.join(', '));
+  return svg(W, H, opys.join('; '), tilo);
 }
