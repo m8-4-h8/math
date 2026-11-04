@@ -1,0 +1,23 @@
+---
+// Нерівність трикутника: три палички. Основа c знизу, палички a і b прикріплені до її кінців, пунктир — куди
+// дістають їхні кінці. a + b > c — сходяться, виходить трикутник; a + b = c — лягають на основу;
+// a + b < c — не дістають одна до одної. Малюнок той самий, що в тренажерах (src/trenazhery/trykutnyky.ts).
+//   <Palychky a={5} b={6} c={8} pidpysy={['5 см', '6 см', '8 см']} pidpys="Трикутник є." />
+import { palychky } from '../trenazhery/trykutnyky.ts';
+
+interface Props {
+  a: number;
+  b: number;
+  c: number;
+  /** Підписи паличок a, b, c (за замовчуванням — самі числа). */
+  pidpysy?: [string, string, string];
+  pidpys?: string;
+}
+const { a, b, c, pidpysy, pidpys } = Astro.props;
+const svg = palychky(a, b, c, pidpysy);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

@@ -129,13 +129,16 @@ export function svg(W: number, H: number, opys: string, tilo: string) {
 // ——— Форми трикутників ———
 // Одиничні координати (y — донизу). Вершина 0 — угорі, 1 — внизу ліворуч, 2 — внизу праворуч.
 
-export type Forma = 'hostrokutnyi' | 'hostrokutnyi2' | 'tupokutnyi' | 'priamokutnyi';
+export type Forma = 'hostrokutnyi' | 'hostrokutnyi2' | 'tupokutnyi' | 'priamokutnyi' | 'priamokutnyi2';
 export const FORMY: Record<Forma, P[]> = {
   hostrokutnyi: [[0.36, 0], [0, 1], [1, 1]],
   hostrokutnyi2: [[0.68, 0], [0, 1], [1, 0.9]],
   tupokutnyi: [[0.12, 0], [0.38, 1], [1, 1]], // тупий кут при вершині 1
   priamokutnyi: [[0, 0], [0, 1], [1, 1]], // прямий кут при вершині 1
+  priamokutnyi2: [[0, 0], [0, 1], [1.7, 1]], // прямий кут при вершині 1, гострі ≈ 60° і 30°
 };
+/** Чи прямий кут при вершині 1 (позначаємо квадратиком). */
+export const zPriamym = (forma: Forma) => forma === 'priamokutnyi' || forma === 'priamokutnyi2';
 
 /** Повернути (на `povorot` градусів) і віддзеркалити форму навколо центру. */
 export function pereminyty(t: P[], povorot = 0, dzerkalo = false): P[] {
@@ -185,13 +188,13 @@ export interface DvaOpts {
 export function dvaTrykutnyky(o: DvaOpts = {}) {
   const { forma = 'hostrokutnyi', povorot = 0, dzerkalo = false, litery1 = ['A', 'B', 'C'], litery2 = ['K', 'M', 'N'] } = o;
   const { rysky: rs = [0, 0, 0], dugy: ds = [0, 0, 0] } = o;
-  const W = 360;
+  const W = 370; // із запасом праворуч: повернута копія може торкатися краю, а буква стоїть ще далі
   const H = 200;
   const f1 = FORMY[forma];
   const f2 = pereminyty(f1, povorot, dzerkalo);
   const s = masshtab([f1, f2], 135, 135);
-  const t1 = postavyty(f1, s, 20, 32, 135, 135);
-  const t2 = postavyty(f2, s, 205, 32, 135, 135);
+  const t1 = postavyty(f1, s, 25, 32, 135, 135);
+  const t2 = postavyty(f2, s, 210, 32, 135, 135);
   let tilo = kontur(t1, 1) + kontur(t2, 3);
   const opysy: string[] = [];
   for (const [t, lit, pSt, pKut] of [
@@ -202,7 +205,8 @@ export function dvaTrykutnyky(o: DvaOpts = {}) {
     for (let i = 0; i < 3; i++) {
       const [a, b, z] = [t[i], t[(i + 1) % 3], t[(i + 2) % 3]];
       tilo += rysky(a, b, rs[i]);
-      if (ds[i]) tilo += duga(a, b, z, { n: ds[i], pidpys: pKut?.[i] });
+      if (i === 1 && zPriamym(forma)) tilo += priamyi(a, b, z);
+      else if (ds[i]) tilo += duga(a, b, z, { n: ds[i], pidpys: pKut?.[i] });
       else if (pKut?.[i]) tilo += duga(a, b, z, { n: 1, k: 4, zalyvka: false, pidpys: pKut[i] });
       if (pSt?.[i]) tilo += pidpysStorony(a, b, pSt[i]!, c);
       tilo += litera(a, lit[i], c);
@@ -210,7 +214,8 @@ export function dvaTrykutnyky(o: DvaOpts = {}) {
   }
   const nazva = (lit: readonly string[], i: number) => `${lit[i]}${lit[(i + 1) % 3]}`;
   for (let i = 0; i < 3; i++) if (rs[i]) opysy.push(`${nazva(litery1, i)} = ${nazva(litery2, i)}`);
-  for (let i = 0; i < 3; i++) if (ds[i]) opysy.push(`кут ${litery1[i]} = кут ${litery2[i]}`);
+  if (zPriamym(forma)) opysy.push(`кути ${litery1[1]} і ${litery2[1]} прямі`);
+  for (let i = 0; i < 3; i++) if (ds[i] && !(i === 1 && zPriamym(forma))) opysy.push(`кут ${litery1[i]} = кут ${litery2[i]}`);
   const vidomi = [
     ...[0, 1, 2].filter((i) => o.pidpysySt1?.[i] && o.pidpysySt1[i] !== '?').map((i) => `${nazva(litery1, i)} = ${o.pidpysySt1![i]}`),
     ...[0, 1, 2].filter((i) => o.pidpysySt2?.[i] && o.pidpysySt2[i] !== '?').map((i) => `${nazva(litery2, i)} = ${o.pidpysySt2![i]}`),
@@ -313,6 +318,10 @@ export interface KutyOpts {
   paralelna?: boolean;
   /** Розфарбувати кути: однаковий колір — рівні кути на доведенні. */
   kolory?: boolean;
+  /** Підписи сторін: сторона i — від вершини i до i + 1 (2 — сторона між вершинами 2 і 0). */
+  pidpysySt?: (string | undefined)[];
+  /** Позначити квадратиком прямий кут при вершині 1 (для форм priamokutnyi, priamokutnyi2). */
+  priamyi?: boolean;
 }
 
 export function kutyTrykutnyka(o: KutyOpts = {}) {
@@ -321,9 +330,10 @@ export function kutyTrykutnyka(o: KutyOpts = {}) {
   const H = 210;
   const f1 = FORMY[forma];
   const zov = o.zovnishnii;
-  const s = masshtab([f1], zov || o.paralelna ? 180 : 220, 140);
-  const x0 = !zov ? 40 : zov.v === 1 ? 85 : zov.v === 2 ? 35 : 60;
-  const t = postavyty(f1, s, x0, o.paralelna || zov?.v === 0 ? 55 : 40, zov ? 180 : 220, 140);
+  const zSt = !!o.pidpysySt?.some(Boolean); // підписи сторін — лишаємо місце з боків
+  const s = masshtab([f1], zov || o.paralelna ? 180 : zSt ? 180 : 220, zSt ? 130 : 140);
+  const x0 = !zov ? (zSt ? 60 : 40) : zov.v === 1 ? 85 : zov.v === 2 ? 35 : 60;
+  const t = postavyty(f1, s, x0, o.paralelna || zov?.v === 0 ? 55 : zSt ? 35 : 40, zov || zSt ? 180 : 220, zSt ? 130 : 140);
   const c = tsentr(t);
   let tilo = kontur(t, 1);
   const KOL = [2, 3, 4];
@@ -350,12 +360,21 @@ export function kutyTrykutnyka(o: KutyOpts = {}) {
     if (zov.litera) tilo += napys([kin[0] + u[0] * 12, kin[1] + u[1] * 12], zov.litera, { k: 0, rozmir: 15, kursyv: true });
     opys.push(`сторону ${litery[iVid]}${litery[zov.v]} продовжено за вершину ${litery[zov.v]}, позначено зовнішній кут`);
   }
+  const priamyiKut = o.priamyi && zPriamym(forma);
+  if (priamyiKut) {
+    tilo += priamyi(t[1], t[0], t[2]);
+    opys.push(`кут ${litery[1]} прямий`);
+  }
+  const pSt = o.pidpysySt ?? [];
   for (let i = 0; i < 3; i++) {
     const p = pidpysy[i];
-    if (p || kolory) tilo += duga(t[i], t[(i + 1) % 3], t[(i + 2) % 3], { k: kolory ? KOL[i] : 2, r: 20, zalyvka: kolory || !!p, pidpys: p });
+    if ((p || kolory) && !(i === 1 && priamyiKut)) tilo += duga(t[i], t[(i + 1) % 3], t[(i + 2) % 3], { k: kolory ? KOL[i] : 2, r: 20, zalyvka: kolory || !!p, pidpys: p });
+    if (pSt[i]) tilo += pidpysStorony(t[i], t[(i + 1) % 3], pSt[i]!, c);
     tilo += litera(t[i], litery[i], c);
   }
   const vidomi = [0, 1, 2].filter((i) => pidpysy[i] && pidpysy[i] !== '?').map((i) => `кут ${litery[i]} = ${pidpysy[i]}`);
+  const storona = (i: number) => (i === 2 ? `${litery[0]}${litery[2]}` : `${litery[i]}${litery[i + 1]}`);
+  vidomi.push(...[0, 1, 2].filter((i) => pSt[i] && pSt[i] !== '?').map((i) => `${storona(i)} — ${pSt[i]}`));
   if (zov?.pidpys && zov.pidpys !== '?') vidomi.push(`зовнішній кут = ${zov.pidpys}`);
   if (vidomi.length) opys.push(vidomi.join(', '));
   return svg(W, H, opys.join('; '), tilo);
@@ -513,4 +532,86 @@ export function rivnobedrenyi(o: RivnobedrenyiOpts = {}) {
   ];
   if (vidomi.length) opys.push(vidomi.join(', '));
   return svg(W, H, opys.join('; '), tilo);
+}
+
+// ——— Нерівність трикутника: три палички ———
+// Основа c лежить знизу, палички a і b прикріплені до її кінців. Пунктирні дуги — куди можуть дістати їхні кінці.
+// a + b > c: кінці сходяться над основою — виходить трикутник; a + b = c: палички лягають на основу;
+// a + b < c: палички не дістають одна до одної — лишається щілина.
+
+export function palychky(a: number, b: number, c: number, pidpysy?: [string, string, string]) {
+  const [pa, pb, pc] = pidpysy ?? [`${a}`, `${b}`, `${c}`];
+  const tryk = a + b > c && a + c > b && b + c > a;
+  const W = 340;
+  const H = tryk ? 200 : 130;
+  const rad = (g: number) => (g * Math.PI) / 180;
+  // Математичні координати (y — угору): L = (0, 0), R = (c, 0).
+  let T: P | null = null;
+  let kutA: number;
+  let kutB: number;
+  if (tryk) {
+    const x = (a * a - b * b + c * c) / (2 * c);
+    T = [x, Math.sqrt(Math.max(0, a * a - x * x))];
+    kutA = Math.atan2(T[1], T[0]);
+    kutB = Math.atan2(T[1], T[0] - c);
+  } else {
+    kutA = 0;
+    kutB = Math.PI;
+  }
+  const dugaPts = (o: P, r: number, vid: number, do_: number) => Array.from({ length: 13 }, (_, i): P => {
+    const g = vid + ((do_ - vid) * i) / 12;
+    return [o[0] + r * Math.cos(g), o[1] + r * Math.sin(g)];
+  });
+  const roz = rad(tryk ? 20 : 26);
+  const dA = tryk ? dugaPts([0, 0], a, kutA - roz, kutA + roz) : dugaPts([0, 0], a, 0, roz);
+  const dB = tryk ? dugaPts([c, 0], b, kutB - roz, kutB + roz) : dugaPts([c, 0], b, Math.PI - roz, Math.PI);
+  const vsi: P[] = [[0, 0], [c, 0], ...dA, ...dB, ...(T ? [T] : [])];
+  const xs = vsi.map((p) => p[0]);
+  const ys = vsi.map((p) => p[1]);
+  const [x0, x1, y1] = [Math.min(...xs), Math.max(...xs), Math.max(...ys)];
+  const sc = Math.min((W - 80) / (x1 - x0), (H - 70) / Math.max(y1, 0.01), 260 / c);
+  const ox = (W - (x1 - x0) * sc) / 2 - x0 * sc;
+  const oy = H - 40;
+  const m = ([x, y]: P): P => [ox + x * sc, oy - y * sc];
+  const shliakh = (pts: P[]) => pts.map((p, i) => `${i ? 'L' : 'M'} ${f(m(p)[0])} ${f(m(p)[1])}`).join(' ');
+  const L = m([0, 0]);
+  const R = m([c, 0]);
+  const palychka = (p: P, q: P, k: number) =>
+    `<line x1="${f(p[0])}" y1="${f(p[1])}" x2="${f(q[0])}" y2="${f(q[1])}" stroke="${kolir(k)}" stroke-width="6" stroke-linecap="round"/>`;
+  let tilo = '';
+  tilo += `<path d="${shliakh(dA)}" fill="none" stroke="${kolir(1)}" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+  tilo += `<path d="${shliakh(dB)}" fill="none" stroke="${kolir(3)}" stroke-width="1.5" stroke-dasharray="4 4"/>`;
+  tilo += palychka(L, R, 2);
+  let opys: string;
+  const pidpysPalychky = (p: P, q: P, t: string, k: number, vgoru: boolean) => {
+    const mm = seredyna(p, q);
+    const [ux, uy] = odyn(riz(q, p));
+    let n: P = [-uy, ux];
+    if ((n[1] > 0) === vgoru) n = [uy, -ux];
+    return napys([mm[0] + n[0] * 16, mm[1] + n[1] * 16], t, { k });
+  };
+  if (T) {
+    const Tm = m(T);
+    tilo += palychka(L, Tm, 1) + palychka(R, Tm, 3);
+    tilo += pidpysPalychky(L, Tm, pa, 1, true) + pidpysPalychky(R, Tm, pb, 3, true);
+    tilo += tochka(Tm);
+    opys = `Палички ${pa}, ${pb} і ${pc}: кінці коротших паличок сходяться над основою, виходить трикутник`;
+  } else {
+    const zsuv = 9;
+    const kA = m([a, 0]);
+    const kB = m([c - b, 0]);
+    const A1: P = [L[0], L[1] - zsuv];
+    const A2: P = [kA[0], kA[1] - zsuv];
+    const B1: P = [R[0], R[1] - zsuv];
+    const B2: P = [kB[0], kB[1] - zsuv];
+    tilo += palychka(A1, A2, 1) + palychka(B1, B2, 3);
+    tilo += napys([(A1[0] + A2[0]) / 2, A1[1] - 16], pa, { k: 1 }) + napys([(B1[0] + B2[0]) / 2, B1[1] - 16], pb, { k: 3 });
+    opys =
+      a + b === c
+        ? `Палички ${pa}, ${pb} і ${pc}: дві коротші разом такі самі, як довга, — лягають на неї, трикутника немає`
+        : `Палички ${pa}, ${pb} і ${pc}: дві коротші разом коротші за довгу — не дістають одна до одної, трикутника немає`;
+  }
+  tilo += napys([(L[0] + R[0]) / 2, L[1] + 18], pc, { k: 2 });
+  tilo += tochka(L) + tochka(R);
+  return svg(W, H, opys, tilo);
 }
