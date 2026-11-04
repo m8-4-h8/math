@@ -1,0 +1,20 @@
+---
+// Рівнобедрений трикутник ABC з основою AC: рисочки на бічних сторонах, дуги в кутах при основі, відрізок BD до основи
+// (медіана — рисочки, бісектриса — дуги, висота — прямий кут), градуси й «?», зовнішній кут при основі.
+// Малюнок той самий, що в тренажерах (src/trenazhery/trykutnyky.ts).
+//   <Rivnobedrenyi vershyna={40} pidpysyKut={{ vershyna: '40°', osnova1: '?' }} />
+//   <Rivnobedrenyi vidrizok={{ mediana: true, bisektrysa: true, vysota: true }} />
+//   <Rivnobedrenyi povorot={100} />   — основа не знизу
+import { rivnobedrenyi, type RivnobedrenyiOpts } from '../trenazhery/trykutnyky.ts';
+
+interface Props extends RivnobedrenyiOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = rivnobedrenyi(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

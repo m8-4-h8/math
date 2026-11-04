@@ -1,16 +1,19 @@
 ---
 // Типові малюнки до ознак рівності трикутників (той самий малюнок, що в тренажерах, src/trenazhery/trykutnyky.ts):
-//   <Konfihuratsiia vyd="khrest" pidpysy={{ AC: '7 см', BD: '?' }} />   — AB і CD перетинаються в спільній середині O
-//   <Konfihuratsiia vyd="spilna" pidpysy={{ AD: '6 см', CD: '?' }} />   — спільна сторона BD, AB = CB, BD — бісектриса кута B
+//   <Konfihuratsiia vyd="khrest" pidpysy={{ AC: '7 см', BD: '?' }} />            — AB і CD перетинаються в спільній середині O
+//   <Konfihuratsiia vyd="khrest" oznaka={2} pidpysy={{ CO: '5 см', DO: '?' }} />  — AO = OB і ∠OAC = ∠OBD
+//   <Konfihuratsiia vyd="spilna" pidpysy={{ AD: '6 см', CD: '?' }} />            — спільна сторона BD, AB = CB, ∠ABD = ∠CBD
+//   <Konfihuratsiia vyd="spilna" oznaka={2} />  — ∠ABD = ∠CBD і ∠ADB = ∠CDB;  oznaka={3} — AB = CB і AD = CD
 import { konfihuratsiia, type Konfihuratsiia } from '../trenazhery/trykutnyky.ts';
 
 interface Props {
   vyd: Konfihuratsiia;
+  oznaka?: 1 | 2 | 3;
   pidpysy?: Record<string, string>;
   pidpys?: string;
 }
-const { vyd, pidpysy = {}, pidpys } = Astro.props;
-const svg = konfihuratsiia(vyd, pidpysy);
+const { vyd, oznaka = 1, pidpysy = {}, pidpys } = Astro.props;
+const svg = konfihuratsiia(vyd, pidpysy, oznaka);
 ---
 
 <figure class="ill not-content">
