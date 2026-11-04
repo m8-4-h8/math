@@ -1,0 +1,170 @@
+---
+title: Перша ознака рівності трикутників
+ikonka: ⚖️
+description: "Якщо дві сторони і кут між ними одного трикутника дорівнюють двом сторонам і куту між ними іншого, трикутники рівні."
+sidebar:
+  order: 39
+---
+
+import Pravylo from '../../../components/Pravylo.astro';
+import DvaTrykutnyky from '../../../components/DvaTrykutnyky.astro';
+import Konfihuratsiia from '../../../components/Konfihuratsiia.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
+import Trenazher from '../../../components/Trenazher.astro';
+
+<Pravylo nazva="Перша ознака: дві сторони і кут між ними">
+Якщо **дві сторони і кут між ними** одного трикутника відповідно дорівнюють двом сторонам і куту між ними іншого
+трикутника, то такі трикутники **рівні**.
+
+$AB = KM$, $AC = KN$, $\angle A = \angle K$ $\Rightarrow$ $\triangle ABC = \triangle KMN$.
+
+У рівних трикутниках рівні й **усі інші** відповідні елементи: $BC = MN$, $\angle B = \angle M$, $\angle C = \angle N$.
+</Pravylo>
+
+:::note[Швидко нагадати]
+- Потрібні три пари: сторона, кут, сторона — і кут **між** цими сторонами.
+- Відповідні вершини — за порядком букв: $\triangle ABC = \triangle KMN$ → $A$ і $K$, $B$ і $M$, $C$ і $N$.
+- Довели рівність — отримали решту: третю сторону й два інші кути.
+- Часті «безкоштовні» пари: **спільна сторона**, **вертикальні кути**, **середина** відрізка.
+- Міні-приклад: $AB = KM = 5$, $AC = KN = 7$, $\angle A = \angle K = 40^\circ$ → $\triangle ABC = \triangle KMN$, тож $BC = MN$.
+
+Все пам'ятаєш — [одразу до задач](#перевір-себе).
+:::
+
+## Пригадай
+
+Що таке [рівні фігури і як записують рівність трикутників](/math/5-klas/rivni-fihury/). Перевір, чи пам'ятаєш:
+
+<Zavdannia vidpovid={['MN', 'NM']} pidkazka="Друга й третя букви першого трикутника відповідають другій і третій буквам другого.">
+  $\triangle ABC = \triangle KMN$. Яка сторона трикутника $KMN$ дорівнює $BC$? Впиши її латинськими буквами.
+
+  <span slot="rozviazok">$B$ відповідає $M$, $C$ — $N$, тож $BC = MN$.</span>
+</Zavdannia>
+
+## Що це таке
+
+**Спершу — з життя.** Розкрий циркуль або ножиці на певний кут і зафіксуй. Тепер довжини двох «ніжок» і кут між ними
+відомі — і відстань між їхніми кінцями вже не зміниться, хоч як крути. Отже, **дві сторони й кут між ними
+визначають трикутник повністю**: щоб зробити його точну копію, досить перенести ці три елементи.
+
+**Тепер — малюнок.** У трикутників $ABC$ і $KMN$ однаковими рисочками позначено рівні сторони, дугою — рівні кути.
+Кут $A$ лежить **між** сторонами $AB$ і $AC$, кут $K$ — між $KM$ і $KN$:
+
+<DvaTrykutnyky povorot={30} rysky={[1, 0, 2]} dugy={[1, 0, 0]} />
+
+**І лише тепер — правило** — воно в рамці вгорі. Твердження, за яким роблять висновок «трикутники рівні», називають
+**ознакою рівності**.
+
+:::tip[Чому це правда]
+Накладемо $\triangle KMN$ на $\triangle ABC$ так, щоб кут $K$ збігся з рівним йому кутом $A$. Тоді промінь $KM$ ляже на
+промінь $AB$, а оскільки $KM = AB$, точка $M$ збіжеться з $B$. Так само $N$ збіжеться з $C$. Між двома точками
+проходить лише одна пряма, тож і сторона $MN$ ляже на $BC$ — трикутники збіглися повністю.
+:::
+
+## Приклад
+
+**Відрізки $AB$ і $CD$ перетинаються в точці $O$, яка є серединою кожного з них. $AC = 7$ см. Знайди $BD$.**
+
+<Konfihuratsiia vyd="khrest" pidpysy={{ AC: '7 см', BD: '?' }} />
+
+1. $AO = OB$ — бо $O$ — середина $AB$.
+2. $CO = OD$ — бо $O$ — середина $CD$.
+3. $\angle AOC = \angle BOD$ — [вертикальні кути](/math/7-klas/vertykalni-kuty/), і вони лежать **між** цими сторонами.
+4. За першою ознакою $\triangle AOC = \triangle BOD$.
+5. Сторона $BD$ відповідає стороні $AC$, тож $BD = 7$ см.
+6. **Перевірка** порядком букв: $A$ і $B$, $O$ і $O$, $C$ і $D$ — отже, $AC$ відповідає $BD$ ✓
+
+## Спробуй сам
+
+<Zavdannia vidpovid="6" pidkazka="AB = CB, кути при B рівні, а BD — спільна сторона. Які трикутники рівні?">
+  $AB = CB$, $\angle ABD = \angle CBD$, $AD = 6$ см. Знайди $CD$.
+
+  <Konfihuratsiia vyd="spilna" pidpysy={{ AD: '6 см', CD: '?' }} />
+
+  <span slot="rozviazok">У трикутниках $ABD$ і $CBD$: $AB = CB$, $\angle ABD = \angle CBD$, $BD$ — спільна. Кут $B$ — між цими сторонами, тож за першою ознакою $\triangle ABD = \triangle CBD$. Звідси $CD = AD = 6$ см. Перевірка: $AD$ і $CD$ лежать навпроти рівних кутів при $B$ ✓</span>
+</Zavdannia>
+
+:::caution[Не плутай]
+**Кут має бути між сторонами.** Якщо рівні дві сторони і кут, що **не** лежить між ними, — це ще не ознака: такі
+трикутники можуть бути різними. Перевір: кут при спільній вершині двох позначених сторін?
+
+**Порядок букв.** $\triangle ABC = \triangle MKN$ означає: $A$ і $M$, $B$ і $K$, $C$ і $N$. Тому $BC = KN$, а **не**
+$BC = MN$.
+
+**Не «на око».** Трикутники, що здаються однаковими, рівні лише тоді, коли це доведено ознакою.
+:::
+
+## Перевір себе
+
+Обери варіант або впиши відповідь. Одиниці можна не писати. За кожну правильну відповідь — зірочка ⭐
+
+<Zavdannia vidpovid="так, за першою ознакою" varianty={['так, за першою ознакою', 'не можна стверджувати']} pidkazka="Знайди позначений кут. Чи лежить він між двома позначеними сторонами?">
+  Чи рівні трикутники на малюнку?
+
+  <DvaTrykutnyky forma="hostrokutnyi2" povorot={200} rysky={[0, 1, 2]} dugy={[0, 0, 1]} />
+
+  <span slot="rozviazok">Рівні сторони $BC$ і $CA$, а позначений кут $C$ лежить між ними. Отже, $\triangle ABC = \triangle KMN$ за першою ознакою.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="не можна стверджувати" varianty={['так, за першою ознакою', 'не можна стверджувати']} pidkazka="Між якими сторонами лежить позначений кут?">
+  Чи рівні трикутники на малюнку?
+
+  <DvaTrykutnyky povorot={-25} rysky={[1, 2, 0]} dugy={[0, 0, 1]} />
+
+  <span slot="rozviazok">Позначено сторони $AB$ і $BC$, а кут — $C$. Він не лежить між цими сторонами (між ними кут $B$). Перша ознака не виконується.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="8" pidkazka="Запиши відповідні вершини: A і M, B і K, C і N.">
+  $\triangle ABC = \triangle MKN$, $AB = 5$ см, $BC = 8$ см, $AC = 6$ см. Знайди $KN$.
+
+  <span slot="rozviazok">$K$ відповідає $B$, $N$ — $C$, тож $KN = BC = 8$ см.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="9" pidkazka="Спершу доведи, що трикутники рівні. Яка сторона відповідає MN?">
+  Знайди $MN$.
+
+  <DvaTrykutnyky povorot={30} rysky={[1, 0, 2]} dugy={[1, 0, 0]} pidpysySt1={[undefined, '9 см']} pidpysySt2={[undefined, '?']} />
+
+  <span slot="rozviazok">$AB = KM$, $AC = KN$, $\angle A = \angle K$ — за першою ознакою $\triangle ABC = \triangle KMN$. Тому $MN = BC = 9$ см.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="40" pidkazka="Трикутники AOC і BOD рівні. Який кут відповідає куту OAC?">
+  $O$ — середина відрізків $AB$ і $CD$, $\angle OAC = 40^\circ$. Знайди $\angle OBD$.
+
+  <Konfihuratsiia vyd="khrest" pidpysy={{ A: '40°', B: '?' }} />
+
+  <span slot="rozviazok">$AO = OB$, $CO = OD$, $\angle AOC = \angle BOD$ (вертикальні) — за першою ознакою $\triangle AOC = \triangle BOD$. Кут $OBD$ відповідає куту $OAC$: $40^\circ$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="15" pidkazka="Трикутники ABD і CBD рівні, тож CD = AD, а BD — спільна.">
+  $AB = CB = 5$ см, $\angle ABD = \angle CBD$, $AD = 4$ см, $BD = 6$ см. Знайди периметр трикутника $CBD$.
+
+  <span slot="rozviazok">За першою ознакою $\triangle ABD = \triangle CBD$, тож $CD = AD = 4$ см. Периметр $CBD$: $5 + 4 + 6 = 15$ см.</span>
+</Zavdannia>
+
+### Змішане повторення
+
+<Zavdannia vidpovid="50" pidkazka="Від 180° відніми два відомі кути.">
+  $\angle A = 35^\circ$, $\angle B = 95^\circ$. Знайди $\angle C$ трикутника $ABC$.
+
+  <span slot="rozviazok">[Сума кутів трикутника](/math/7-klas/suma-kutiv-trykutnyka/): $180^\circ - 35^\circ - 95^\circ = 50^\circ$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="62" pidkazka="Бісектриса ділить кут навпіл.">
+  $AL$ — бісектриса трикутника $ABC$, $\angle BAL = 31^\circ$. Знайди $\angle BAC$.
+
+  <span slot="rozviazok">[Бісектриса](/math/7-klas/elementy-trykutnyka/): $2 \cdot 31^\circ = 62^\circ$.</span>
+</Zavdannia>
+
+## Потренуйся
+
+Тренажер щоразу складає нові завдання, тож тренуватися можна скільки завгодно. Обери рівень і розв'яжи 10 завдань.
+
+<Trenazher />
+
+## Пов'язані теми
+
+- [Рівні фігури](/math/5-klas/rivni-fihury/)
+- [Вертикальні кути. Кут між прямими](/math/7-klas/vertykalni-kuty/)
+- [Трикутник і його елементи. Медіана, бісектриса, висота](/math/7-klas/elementy-trykutnyka/)
+- [Сума кутів трикутника. Зовнішній кут](/math/7-klas/suma-kutiv-trykutnyka/)

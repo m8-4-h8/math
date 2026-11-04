@@ -1,0 +1,19 @@
+---
+// Типові малюнки до ознак рівності трикутників (той самий малюнок, що в тренажерах, src/trenazhery/trykutnyky.ts):
+//   <Konfihuratsiia vyd="khrest" pidpysy={{ AC: '7 см', BD: '?' }} />   — AB і CD перетинаються в спільній середині O
+//   <Konfihuratsiia vyd="spilna" pidpysy={{ AD: '6 см', CD: '?' }} />   — спільна сторона BD, AB = CB, BD — бісектриса кута B
+import { konfihuratsiia, type Konfihuratsiia } from '../trenazhery/trykutnyky.ts';
+
+interface Props {
+  vyd: Konfihuratsiia;
+  pidpysy?: Record<string, string>;
+  pidpys?: string;
+}
+const { vyd, pidpysy = {}, pidpys } = Astro.props;
+const svg = konfihuratsiia(vyd, pidpysy);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
