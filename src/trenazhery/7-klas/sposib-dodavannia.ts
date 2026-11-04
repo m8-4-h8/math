@@ -1,6 +1,6 @@
 // Спосіб додавання: коефіцієнти при одній змінній протилежні — додаємо рівняння, однакові — віднімаємо;
 // якщо ні — множимо одне (або обидва) рівняння на число, і праву частину теж.
-import { ch, nsk, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { ch, nsk, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 import { tvd } from '../alhebra.ts';
 import { cherez, para, systema, type Rivniannia } from '../systemy.ts';
 
@@ -24,6 +24,7 @@ function protylezhni(r: Vypadok): TrenZavdannia {
   return {
     pytannia: `Знайди $${shukane}$: $${systema(r1, r2)}$`,
     vidpovid: ch(zaY ? x : y),
+    nevidome: `$${shukane}$`,
     pidkazka: `Коефіцієнти при ${zaY ? 'y' : 'x'} протилежні — просто додай рівняння.`,
     rozviazok: `${ch(sumaK)}${shukane} = ${ch(r1.c)} + ${tvd(r2.c)} = ${ch(r1.c + r2.c)}; ${shukane} = ${ch(r1.c + r2.c)} : ${tvd(sumaK)} = ${ch(zaY ? x : y)}`,
   };
@@ -63,7 +64,7 @@ function zMnozhenniam(r: Vypadok): TrenZavdannia {
           ? `Помнож перше рівняння на ${m1} — і праву частину теж: коефіцієнти при y стануть ±${s}.`
           : `Помнож перше на ${m1}, друге на ${m2} — при y стануть ±${s}.`;
     return {
-      pytannia: `Розв’яжи систему $${systema(r1, r2)}$. Відповідь запиши парою, наприклад (5; 1).`,
+      pytannia: `Розв’яжи систему $${systema(r1, r2)}$. Відповідь запиши парою, наприклад ${zrazok(ZRAZKY.para, para(x, y))}.`,
       vidpovid: para(x, y),
       pidkazka,
       rozviazok: `${pidkazka} Потім додай або відніми рівняння: x = ${ch(x)}; підстав у перше: y = ${ch(y)}. Перевірка: ${ch(r2.a)} · ${tvd(x)} + ${tvd(r2.b)} · ${tvd(y)} = ${ch(r2.c)} ✓`,

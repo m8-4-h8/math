@@ -1,5 +1,5 @@
 // Правильні й неправильні дроби, мішані числа: виділити цілу частину і записати неправильним дробом.
-import { nsd, tdrib, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { nsd, tdrib, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 // Нескоротний дріб n/d з n > d (n не ділиться на d).
 function nepravylnyi(r: Vypadok, maxTsila: number) {
@@ -25,10 +25,11 @@ function vyd(r: Vypadok): TrenZavdannia {
 
 function tsilaChastyna(r: Vypadok, maxTsila: number): TrenZavdannia {
   const { d, ost, tsila, n } = nepravylnyi(r, maxTsila);
+  const vidpovid = `${tsila} ${ost}/${d}`;
   return {
-    pytannia: 'Виділи цілу частину. Запиши мішане число, наприклад «2 1/3».',
+    pytannia: `Виділи цілу частину. Запиши мішане число, наприклад «${zrazok(ZRAZKY.mishane, vidpovid)}».`,
     vyraz: `$${tdrib(n, d)} =$`,
-    vidpovid: `${tsila} ${ost}/${d}`,
+    vidpovid,
     pidkazka: `Скільки разів ${d} вміщається в ${n}? Це ціла частина, а остача — новий чисельник.`,
     rozviazok: `${n} : ${d} = ${tsila} (ост. ${ost}), тож $${tdrib(n, d)} = ${tsila}${tdrib(ost, d)}$.`,
   };
@@ -45,7 +46,7 @@ function uNepravylnyi(r: Vypadok, maxTsila: number): TrenZavdannia {
         rozviazok: `${tsila} · ${d} + ${ost} = ${n}, тож $${tsila}${tdrib(ost, d)} = ${tdrib(n, d)}$.`,
       }
     : {
-        pytannia: 'Запиши неправильним дробом через риску, наприклад «7/2».',
+        pytannia: `Запиши неправильним дробом через риску, наприклад «${zrazok(['7/2', '9/4', '11/3', '13/5'], `${n}/${d}`)}».`,
         vyraz: `$${tsila}${tdrib(ost, d)} =$`,
         vidpovid: `${n}/${d}`,
         pidkazka: `Ціла частина ${tsila} — це ${tsila * d}/${d}. Додай ще ${ost}/${d}.`,

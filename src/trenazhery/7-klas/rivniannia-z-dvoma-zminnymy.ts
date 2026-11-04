@@ -27,6 +27,7 @@ function znaityY(r: Vypadok, shukaiemoY: boolean): TrenZavdannia {
   return {
     pytannia: `$${rivniannia(rv)}$. Знайди $${shukane}$, якщо $${vidome} = ${tz(vidomeZn)}$.`,
     vidpovid: ch(shukaneZn),
+    nevidome: `$${shukane}$`,
     pidkazka: `Підстав ${vidome} = ${ch(vidomeZn)}: ${ch(kVid)} · ${tvd(vidomeZn)} + ${tvd(kShuk)}${shukane} = ${ch(rv.c)}.`,
     rozviazok: `${ch(kShuk)}${shukane} = ${ch(rv.c)} − ${tvd(kVid * vidomeZn)} = ${ch(rv.c - kVid * vidomeZn)}; ${shukane} = ${ch(rv.c - kVid * vidomeZn)} : ${tvd(kShuk)} = ${ch(shukaneZn)}`,
   };

@@ -56,6 +56,7 @@ function sumaRiznytsia(r: Vypadok): TrenZavdannia {
   return {
     pytannia: `Знайди $${shukaiemoX ? 'x' : 'y'}$ у розв’язку системи $${systema({ a: 1, b: -1, c: x - y }, { a: 1, b: 1, c: x + y })}$.`,
     vidpovid: ch(shukaiemoX ? x : y),
+    nevidome: shukaiemoX ? '$x$' : '$y$',
     pidkazka: shukaiemoX ? 'Додай рівняння: y зникне.' : 'Відніми перше рівняння від другого: x зникне.',
     rozviazok: shukaiemoX
       ? `2x = ${tvd(x - y)} + ${tvd(x + y)} = ${ch(2 * x)}; x = ${ch(x)}`

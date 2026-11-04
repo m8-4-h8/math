@@ -1,6 +1,6 @@
 // Координатний промінь і шкала: координата точки за малюнком (ціна поділки 1, 2, 5, 10, 0,1, 1/n),
 // ціна поділки, відстань між точками, яка точка правіше.
-import { des, nsd, rivnyiDrib, tdrib, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { des, nsd, rivnyiDrib, tdrib, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 import { promin } from '../malunky.ts';
 
 const NAZVY = ['A', 'B', 'C', 'D', 'K', 'M', 'P'];
@@ -42,11 +42,13 @@ function drib(r: Vypadok): TrenZavdannia {
   while (n % d === 0) n = r.chyslo(1, dovzhyna - 1);
   const nazva = r.vybir(NAZVY);
   const [a, b] = [n / nsd(n, d), d / nsd(n, d)];
+  const vidpovid = `${a}/${b}`;
+  const perevirka = rivnyiDrib(n, d);
   return {
-    pytannia: `Яка координата точки ${nazva}? Запиши дробом через риску, наприклад 2/3.`,
+    pytannia: `Яка координата точки ${nazva}? Запиши дробом через риску, наприклад ${zrazok(ZRAZKY.drib, vidpovid, perevirka)}.`,
     malunok: promin(dovzhyna, d, (i) => String(i / d), [{ nazva, podilka: n }]),
-    vidpovid: `${a}/${b}`,
-    perevirka: rivnyiDrib(n, d),
+    vidpovid,
+    perevirka,
     pidkazka: `Одиничний відрізок поділено на ${d} рівних частин — кожна $${tdrib(1, d)}$.`,
     rozviazok: `${n} поділок по $${tdrib(1, d)}$ — це $${tdrib(n, d)}$.`,
   };

@@ -1,6 +1,6 @@
 // Відношення: частка двох чисел (у скільки разів одне більше за інше); скорочення відношення;
 // величини — в однакових одиницях; поділ числа у даному відношенні (спершу кількість частин).
-import { des, mnozh, nsd, skilky, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { des, mnozh, nsd, skilky, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 function chastka(r: Vypadok): TrenZavdannia {
   const b = r.chyslo(2, 12);
@@ -20,7 +20,7 @@ function skorotyty(r: Vypadok): TrenZavdannia {
     if (nsd(p, q) !== 1) continue;
     const k = r.chyslo(2, 9);
     return {
-      pytannia: 'Скороти відношення. Запиши через двокрапку, наприклад «2:3».',
+      pytannia: `Скороти відношення. Запиши через двокрапку, наприклад «${zrazok(ZRAZKY.vidnoshennia, `${p}:${q}`)}».`,
       vyraz: `$${p * k} : ${q * k}$`,
       vidpovid: `${p}:${q}`,
       pidkazka: `Поділи обидва числа на НСД(${p * k}; ${q * k}).`,

@@ -6,6 +6,7 @@
 //
 // Генератори запускаються і в браузері, і в автоперевірці (`npm test`) прямо через Node, тому:
 // імпорти — з розширенням `.ts`, типи — лише через `import type`, без enum і namespace.
+import { pravylno } from '../scripts/perevirka.ts';
 
 export type Riven = 1 | 2 | 3;
 
@@ -30,6 +31,11 @@ export interface TrenZavdannia {
   rozviazok?: string;
   /** Одиниці виміру біля поля: «см», «грн». */
   odynytsi?: string;
+  /**
+   * Що вписати в поле, якщо це значення змінної: «$k$». Тоді поле стоїть окремим рядком «k = [ ]».
+   * Для рівнянь у `vyraz` («$3x + 5 = 20$», «□ − 6 = 2») визначається саме — див. `shukane`.
+   */
+  nevidome?: string;
 }
 
 export interface Henerator {
@@ -197,6 +203,52 @@ export function neskorotnyiDrib(n: number, d: number) {
     const m = vvid.match(/(\d+)\s*\/\s*(\d+)\s*$/);
     return rivnyi(vvid) && (!m || nsd(Number(m[1]), Number(m[2])) === 1);
   };
+}
+
+// ——— Поле відповіді ———
+
+/**
+ * Що шукаємо, якщо завдання — рівність із невідомим. Тоді поле стоїть окремим рядком «x = [ ]»,
+ * а не одразу після «= 49», де його легко прийняти за місце для результату правої частини.
+ * Береться з `nevidome`, а якщо його нема — з `vyraz`: рівність, що не закінчується «=»,
+ * з віконцем □ або з однією буквою-змінною. Повертає «□», «x» або «$x$» (як записано рівняння).
+ */
+export function shukane(z: TrenZavdannia): string | undefined {
+  if (z.nevidome !== undefined) return z.nevidome || undefined;
+  if (!z.vyraz || z.varianty) return undefined;
+  const formula = z.vyraz.includes('$');
+  const v = z.vyraz.replace(/\$/g, '');
+  const chastyny = v.split('=');
+  if (chastyny.length < 2 || !/[^\s?…]/.test(chastyny.at(-1)!)) return undefined;
+  if (/□|\\square/.test(v)) return formula ? '$\\square$' : '□';
+  const bukvy = new Set(v.replace(/\\[a-z]+/gi, '').match(/(?<!\p{L})[a-z](?!\p{L})/gu) || []);
+  if (bukvy.size !== 1) return undefined;
+  const [b] = bukvy;
+  return formula ? `$${b}$` : b;
+}
+
+/** Готові зразки запису для `zrazok`. Числа в різних зразках одного списку не повторюються. */
+export const ZRAZKY = {
+  drib: ['2/3', '4/5', '1/6', '7/9'],
+  mishane: ['2 1/3', '4 5/6', '7 8/9', '10 11/12'],
+  vidnoshennia: ['2:3', '4:5', '1:6', '7:9'],
+  para: ['(5; 1)', '(2; 4)', '(3; 6)', '(7; 8)'],
+  koordynaty: ['−3; 2', '4; −1', '−5; 6', '7; −8'],
+} as const;
+
+/**
+ * Зразок запису для умови («Запиши дріб через риску, наприклад 4/5»), що не підказує відповідь.
+ * Бере перший зі зразків, де немає жодного числа з відповіді; якщо такого нема — перший, який
+ * тренажер не зарахував би як відповідь. Приклад, що збігається з відповіддю, — це готова відповідь.
+ */
+export function zrazok(kandydaty: readonly string[], vidpovid: TrenZavdannia['vidpovid'], perevirka?: (vvid: string) => boolean) {
+  const vidpovidi = (Array.isArray(vidpovid) ? vidpovid : [vidpovid]).map(String);
+  const chysla = (s: string) => s.match(/\d+/g) || [];
+  const zaboroneni = new Set(vidpovidi.flatMap(chysla));
+  const mozhna = kandydaty.filter((k) => !pravylno(k, vidpovidi) && !perevirka?.(k));
+  const z = mozhna.find((k) => !chysla(k).some((c) => zaboroneni.has(c))) ?? mozhna[0];
+  if (z === undefined) throw new Error(`zrazok: усі зразки збігаються з відповіддю «${vidpovidi[0]}»`);
+  return z;
 }
 
 /** Випадковий нескоротний дріб a/b із заданим знаменником (a < b). */

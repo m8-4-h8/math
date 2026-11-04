@@ -7,7 +7,8 @@
 // • завдань достатньо різних, щоб гра з 10 прикладів не повторювалась;
 // • там, де це можливо, відповідь перераховується НЕЗАЛЕЖНО від генератора: приклад «… =» обчислюємо,
 //   у рівність з □ чи x підставляємо відповідь, у порівняння «a □ b» — знак;
-// • кожна рівність у розв'язку й підказці правильна («38 + 10 = 48»), а остання дає відповідь.
+// • кожна рівність у розв'язку й підказці правильна («38 + 10 = 48»), а остання дає відповідь;
+// • зразок запису в умові («наприклад 2/3») не збігається з відповіддю, а в рівнянні видно, що шукаємо («x = [ ]»).
 //
 //   npm test                                  — перевірити все
 //   npm test -- 5-klas/dodavannia-drobiv      — лише ці генератори, з прикладами завдань
@@ -15,7 +16,7 @@ import { readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import katex from 'katex';
 import { pravylno } from '../src/scripts/perevirka.ts';
-import { stvorytyVypadok } from '../src/trenazhery/dopomoha.ts';
+import { shukane, stvorytyVypadok } from '../src/trenazhery/dopomoha.ts';
 import type { Henerator, Riven, TrenZavdannia } from '../src/trenazhery/dopomoha.ts';
 
 const KORIN = fileURLToPath(new URL('..', import.meta.url));
@@ -314,6 +315,19 @@ function perevirytyZavdannia(z: TrenZavdannia): { pomylky: string[]; nezalezhna:
   if (chyslo && chyslo[1] === 1n) {
     const susid = String(chyslo[0] + 1n).replace('-', '−');
     if (pryimaie(susid)) pomylky.push(`приймається і неправильна відповідь «${susid}» (правильна «${vidpovidi[0]}»)`);
+  }
+  // Зразок запису в умові («Запиши дріб через риску, наприклад 2/3») не може бути самою відповіддю.
+  for (const t of [z.pytannia, z.pidkazka]) {
+    for (const [, lapky, slovo] of (t || '').matchAll(/наприклад,?\s+(?:«([^»]+)»|(\S+?))(?=[.,;:!?]?(?:\s|$))/g)) {
+      const pryklad = (lapky ?? slovo).replace(/\$/g, '');
+      if (pryimaie(pryklad)) pomylky.push(`зразок «${pryklad}» в умові — це і є відповідь «${vidpovidi[0]}» (візьми zrazok())`);
+    }
+  }
+  // Рівність із невідомим («69 − 4 · x = 49»): біля поля має стояти «x =», інакше незрозуміло, що вписати.
+  if (!z.varianty && z.vyraz && z.nevidome === undefined) {
+    const prava = z.vyraz.replace(/\$/g, '').split('=').slice(1).at(-1);
+    if (prava !== undefined && /[^\s?…]/.test(prava) && !shukane(z))
+      pomylky.push(`рівність «${z.vyraz}» без підпису поля: незрозуміло, що вписати — додай nevidome`);
   }
   if (z.varianty) {
     const v = z.varianty.map(String);

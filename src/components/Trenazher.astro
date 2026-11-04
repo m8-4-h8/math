@@ -98,6 +98,7 @@ const RIVNI = [
     <form class="tren-forma" autocomplete="off">
       <label class="tren-vyraz" for=""></label>
       <span class="tren-vvid">
+        <span class="tren-shukane" aria-hidden="true" hidden></span>
         <input class="tren-pole" type="text" aria-label="Відповідь" />
         <span class="tren-odynytsi"></span>
       </span>
@@ -127,7 +128,7 @@ const RIVNI = [
 <script>
   import { salut } from '../scripts/zirky';
   import { pravylno } from '../scripts/perevirka';
-  import { stvorytyVypadok, type Henerator, type Riven, type TrenZavdannia } from '../trenazhery/dopomoha';
+  import { shukane, stvorytyVypadok, type Henerator, type Riven, type TrenZavdannia } from '../trenazhery/dopomoha';
 
   const KILKIST = 10;
   // Кожен генератор — окремий маленький файл, який завантажується лише тоді, коли потрібен.
@@ -157,6 +158,11 @@ const RIVNI = [
   }
   const tekstyZavdannia = (z: TrenZavdannia) =>
     [z.pytannia, z.vyraz, z.rozviazok, z.pidkazka, z.pokaz, ...(z.varianty || []).map(String)].filter(Boolean).join(' ');
+  // «Відповідь: x = 7» — якщо шукали змінну (для віконця □ просто «Відповідь: 7»).
+  const pidpysVidpovidi = (z: TrenZavdannia) => {
+    const s = shukane(z);
+    return s && !/□|square/.test(s) ? html(s) + ' = ' : '';
+  };
 
   function chytaty(kluch: string) {
     try {
@@ -206,6 +212,7 @@ const RIVNI = [
       const forma = $<HTMLFormElement>('.tren-forma');
       const pole = $<HTMLInputElement>('.tren-pole');
       const odynytsiEl = $('.tren-odynytsi');
+      const shukaneEl = $('.tren-shukane');
       const variantyEl = $('.tren-varianty');
       const vidhuk = $('.tren-vidhuk');
       const rozviazokEl = $('.tren-rozviazok');
@@ -270,7 +277,8 @@ const RIVNI = [
       const vidkrytyRozviazok = (zVidpovid: boolean) => {
         const { z, vidpovidi } = kroky[krok];
         const chastyny = [];
-        if (zVidpovid) chastyny.push(`<strong>Відповідь:</strong> ${html(z.pokaz ?? rozbyty(vidpovidi[0]))}${odynytsi(z.odynytsi)}`);
+        if (zVidpovid)
+          chastyny.push(`<strong>Відповідь:</strong> ${pidpysVidpovidi(z)}${html(z.pokaz ?? rozbyty(vidpovidi[0]))}${odynytsi(z.odynytsi)}`);
         if (z.rozviazok) chastyny.push(html(z.rozviazok));
         rozviazokEl.innerHTML = chastyny.join('<br />');
         rozviazokEl.hidden = !chastyny.length;
@@ -320,6 +328,14 @@ const RIVNI = [
           pole.inputMode = /^\d+$/.test(persha) ? 'numeric' : /^\d+[.,]\d+$/.test(persha) ? 'decimal' : 'text';
           odynytsiEl.textContent = z.odynytsi || '';
           odynytsiEl.hidden = !z.odynytsi;
+          // Рівняння «69 − 4 · x = 49»: поле окремим рядком «x = [ ]», а не одразу після «= 49»,
+          // де його легко прийняти за місце для відповіді на приклад.
+          const shuk = shukane(z);
+          forma.classList.toggle('rivniannia', !!shuk);
+          shukaneEl.innerHTML = shuk ? html(shuk) + ' =' : '';
+          shukaneEl.hidden = !shuk;
+          const nazva = shuk?.replace(/\$/g, '').replace(/□|\\square/, 'віконце');
+          pole.setAttribute('aria-label', nazva ? `Відповідь: ${nazva} =` : 'Відповідь');
           pole.blur();
           pole.focus({ preventScroll: true });
         }
@@ -450,7 +466,7 @@ const RIVNI = [
         rozbir.querySelector('ol')!.innerHTML = pomylky
           .map(({ tema, z, vidpovidi }) => {
             const umova = (z.malunok || '') + [z.pytannia, z.vyraz].filter(Boolean).map((t) => html(t!)).join(' ');
-            const vidpovid = html(z.pokaz ?? rozbyty(vidpovidi[0])) + odynytsi(z.odynytsi);
+            const vidpovid = pidpysVidpovidi(z) + html(z.pokaz ?? rozbyty(vidpovidi[0])) + odynytsi(z.odynytsi);
             const posylannia = temy.length > 1 ? ` <a href="${tema.shliakh}">Повторити тему «${ekran(tema.nazva)}» →</a>` : '';
             return `<li><div>${umova}</div><div><strong>Відповідь:</strong> ${vidpovid}</div>${
               z.rozviazok ? `<div class="tren-poyasnennia">${html(z.rozviazok)}</div>` : ''
@@ -655,6 +671,19 @@ const RIVNI = [
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+  }
+  /* Рівняння — окремим рядком, а під ним «x = [ ]». */
+  .tren-forma.rivniannia .tren-vyraz {
+    flex-basis: 100%;
+  }
+  .tren-shukane {
+    font-size: clamp(1.5rem, 6vw, 2.25rem);
+    font-weight: 800;
+    color: var(--sl-color-white);
+    white-space: nowrap;
+  }
+  .tren-shukane :global(.katex) {
+    font-size: 1.1em;
   }
   .tren-odynytsi {
     font-size: 1.3rem;

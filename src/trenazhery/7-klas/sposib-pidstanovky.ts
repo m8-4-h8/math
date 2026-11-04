@@ -1,6 +1,6 @@
 // Спосіб підстановки: з одного рівняння виражаємо змінну (зручно там, де коефіцієнт 1 або −1) і
 // підставляємо в друге — у дужках; знаходимо одну змінну, потім другу.
-import { ch, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { ch, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 import { tex, tvd } from '../alhebra.ts';
 import { cherez, para, rivniannia, systema } from '../systemy.ts';
 
@@ -15,6 +15,7 @@ function vyrazheno(r: Vypadok): TrenZavdannia {
   return {
     pytannia: `Знайди $${shukaiemoX ? 'x' : 'y'}$: $\\begin{cases} ${pershe} \\\\ ${rivniannia(r2)} \\end{cases}$`,
     vidpovid: ch(shukaiemoX ? x : y),
+    nevidome: shukaiemoX ? '$x$' : '$y$',
     pidkazka: `y уже виражено: підстав (${tex([m, k]).replace(/-/g, '−')}) замість y у друге рівняння.`,
     rozviazok: `${ch(r2.a)}x + ${tvd(r2.b)} · (${tex([m, k]).replace(/-/g, '−')}) = ${ch(r2.c)}; ${ch(r2.a + r2.b * k)}x = ${ch(r2.c - r2.b * m)}; x = ${ch(x)}${
       shukaiemoX ? '' : `; y = ${ch(k)} · ${tvd(x)} + ${tvd(m)} = ${ch(y)}`
@@ -36,9 +37,10 @@ function vyrazyty(r: Vypadok, paroiu: boolean): TrenZavdannia {
     : `З першого: y = ${r1.b === 1 ? '' : '−('}${ch(r1.c)} ${r1.a < 0 ? '+' : '−'} ${Math.abs(r1.a) === 1 ? '' : Math.abs(r1.a)}x${r1.b === 1 ? '' : ')'}`;
   return {
     pytannia: paroiu
-      ? `Розв’яжи систему $${systema(r1, r2)}$. Відповідь запиши парою, наприклад (5; 1).`
+      ? `Розв’яжи систему $${systema(r1, r2)}$. Відповідь запиши парою, наприклад ${zrazok(ZRAZKY.para, para(x, y))}.`
       : `Знайди $${shukaiemoX ? 'x' : 'y'}$: $${systema(r1, r2)}$`,
     vidpovid: paroiu ? para(x, y) : ch(shukaiemoX ? x : y),
+    nevidome: paroiu ? undefined : shukaiemoX ? '$x$' : '$y$',
     pidkazka: `${yak} — і підстав у друге рівняння.`,
     rozviazok: `${yak}. Після підстановки: ${odynychnyiX ? `y = ${ch(y)}, тоді x = ${ch(x)}` : `x = ${ch(x)}, тоді y = ${ch(y)}`}. Перевірка в другому: ${ch(r2.a)} · ${tvd(x)} + ${tvd(r2.b)} · ${tvd(y)} = ${ch(r2.c)} ✓`,
   };

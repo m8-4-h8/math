@@ -1,5 +1,5 @@
 // Додавання і віднімання дробів з однаковими знаменниками та мішаних чисел; 1 − дріб; позичаємо ціле.
-import { nsd, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { nsd, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 const mishane = (t: number, o: number, d: number) => (o ? `${t}${tdrib(o, d)}` : `${t}`);
 
@@ -45,7 +45,7 @@ function mishaniPlius(r: Vypadok): TrenZavdannia {
   const sumaO = o1 + o2;
   const vsoho = (t1 + t2) * d + sumaO;
   return {
-    pytannia: 'Обчисли. Відповідь запиши мішаним числом, наприклад «5 1/3».',
+    pytannia: `Обчисли. Відповідь запиши мішаним числом, наприклад «${zrazok(ZRAZKY.mishane, vidpovidDrib(vsoho, d), rivnyiDrib(vsoho, d))}».`,
     vyraz: `$${mishane(t1, o1, d)} + ${mishane(t2, o2, d)} =$`,
     vidpovid: vidpovidDrib(vsoho, d).slice(-1),
     perevirka: rivnyiDrib(vsoho, d),
