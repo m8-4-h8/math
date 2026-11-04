@@ -1,6 +1,6 @@
 // Скорочення дробів: основна властивість дробу (множимо чи ділимо чисельник і знаменник на те саме число);
 // скорочення на спільний дільник і одразу на НСД; пропущений член рівних дробів; нескоротний дріб.
-import { nsd, tdrib, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { nsd, tdrib, ZRAZKY, rivnyiDrib, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 /** Нескоротний дріб a/b з b від 2 до maxB. */
 function neskorotnyi(r: Vypadok, maxB: number) {
@@ -15,7 +15,7 @@ function skorotyty(r: Vypadok, mnozhnyky: number[], maxB: number): TrenZavdannia
   const [a, b] = neskorotnyi(r, maxB);
   const k = r.vybir(mnozhnyky);
   return {
-    pytannia: 'Скороти дріб до нескоротного. Запиши через риску, наприклад 2/3.',
+    pytannia: `Скороти дріб до нескоротного. Запиши через риску, наприклад ${zrazok(ZRAZKY.drib, `${a}/${b}`, rivnyiDrib(a, b))}.`,
     vyraz: `$${tdrib(a * k, b * k)} =$`,
     vidpovid: `${a}/${b}`,
     pidkazka: k <= 5 ? `На яке число діляться і ${a * k}, і ${b * k}?` : `Знайди НСД(${a * k}; ${b * k}) і поділи на нього обидва числа.`,

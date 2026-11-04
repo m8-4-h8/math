@@ -44,6 +44,7 @@ function kZaTochkoiu(r: Vypadok): TrenZavdannia {
     return {
       pytannia: `Пряма $y = kx ${b < 0 ? '-' : '+'} ${Math.abs(b)}$ проходить через точку $(${tz(x)};\\, ${tz(y)})$. Знайди $k$.`,
       vidpovid: ch(k),
+      nevidome: '$k$',
       pidkazka: `Підстав x = ${ch(x)}, y = ${ch(y)}: ${ch(y)} = k · ${tvd(x)} ${b < 0 ? '−' : '+'} ${Math.abs(b)}.`,
       rozviazok: `k · ${tvd(x)} = ${ch(y)} − ${tvd(b)} = ${ch(y - b)}; k = ${ch(y - b)} : ${tvd(x)} = ${ch(k)}`,
     };
@@ -51,6 +52,7 @@ function kZaTochkoiu(r: Vypadok): TrenZavdannia {
   return {
     pytannia: `Пряма $y = ${k === 1 ? '' : k === -1 ? '-' : tz(k)}x + b$ проходить через точку $(${tz(x)};\\, ${tz(y)})$. Знайди $b$.`,
     vidpovid: ch(b),
+    nevidome: '$b$',
     pidkazka: `Підстав x = ${ch(x)}, y = ${ch(y)}.`,
     rozviazok: `b = ${ch(y)} − ${tvd(k)} · ${tvd(x)} = ${ch(y)} − ${tvd(k * x)} = ${ch(b)}`,
   };
@@ -63,6 +65,7 @@ function dviTochky(r: Vypadok): TrenZavdannia {
   return {
     pytannia: `Пряма $y = kx + b$ проходить через точки $(0;\\, ${tz(b)})$ і $(${tz(x2)};\\, ${tz(y2)})$. Знайди $k$.`,
     vidpovid: ch(k),
+    nevidome: '$k$',
     pidkazka: `Точка (0; ${ch(b)}) на осі y, тож b = ${ch(b)}. Тоді ${ch(y2)} = k · ${tvd(x2)} + ${tvd(b)}.`,
     rozviazok: `b = ${ch(b)}; k · ${tvd(x2)} = ${ch(y2)} − ${tvd(b)} = ${ch(y2 - b)}; k = ${ch(y2 - b)} : ${tvd(x2)} = ${ch(k)}`,
   };

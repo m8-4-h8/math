@@ -37,10 +37,12 @@ function oblast(r: Vypadok): TrenZavdannia {
   const a = r.krim(-9, 9, [0]);
   const k = r.krim(-12, 12, [0]);
   const typ = r.chyslo(0, 1);
-  const znamennyk = typ === 0 ? `x ${a < 0 ? '+' : '-'} ${Math.abs(a)}` : `${a < 0 ? '' : '-'}x ${a < 0 ? '-' : '+'} ${Math.abs(a)}`;
+  // Знаменник x − a або −x + a: нуль саме при x = a.
+  const znamennyk = typ === 0 ? `x ${a < 0 ? '+' : '-'} ${Math.abs(a)}` : `-x ${a < 0 ? '-' : '+'} ${Math.abs(a)}`;
   return {
     pytannia: `Яке значення $x$ не входить в область визначення функції $y = \\dfrac{${k}}{${znamennyk}}$?`,
     vidpovid: ch(a),
+    nevidome: '$x$',
     pidkazka: 'На нуль ділити не можна. При якому x знаменник стане нулем?',
     rozviazok: `${znamennyk.replace(/-/g, '−')} = 0 при x = ${ch(a)}.`,
   };

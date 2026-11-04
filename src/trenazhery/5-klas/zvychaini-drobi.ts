@@ -1,5 +1,5 @@
 // Звичайні дроби: дріб за малюнком, чисельник і знаменник, порівняння, рівні дроби, яка частина цілого.
-import { mnozh, nsd, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { mnozh, nsd, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 import { smuzhka } from '../malunky.ts';
 
 function zaMalunkom(r: Vypadok): TrenZavdannia {
@@ -7,7 +7,7 @@ function zaMalunkom(r: Vypadok): TrenZavdannia {
   const n = r.chyslo(1, d - 1);
   return r.shans(0.7)
     ? {
-        pytannia: 'Яку частину смужки зафарбовано? Запиши дріб через риску, наприклад 2/5.',
+        pytannia: `Яку частину смужки зафарбовано? Запиши дріб через риску, наприклад ${zrazok(ZRAZKY.drib, `${n}/${d}`, rivnyiDrib(n, d))}.`,
         malunok: smuzhka(n, d),
         vidpovid: `${n}/${d}`,
         perevirka: rivnyiDrib(n, d),

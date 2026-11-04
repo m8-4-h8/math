@@ -1,6 +1,6 @@
 // Закони множення: переставний і сполучний (шукаємо пари 4 · 25, 2 · 5, 8 · 125), розподільний —
 // розкриваємо дужки (6 · 51 = 6 · 50 + 6) і виносимо спільний множник (29 · 64 + 29 · 36 = 29 · 100).
-import { ch, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { ch, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 const PARY = [
   [2, 5, 10],
@@ -64,11 +64,13 @@ function sproshchennia(r: Vypadok): TrenZavdannia {
   const minus = r.shans() && a !== b;
   const [p, q] = minus ? [Math.max(a, b), Math.min(a, b)] : [a, b];
   const k = minus ? p - q : p + q;
+  const vidpovid = `${k}x`;
+  const perevirka = (v: string) => v.replace(/х/gi, 'x').replace(/[\s·*]/g, '').toLowerCase() === vidpovid;
   return {
-    pytannia: 'Спрости вираз. Запиши відповідь, наприклад «12x».',
+    pytannia: `Спрости вираз. Запиши відповідь числом з буквою, наприклад «${zrazok(['5x', '3x', '7x'], vidpovid, perevirka)}».`,
     vyraz: `${p}x ${minus ? '−' : '+'} ${q}x =`,
-    vidpovid: `${k}x`,
-    perevirka: (v) => v.replace(/х/gi, 'x').replace(/[\s·*]/g, '').toLowerCase() === `${k}x`,
+    vidpovid,
+    perevirka,
     pidkazka: `Винеси x за дужки: (${p} ${minus ? '−' : '+'} ${q}) · x.`,
     rozviazok: `(${p} ${minus ? '−' : '+'} ${q}) · x = ${k}x`,
   };

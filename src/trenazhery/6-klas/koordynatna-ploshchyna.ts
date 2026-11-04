@@ -1,6 +1,6 @@
 // Координатна площина: точка (x; y) — спершу по горизонталі, потім по вертикалі; чверті за знаками
 // координат; точки на осях; абсциса й ордината; симетричні точки.
-import { ch, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { ch, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 import { ploshchyna } from '../malunky.ts';
 
 const NAZVY = ['A', 'B', 'C', 'D', 'K', 'M', 'N', 'P'];
@@ -38,7 +38,7 @@ function zaMalunkom(r: Vypadok): TrenZavdannia {
   if (x === 0 && y === 0) return zaMalunkom(r);
   const nazva = r.vybir(NAZVY);
   return {
-    pytannia: `Які координати точки ${nazva}? Запиши через крапку з комою, наприклад «−3; 2».`,
+    pytannia: `Які координати точки ${nazva}? Запиши через крапку з комою, наприклад «${zrazok(ZRAZKY.koordynaty, para(x, y))}».`,
     malunok: ploshchyna([{ nazva, x, y }]),
     vidpovid: para(x, y),
     pidkazka: 'Спершу порахуй клітинки по горизонталі від нуля (x), потім — по вертикалі (y).',

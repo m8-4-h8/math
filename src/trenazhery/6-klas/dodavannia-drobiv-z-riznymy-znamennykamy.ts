@@ -1,6 +1,6 @@
 // Додавання і віднімання дробів з різними знаменниками: спільний знаменник (НСК), додаткові множники,
 // скорочення відповіді; мішані числа (цілі окремо, дробові окремо; позичаємо одиницю).
-import { nsd, nsk, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+import { nsd, nsk, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 function neskorotnyi(r: Vypadok, b: number) {
   for (;;) {
@@ -64,7 +64,7 @@ function mishani(r: Vypadok): TrenZavdannia {
     const zn = plius ? '+' : '-';
     const pozychaiemo = !plius && x < y;
     return {
-      pytannia: 'Обчисли. Відповідь запиши мішаним числом, наприклад «3 1/6».',
+      pytannia: `Обчисли. Відповідь запиши мішаним числом, наприклад «${zrazok(ZRAZKY.mishane, vidpovidDrib(vsoho, s), rivnyiDrib(vsoho, s))}».`,
       vyraz: `$${mishane(t1, a, b)} ${zn} ${mishane(t2, c, d)} =$`,
       vidpovid: vidpovidDrib(vsoho, s).slice(-1),
       pokaz: `$${tvidpovidDrib(vsoho, s)}$`,
