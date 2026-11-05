@@ -3,7 +3,7 @@
 // Повертає SVG-рядок: його вставляють і компонент KoloElementy, і тренажери (поле `malunok`).
 // Невідоме підписуємо «?», тож малюнок не видає відповідь.
 // Файл не є генератором: генератори лежать у `<N>-klas/`.
-import { type P, duga, litera, napys, priamyi, pidpysStorony, rysky, svg, tochka, vidrizok } from './trykutnyky.ts';
+import { type P, duga, kontur, litera, napys, priamyi, pidpysStorony, proektsiia, rysky, svg, tochka, vidrizok } from './trykutnyky.ts';
 
 const f = (v: number) => v.toFixed(1);
 const rad = (g: number) => (g * Math.PI) / 180;
@@ -51,6 +51,19 @@ export interface KoloOpts {
   literyKut?: Record<string, number>;
   /** Зафарбувати круг. */
   kruh?: boolean;
+  /** Без кола — лише точки й відрізки (серединний перпендикуляр, бісектриса кута). */
+  bezKola?: boolean;
+  /** Колір кола: 1 — синій (за замовчуванням), 3 — зелений (коли поруч синій трикутник). */
+  kolirKola?: number;
+  /** Многокутник (трикутник) через точки — синій контур із заливкою. */
+  mnohokutnyk?: string[];
+  /** Трикутник, описаний навколо кола: vershyny[i] — перетин дотичних у точках dotyku[i] і dotyku[i + 1]
+   *  (точки дотику йдуть проти годинникової стрілки, кути — у градусах). */
+  opysanyi?: { vershyny: [string, string, string]; dotyku: [string, string, string]; kuty: [number, number, number] };
+  /** Основа перпендикуляра: буква → [з якої точки, пряма через a, b]. */
+  proektsii?: Record<string, [string, string, string]>;
+  /** Промені: з a через b і далі на `dali` радіусів. */
+  promeni?: { a: string; b: string; dali?: number }[];
   W?: number;
   H?: number;
 }
@@ -58,7 +71,7 @@ export interface KoloOpts {
 export function kolo(o: KoloOpts = {}) {
   const W = o.W ?? 300;
   const H = o.H ?? 220;
-  const O = o.tsentr ?? 'O';
+  const O = o.tsentr ?? (o.bezKola ? '' : 'O');
   const pt: Record<string, P> = { [O || '_O']: [0, 0] };
   const naK = new Set<string>();
   for (const [l, g] of Object.entries(o.naKoli ?? {})) {
@@ -75,7 +88,21 @@ export function kolo(o: KoloOpts = {}) {
       naK.add(l);
     });
   }
+  const op = o.opysanyi;
+  if (op) {
+    op.dotyku.forEach((l, i) => {
+      pt[l] = naKoli(op.kuty[i]);
+      naK.add(l);
+    });
+    op.vershyny.forEach((l, i) => {
+      const [g1, g2] = [op.kuty[i], op.kuty[(i + 1) % 3]];
+      const rizn = (((g2 - g1) % 360) + 360) % 360; // дуга між точками дотику проти годинникової стрілки
+      const d = 1 / Math.cos(rad(rizn / 2));
+      pt[l] = [d * Math.cos(rad(g1 + rizn / 2)), d * Math.sin(rad(g1 + rizn / 2))];
+    });
+  }
   for (const [l, [a, b]] of Object.entries(o.serednia ?? {})) pt[l] = [(pt[a][0] + pt[b][0]) / 2, (pt[a][1] + pt[b][1]) / 2];
+  for (const [l, [x, a, b]] of Object.entries(o.proektsii ?? {})) pt[l] = proektsiia(pt[x], pt[a], pt[b]);
   // Дотичні: допоміжні точки «дот<буква>» по обидва боки від точки дотику.
   const liniiDotychnykh: [P, P][] = [];
   for (const l of [...(o.dotychni ?? []), ...(z ? z.dotyku : [])]) {
@@ -90,6 +117,11 @@ export function kolo(o: KoloOpts = {}) {
     const [ux, uy] = [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
     return [[p[0] - ux * dali, p[1] - uy * dali], [q[0] + ux * dali, q[1] + uy * dali]];
   });
+  for (const { a, b, dali = 0.6 } of o.promeni ?? []) {
+    const [p, q] = [pt[a], pt[b]];
+    const l = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+    liniiPriamykh.push([p, [q[0] + ((q[0] - p[0]) / l) * dali, q[1] + ((q[1] - p[1]) / l) * dali]]);
+  }
   if (z) {
     // Дотичні з зовнішньої точки — трохи далі за точку дотику.
     for (const l of z.dotyku) {
@@ -99,7 +131,7 @@ export function kolo(o: KoloOpts = {}) {
     }
   }
   // Масштаб: коло, видимі точки й лінії вміщаємо в рамку з полями.
-  const vsi: P[] = [[-1, -1], [1, 1], ...Object.entries(pt).filter(([l]) => !l.startsWith('дот')).map(([, p]) => p), ...liniiDotychnykh.flat(), ...liniiPriamykh.flat()];
+  const vsi: P[] = [...(o.bezKola ? [] : ([[-1, -1], [1, 1]] as P[])), ...Object.entries(pt).filter(([l]) => !l.startsWith('дот')).map(([, p]) => p), ...liniiDotychnykh.flat(), ...liniiPriamykh.flat()];
   const xs = vsi.map((p) => p[0]);
   const ys = vsi.map((p) => p[1]);
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
@@ -111,9 +143,15 @@ export function kolo(o: KoloOpts = {}) {
   const M: Record<string, P> = Object.fromEntries(Object.entries(pt).map(([l, p]) => [l, m(p)]));
   const C = M[O || '_O'];
 
-  let tilo = `<circle cx="${f(C[0])}" cy="${f(C[1])}" r="${f(s)}" fill="var(--ill-1)" fill-opacity="${o.kruh ? 0.18 : 0.06}" stroke="var(--ill-1)" stroke-width="2.5"/>`;
+  const kk = `var(--ill-${o.kolirKola ?? 1})`;
+  let tilo = '';
+  const bahato = o.mnohokutnyk ?? op?.vershyny;
+  if (bahato) tilo += kontur(bahato.map((l) => M[l]), 1);
+  if (!o.bezKola) tilo += `<circle cx="${f(C[0])}" cy="${f(C[1])}" r="${f(s)}" fill="${kk}" fill-opacity="${o.kruh ? 0.18 : bahato ? 0 : 0.06}" stroke="${kk}" stroke-width="2.5"/>`;
   for (const [p, q] of [...liniiDotychnykh, ...liniiPriamykh]) tilo += vidrizok(m(p), m(q), { tovshch: 2 });
-  const opys: string[] = [O ? `Коло з центром ${O}` : 'Коло'];
+  const opys: string[] = o.bezKola ? [] : [O ? `Коло з центром ${O}` : 'Коло'];
+  if (o.mnohokutnyk) opys.push(`${o.mnohokutnyk.length === 3 ? 'трикутник' : 'многокутник'} ${o.mnohokutnyk.join('')}${o.bezKola ? '' : ', вершини на колі'}`);
+  if (op) opys.push(`трикутник ${op.vershyny.join('')} описано навколо кола, точки дотику ${op.dotyku.join(', ')}`);
   const vidomi: string[] = [];
   for (const v of o.vidrizky ?? []) {
     tilo += vidrizok(M[v.a], M[v.b], { k: v.k ?? 0, shtrykh: v.shtrykh });
@@ -158,7 +196,7 @@ export function kolo(o: KoloOpts = {}) {
   if (vv.length) opys.push(`проведено ${vv.join(', ')}`);
   if (o.priamiKuty?.length) opys.push(`прямі кути при точках ${o.priamiKuty.map((k) => k[0]).join(', ')}`);
   if (vidomi.length) opys.push(vidomi.join(', '));
-  return svg(W, H, opys.join('; '), tilo);
+  return svg(W, H, opys.join('; ') || 'Малюнок', tilo);
 }
 
 /** Пряма і коло: три випадки поруч — d < r (дві спільні точки), d = r (одна), d > r (жодної). */
@@ -185,4 +223,33 @@ export function priamaIKolo(vypadky: number[] = [0.55, 1, 1.45], pidpysy = ['d <
   });
   const opys = vypadky.map((d, i) => `${pidpysy[i]}: ${d < 1 ? 'пряма перетинає коло у двох точках' : d === 1 ? 'пряма дотикається до кола в одній точці' : 'пряма не має з колом спільних точок'}`);
   return svg(W, H, `Коло з центром O і пряма на відстані d від центра, три випадки. ${opys.join('; ')}`, tilo);
+}
+
+/** Два кола з центрами O₁ і O₂ (радіуси R і r, відстань між центрами d); пунктир O₁O₂ і підпис під малюнком. */
+export function dvaKola(R: number, r: number, d: number, pidpys = '') {
+  const W = 160;
+  const H = 130;
+  // Математичні координати: O₁ = (0, 0), O₂ = (d, 0).
+  const x0 = Math.min(-R, d - r);
+  const x1 = Math.max(R, d + r);
+  const vys = 2 * Math.max(R, r);
+  const s = Math.min((W - 24) / (x1 - x0), (H - 44) / vys);
+  const ox = (W - (x1 - x0) * s) / 2 - x0 * s;
+  const oy = (H - 22) / 2 + 2;
+  const O1: P = [ox, oy];
+  const O2: P = [ox + d * s, oy];
+  let tilo = `<circle cx="${f(O1[0])}" cy="${f(oy)}" r="${f(R * s)}" fill="var(--ill-1)" fill-opacity="0.06" stroke="var(--ill-1)" stroke-width="2.5"/>`;
+  tilo += `<circle cx="${f(O2[0])}" cy="${f(oy)}" r="${f(r * s)}" fill="var(--ill-3)" fill-opacity="0.08" stroke="var(--ill-3)" stroke-width="2.5"/>`;
+  if (d > 0) tilo += vidrizok(O1, O2, { k: 2, shtrykh: true, tovshch: 1.5 });
+  tilo += tochka(O1) + tochka(O2);
+  tilo += napys([O1[0] - 2, oy - 11], 'O₁', { k: 0, rozmir: 12, kursyv: true });
+  tilo += napys([O2[0] + 2, oy + 12], 'O₂', { k: 0, rozmir: 12, kursyv: true });
+  if (pidpys) tilo += napys([W / 2, H - 10], pidpys, { k: 0, rozmir: 12 });
+  const vyd =
+    d > R + r ? 'кола лежать одне поза одним, спільних точок немає'
+    : d === R + r ? 'кола дотикаються зовні в одній точці'
+    : d > Math.abs(R - r) ? 'кола перетинаються у двох точках'
+    : d === Math.abs(R - r) ? 'кола дотикаються зсередини в одній точці'
+    : 'менше коло лежить усередині більшого, спільних точок немає';
+  return svg(W, H, `Два кола з центрами O₁ і O₂: ${vyd}${pidpys ? ` (${pidpys})` : ''}`, tilo);
 }
