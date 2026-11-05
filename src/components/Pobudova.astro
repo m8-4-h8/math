@@ -1,0 +1,24 @@
+---
+// Задачі на побудову циркулем і лінійкою: дуги циркуля помаранчеві, побудоване — зелене. `krok` (1, 2, 3) показує
+// лише перші кроки, тож побудову можна розкласти покроково в <Ryad> (з ramka={false}). Малюнок той самий, що в
+// тренажерах (src/trenazhery/pobudovy.ts).
+//   <Pobudova vyd="serednia" />                  — серединний перпендикуляр і середина відрізка AB
+//   <Pobudova vyd="bisektrysa" krok={2} ramka={false} pidpys="2. Дуги з центрами A і B" />
+//   <Pobudova vyd="kut" />                       — кут, рівний даному
+//   <Pobudova vyd="perpNa" />, <Pobudova vyd="perpZ" />   — перпендикуляр через точку на прямій / з точки поза прямою
+//   <Pobudova vyd="trykutnyk" storony={[5, 4, 6]} pidpysy={['5 см', '4 см', '6 см']} />   — за трьома сторонами
+//   <Pobudova vyd="dviStoronyKut" alfa={60} storony={[0, 4, 5]} />, <Pobudova vyd="storonaDvaKuty" alfa={50} beta={60} />
+import { pobudova, type PobudovaOpts } from '../trenazhery/pobudovy.ts';
+
+interface Props extends PobudovaOpts {
+  ramka?: boolean;
+  pidpys?: string;
+}
+const { pidpys, ramka = true, ...opts } = Astro.props;
+const svg = pobudova(opts);
+---
+
+<figure class={ramka ? 'ill not-content' : 'not-content'}>
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
