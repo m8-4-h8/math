@@ -1,0 +1,100 @@
+---
+// Скорочення раціонального дробу: чисельник і знаменник розкладено на множники, спільні множники закреслено (лише
+// множники, а не доданки!), праворуч — результат. Під малюнком — кроки і недопустимі значення початкового дробу.
+//   <SkorochenniaVyrazu pochatkovyi={['3x − 6', 'x² − 4']} chys={['3', '(x − 2)']} znam={['(x − 2)', '(x + 2)']}
+//     rezultat={['3', 'x + 2']} obmezhennia="x ≠ 2, x ≠ −2" />
+interface Props {
+  /** Дріб до розкладання: [чисельник, знаменник]. */
+  pochatkovyi?: [string, string];
+  /** Множники чисельника і знаменника. Однакові рядки — спільні множники. */
+  chys: string[];
+  znam: string[];
+  /** Що лишилося: [чисельник, знаменник]; знаменник '1' — ціле. За замовчуванням — незакреслені множники. */
+  rezultat?: [string, string];
+  /** Недопустимі значення початкового дробу, напр. «x ≠ 2, x ≠ −2». */
+  obmezhennia?: string;
+  /** Як розклали на множники (короткий крок 1). */
+  yak?: string;
+}
+const { pochatkovyi, chys, znam, rezultat, obmezhennia, yak } = Astro.props;
+
+// Спільні множники: кожен рядок чисельника шукаємо серед ще не використаних множників знаменника.
+const vilni = znam.map(() => true);
+const chysSpilni = chys.map((m) => {
+  const i = znam.findIndex((z, j) => vilni[j] && z === m);
+  if (i < 0) return false;
+  vilni[i] = false;
+  return true;
+});
+const znamSpilni = vilni.map((v) => !v);
+const spilni = chys.filter((_, i) => chysSpilni[i]);
+const zalyshok = (ms: string[], sp: boolean[]) => ms.filter((_, i) => !sp[i]).join(' · ') || '1';
+const [rc, rz] = rezultat ?? [zalyshok(chys, chysSpilni), zalyshok(znam, znamSpilni)];
+/** Для запису через «/»: суму чи різницю беремо в дужки, щоб «3 / x + 2» не читалося як (3 / x) + 2. */
+const vDuzhky = (v: string) => (/ [+−-] /.test(v) && !/^\(.*\)$/.test(v) ? `(${v})` : v);
+const opys = `${pochatkovyi ? `Дріб ${pochatkovyi[0]} на ${pochatkovyi[1]}. ` : ''}Чисельник: ${chys.join(' · ')}, знаменник: ${znam.join(
+  ' · ',
+)}. Спільні множники ${spilni.join(', ')} скорочуємо. Результат: ${rz === '1' ? rc : `${rc} на ${rz}`}`;
+---
+
+<figure class="ill not-content" aria-label={opys}>
+  <p class="sv-riad" aria-hidden="true">
+    {
+      pochatkovyi && (
+        <>
+          <span class="frac">
+            <span>{pochatkovyi[0]}</span>
+            <span>{pochatkovyi[1]}</span>
+          </span>
+          <span class="sv-znak">=</span>
+        </>
+      )
+    }
+    <span class="frac">
+      <span>{chys.map((m, i) => <>{i > 0 && ' · '}<span class:list={{ 'sv-spilnyi': chysSpilni[i] }}>{m}</span></>)}</span>
+      <span>{znam.map((m, i) => <>{i > 0 && ' · '}<span class:list={{ 'sv-spilnyi': znamSpilni[i] }}>{m}</span></>)}</span>
+    </span>
+    <span class="sv-znak">=</span>
+    {
+      rz === '1' ? (
+        <span class="c3 sv-rez">{rc}</span>
+      ) : (
+        <span class="frac c3">
+          <span>{rc}</span>
+          <span>{rz}</span>
+        </span>
+      )
+    }
+  </p>
+  <ol class="ill-steps">
+    {pochatkovyi && <li>Розкладаємо чисельник і знаменник на множники{yak ? `: ${yak}` : ''}.</li>}
+    <li>
+      Спільні множники — <b class="c2">{spilni.join(', ')}</b>. Ділимо на них і чисельник, і знаменник (закреслюємо).
+    </li>
+    <li>Залишилося {rz === '1' ? <b class="c3">{rc}</b> : <b class="c3">{vDuzhky(rc)} / {vDuzhky(rz)}</b>}.</li>
+    {obmezhennia && <li class="muted">Недопустимі значення беремо з початкового знаменника: {obmezhennia}.</li>}
+  </ol>
+</figure>
+
+<style>
+  .sv-riad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    margin: 0.4rem 0;
+  }
+  .sv-znak {
+    font-weight: 700;
+  }
+  .sv-rez {
+    font-weight: 700;
+  }
+  .sv-spilnyi {
+    color: var(--ill-2);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+  }
+</style>

@@ -1,0 +1,21 @@
+---
+// Чотирикутник ABCD: опуклий чи неопуклий (кут, більший за 180°), діагоналі, кути з дугами й підписами («?» —
+// шуканий), підписи сторін, поділ діагоналлю AC на два трикутники (`rozbyttia`). Малюнок той самий, що в тренажерах
+// (src/trenazhery/chotyrykutnyky.ts).
+//   <Chotyrykutnyk kuty={['70°', '110°', '85°', '?']} />
+//   <Chotyrykutnyk rozbyttia />                       — сума кутів: два трикутники
+//   <Chotyrykutnyk forma="neopuklyi" diahonali={[[0, 2], [1, 3]]} />
+import { chotyrykutnyk, type ChotyrykutnykOpts } from '../trenazhery/chotyrykutnyky.ts';
+
+interface Props extends ChotyrykutnykOpts {
+  ramka?: boolean;
+  pidpys?: string;
+}
+const { pidpys, ramka = true, ...opts } = Astro.props;
+const svg = chotyrykutnyk(opts);
+---
+
+<figure class={ramka ? 'ill not-content' : 'not-content'}>
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
