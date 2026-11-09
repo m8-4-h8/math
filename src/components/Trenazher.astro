@@ -47,9 +47,9 @@ const spysok = ids.map((id) => {
 });
 const kilka = spysok.length > 1;
 const RIVNI = [
-  { kod: 1, nazva: '🐣 Легко' },
-  { kod: 2, nazva: '🦊 Середньо' },
-  { kod: 3, nazva: '🦁 Складно' },
+  { kod: 1, ikonka: '🐣', nazva: 'Легко' },
+  { kod: 2, ikonka: '🦊', nazva: 'Середньо' },
+  { kod: 3, ikonka: '🦁', nazva: 'Складно' },
 ];
 ---
 
@@ -57,27 +57,39 @@ const RIVNI = [
   <div class="tren-ekran tren-start">
     {
       kilka && (
-        <>
-          <p class="tren-pidpys">Які теми тренуємо?</p>
-          <div class="tren-vybir tren-temy" role="group" aria-label="Теми">
-            {spysok.map((t) => (
-              <button type="button" class="tren-tema" data-id={t.id} aria-pressed="true">
-                <span aria-hidden="true">{t.ikonka}</span> {t.nazva}
-              </button>
-            ))}
+        <div class="tren-temy-blok">
+          {/* На телефоні список тем згорнутий за цією кнопкою, щоб «Рівень» і «Почати» були одразу видно. */}
+          <button type="button" class="tren-temy-perem" aria-expanded="false">
+            <span class="tren-temy-pidsumok" />
+            <span class="tren-temy-strilka" aria-hidden="true">
+              ▾
+            </span>
+          </button>
+          <div class="tren-temy-vmist">
+            <p class="tren-pidpys">Які теми тренуємо?</p>
+            <div class="tren-vybir tren-temy" role="group" aria-label="Теми">
+              {spysok.map((t) => (
+                <button type="button" class="tren-tema" data-id={t.id} aria-pressed="true">
+                  <span aria-hidden="true">{t.ikonka}</span> {t.nazva}
+                </button>
+              ))}
+            </div>
+            <p class="tren-vsi">
+              <button type="button" class="tren-usi">Усі теми</button>
+              <button type="button" class="tren-zhodnoi">Зняти всі</button>
+            </p>
           </div>
-          <p class="tren-vsi">
-            <button type="button" class="tren-usi">Усі теми</button>
-            <button type="button" class="tren-zhodnoi">Зняти всі</button>
-          </p>
-        </>
+        </div>
       )
     }
     <p class="tren-pidpys">Рівень</p>
-    <div class="tren-vybir" role="group" aria-label="Рівень">
+    <div class="tren-vybir tren-rivni" role="group" aria-label="Рівень">
       {
-        RIVNI.map(({ kod, nazva }) => (
+        RIVNI.map(({ kod, ikonka, nazva }) => (
           <button type="button" class="tren-riven" data-kod={kod} aria-pressed={kod === riven ? 'true' : 'false'}>
+            <span class="tren-riven-ikonka" aria-hidden="true">
+              {ikonka}
+            </span>{' '}
             {nazva}
           </button>
         ))
@@ -97,12 +109,13 @@ const RIVNI = [
     <p class="tren-pytannia"></p>
     <form class="tren-forma" autocomplete="off">
       <label class="tren-vyraz" for=""></label>
+      <!-- Поле й OK — одна група: на вузькому екрані вона переходить на новий рядок цілком, а не «OK» окремо. -->
       <span class="tren-vvid">
         <span class="tren-shukane" aria-hidden="true" hidden></span>
         <input class="tren-pole" type="text" aria-label="Відповідь" />
         <span class="tren-odynytsi"></span>
+        <button type="submit" class="tren-ok">OK</button>
       </span>
-      <button type="submit" class="tren-ok">OK</button>
     </form>
     <div class="tren-varianty" role="group" aria-label="Варіанти відповіді" hidden></div>
     <p class="tren-vidhuk" aria-live="polite"></p>
@@ -220,10 +233,46 @@ const RIVNI = [
       const dali = $<HTMLButtonElement>('.tren-dali');
       const seriiaEl = $('.tren-seriia');
       const rekordEl = $('.tren-rekord');
+      const blokTem = this.querySelector<HTMLElement>('.tren-temy-blok');
+      const peremykachTem = this.querySelector<HTMLButtonElement>('.tren-temy-perem');
+      const pidsumokTem = this.querySelector<HTMLElement>('.tren-temy-pidsumok');
 
       const id = 'tren-' + Math.random().toString(36).slice(2);
       pole.id = id;
       vyrazEl.setAttribute('for', id);
+      if (blokTem && peremykachTem) {
+        $('.tren-temy-vmist').id = id + '-temy';
+        peremykachTem.setAttribute('aria-controls', id + '-temy');
+        peremykachTem.addEventListener('click', () => {
+          const vidkryty = peremykachTem.getAttribute('aria-expanded') !== 'true';
+          peremykachTem.setAttribute('aria-expanded', String(vidkryty));
+          blokTem.classList.toggle('vidkryto', vidkryty);
+        });
+      }
+
+      // На телефоні тренажер вищий за екран, а знизу ще й клавіатура. Прокручуємо так, щоб було видно
+      // частину від `vid` до `doEl`; якщо вся не влазить — головне видно `holovne`. Межі — те, що справді
+      // видно: під шапкою сайту і над клавіатурою (visualViewport). Якщо все й так видно, нічого не рухаємо.
+      const plavno = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+      const dovesty = (vid: Element, doEl: Element, holovne: 'vid' | 'do') => {
+        const vv = window.visualViewport;
+        const shapka = document.querySelector('header.header')?.getBoundingClientRect().bottom ?? 0;
+        const verh = Math.max(vv?.offsetTop ?? 0, shapka) + 8;
+        const niz = (vv ? vv.offsetTop + vv.height : innerHeight) - 8;
+        const v = vid.getBoundingClientRect().top;
+        const d = doEl.getBoundingClientRect().bottom;
+        let zsuv = 0;
+        if (v < verh) zsuv = holovne === 'vid' ? v - verh : Math.max(v - verh, d - niz);
+        else if (d > niz) zsuv = holovne === 'do' ? d - niz : Math.min(d - niz, v - verh);
+        if (Math.abs(zsuv) > 4) window.scrollBy({ top: zsuv, behavior: plavno });
+      };
+
+      // Поле росте разом з відповіддю (довгий список дільників не ховається за краєм поля).
+      const pidihnatyPole = () => pole.style.setProperty('--symvoliv', String(Math.max(pole.value.length, 1)));
+      pole.addEventListener('input', () => {
+        pole.classList.remove('nevirno');
+        pidihnatyPole();
+      });
 
       let kroky: Krok[] = [];
       let krok = 0;
@@ -239,6 +288,11 @@ const RIVNI = [
         rekordEl.hidden = !r;
         rekordEl.textContent = `🏆 Твій рекорд тут: ${r} з ${KILKIST}`;
         if (opysRivnia) opysRivnia.textContent = temy[0].rivni[riven() - 1];
+        if (pidsumokTem) {
+          const n = obrani().length;
+          pidsumokTem.textContent =
+            n === temy.length ? `📚 Теми: усі ${n}` : n ? `📚 Теми: ${n} з ${temy.length}` : '📚 Теми: жодної не обрано';
+        }
         hraty.disabled = !obrani().length;
         hraty.textContent = obrani().length ? '▶ Почати' : 'Обери хоча б одну тему';
       };
@@ -270,7 +324,9 @@ const RIVNI = [
         krapka().classList.remove('zaraz');
         krapka().classList.add(pidsumok);
         zakinchene = true;
-        pole.disabled = true;
+        // Не disabled, а readOnly: поле лишається у фокусі, і клавіатура телефона не ховається й не
+        // вискакує знову між завданнями (від цього сторінка щоразу стрибала б).
+        pole.readOnly = true;
         variantyEl.querySelectorAll('button').forEach((b) => (b.disabled = true));
         pokazatyVidpovid.hidden = true;
       };
@@ -284,6 +340,7 @@ const RIVNI = [
         rozviazokEl.hidden = !chastyny.length;
         dali.hidden = false;
         dali.focus({ preventScroll: true });
+        dovesty(vidhuk, dali, 'vid');
       };
 
       const nastupnyi = () => {
@@ -297,7 +354,7 @@ const RIVNI = [
         vyrazEl.innerHTML = z.vyraz ? html(z.vyraz) : '';
         vyrazEl.hidden = !z.vyraz;
         vidhuk.textContent = '';
-        vidhuk.classList.remove('dobre', 'pohano');
+        vidhuk.classList.remove('dobre', 'pohano', 'pidkazka');
         rozviazokEl.hidden = true;
         // Кнопка видна одразу, але відмикається лише після першої власної спроби.
         pokazatyVidpovid.hidden = false;
@@ -317,15 +374,25 @@ const RIVNI = [
             b.addEventListener('click', () => vidpovisty(String(v), b));
             variantyEl.append(b);
           }
+          // На телефоні: короткі варіанти («>», «Так», «12») — в один рядок, довші — по два в рядку,
+          // зовсім довгі («за катетом і гострим кутом») — стовпчиком на всю ширину.
+          const dovzhyna = Math.max(...z.varianty.map((v) => String(v).replace(/\\[a-z]+|[$\\{}]/gi, '').length));
+          variantyEl.dataset.vyd = dovzhyna <= 4 ? 'riadok' : dovzhyna <= 10 ? 'dva' : 'stovpchyk';
+          variantyEl.style.setProperty('--kilkist', String(Math.min(z.varianty.length, 4)));
           (variantyEl.firstElementChild as HTMLElement | null)?.focus({ preventScroll: true });
+          dovesty(this, variantyEl, 'do');
         } else {
           forma.hidden = false;
           variantyEl.hidden = true;
-          pole.disabled = false;
+          pole.readOnly = false;
           pole.value = '';
+          pole.classList.remove('virno', 'nevirno');
+          pidihnatyPole();
           // Клавіатура на телефоні: цифри, цифри з комою або повна (для дробів, мінуса, слів).
           const persha = vidpovidi[0];
-          pole.inputMode = /^\d+$/.test(persha) ? 'numeric' : /^\d+[.,]\d+$/.test(persha) ? 'decimal' : 'text';
+          const rezhym = /^\d+$/.test(persha) ? 'numeric' : /^\d+[.,]\d+$/.test(persha) ? 'decimal' : 'text';
+          const inshaKlaviatura = pole.inputMode !== rezhym;
+          pole.inputMode = rezhym;
           odynytsiEl.textContent = z.odynytsi || '';
           odynytsiEl.hidden = !z.odynytsi;
           // Рівняння «69 − 4 · x = 49»: поле окремим рядком «x = [ ]», а не одразу після «= 49»,
@@ -336,7 +403,10 @@ const RIVNI = [
           shukaneEl.hidden = !shuk;
           const nazva = shuk?.replace(/\$/g, '').replace(/□|\\square/, 'віконце');
           pole.setAttribute('aria-label', nazva ? `Відповідь: ${nazva} =` : 'Відповідь');
-          pole.blur();
+          dovesty(this, forma, 'do');
+          // Інша клавіатура (цифри → повна) з'являється лише після нового фокуса. Якщо ж клавіатура та сама,
+          // поле не відпускаємо — тоді вона не ховається між завданнями.
+          if (inshaKlaviatura) pole.blur();
           pole.focus({ preventScroll: true });
         }
       };
@@ -348,7 +418,7 @@ const RIVNI = [
         // однакові числа, і перевірка «досить тих самих чисел» їх би не розрізнила).
         const virno = knopka ? k.vidpovidi.includes(vvid) : pravylno(vvid, k.vidpovidi) || !!k.z.perevirka?.(vvid);
         if (virno) {
-          knopka?.classList.add('virno');
+          (knopka ?? pole).classList.add('virno');
           const pershaSproba = k.sprob === 0;
           zakinchytyKrok(pershaSproba ? 'tak' : 'maizhe');
           if (pershaSproba) seriia++;
@@ -373,16 +443,23 @@ const RIVNI = [
           knopka.classList.add('nevirno');
           knopka.disabled = true;
         } else {
+          // Червона рамка й «трусь» — помилку видно просто на полі, навіть коли решту закрила клавіатура.
+          pole.classList.remove('nevirno');
+          void pole.offsetWidth;
+          pole.classList.add('nevirno');
           pole.select();
         }
-        if (k.sprob >= 2 && k.z.pidkazka) vidhuk.innerHTML = '💡 Підказка: ' + html(k.z.pidkazka);
+        const zPidkazkoiu = k.sprob >= 2 && !!k.z.pidkazka;
+        if (zPidkazkoiu) vidhuk.innerHTML = '💡 <strong>Підказка:</strong> ' + html(k.z.pidkazka!);
         else vidhuk.textContent = 'Ой, ні. Подумай ще раз!';
         vidhuk.classList.add('pohano');
+        vidhuk.classList.toggle('pidkazka', zPidkazkoiu);
         // Відповідь можна підглянути лише після власної спроби.
         pokazatyVidpovid.disabled = false;
         pokazatyVidpovid.textContent = 'Показати відповідь';
         // Серед двох варіантів після помилки лишився один — показуємо розв'язок одразу.
         if (knopka && variantyEl.querySelectorAll('button:not(:disabled)').length <= 1) pokazatyVidpovid.click();
+        else dovesty(knopka ? variantyEl : forma, pokazatyVidpovid, 'vid');
       };
 
       forma.addEventListener('submit', (e) => {
@@ -394,7 +471,7 @@ const RIVNI = [
         if (zakinchene || !kroky[krok].sprob) return;
         zakinchytyKrok('ne');
         vidhuk.textContent = `Порівняй зі своєю відповіддю «${kroky[krok].sproba}» і розбери розв'язок — наступне вийде! 🙂`;
-        vidhuk.classList.remove('pohano');
+        vidhuk.classList.remove('pohano', 'pidkazka');
         vidkrytyRozviazok(true);
       });
       dali.addEventListener('click', () => {
@@ -474,6 +551,7 @@ const RIVNI = [
           })
           .join('');
         pokazaty('kinets');
+        dovesty(this, $('.tren-znovu'), 'vid');
         if (zirok === 3) salut($('.tren-zirky'));
       };
 
@@ -482,6 +560,7 @@ const RIVNI = [
       $('.tren-nalashtuvannia').addEventListener('click', () => {
         onovyty();
         pokazaty('start');
+        dovesty(this, hraty, 'vid');
       });
       onovyty();
     }
@@ -553,6 +632,10 @@ const RIVNI = [
   }
   .tren-vsi {
     margin: -0.25rem 0 1rem;
+  }
+  /* Кнопка «📚 Теми: усі 36» потрібна лише на телефоні (див. унизу); на широкому екрані теми видно одразу. */
+  .tren-temy-perem {
+    display: none;
   }
   .tren-pokazaty:disabled {
     opacity: 0.55;
@@ -671,6 +754,12 @@ const RIVNI = [
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .tren-ok {
+    flex: none;
+    margin-inline-start: 0.35rem;
   }
   /* Рівняння — окремим рядком, а під ним «x = [ ]». */
   .tren-forma.rivniannia .tren-vyraz {
@@ -690,7 +779,11 @@ const RIVNI = [
     font-weight: 800;
   }
   .tren-pole {
-    width: 7.5rem;
+    /* Ширина росте з кількістю введених символів (--symvoliv), але не менше 7.5rem і не ширше рядка. */
+    flex: 0 1 auto;
+    width: max(7.5rem, calc(var(--symvoliv, 1) * 0.7em + 1.75rem));
+    min-width: 4.5rem;
+    max-width: 100%;
     padding: 0.4rem 0.6rem;
     border: 3px solid var(--dt-card-border);
     border-radius: 1rem;
@@ -704,6 +797,30 @@ const RIVNI = [
   .tren-pole:focus {
     outline: none;
     border-color: var(--sl-color-accent);
+  }
+  .tren-pole.nevirno {
+    border-color: var(--dt-err);
+    animation: tren-trus 0.35s ease;
+  }
+  .tren-pole.virno {
+    border-color: var(--dt-ok);
+    background: var(--dt-ok-bg);
+  }
+  @keyframes tren-trus {
+    25% {
+      transform: translateX(-6px);
+    }
+    50% {
+      transform: translateX(5px);
+    }
+    75% {
+      transform: translateX(-3px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tren-pole.nevirno {
+      animation: none;
+    }
   }
   .tren-varianty {
     display: flex;
@@ -805,5 +922,210 @@ const RIVNI = [
   }
   .tren-pomylky :global(a) {
     font-weight: 700;
+  }
+
+  /* ——— Телефон ——— */
+  @media (max-width: 36rem) {
+    .tren {
+      padding: 1.1rem 0.85rem;
+    }
+    .tren-pidpys {
+      font-size: 0.95rem;
+    }
+
+    /* Теми згорнуті за кнопкою «📚 Теми: усі 36», а відкриті — компактним списком, що прокручується. */
+    .tren-temy-blok {
+      margin-bottom: 1rem;
+    }
+    .tren-temy-perem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border-radius: 1rem !important;
+      background: var(--sl-color-accent-low);
+      color: var(--sl-color-text-accent);
+      box-shadow: 0 3px 0 var(--dt-card-border);
+      text-align: start;
+    }
+    .tren-temy-strilka {
+      transition: transform 0.2s ease;
+    }
+    .tren-temy-perem[aria-expanded='true'] .tren-temy-strilka {
+      transform: rotate(180deg);
+    }
+    .tren-temy-blok:not(.vidkryto) .tren-temy-vmist {
+      display: none;
+    }
+    .tren-temy-vmist {
+      margin-top: 0.6rem;
+    }
+    .tren-temy-vmist > .tren-pidpys {
+      display: none;
+    }
+    .tren-temy {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      /* Не center: інакше верх списку, що прокручується, вилазить за межі й до нього не дістати. */
+      justify-content: flex-start;
+      align-items: stretch;
+      gap: 0.35rem;
+      max-height: min(22rem, 55vh);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      margin-bottom: 0.5rem;
+      padding: 0.15rem 0.15rem 0.35rem;
+    }
+    .tren-tema {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.8rem !important;
+      box-shadow: 0 2px 0 var(--dt-card-border);
+      font-size: 0.95rem;
+      text-align: start;
+    }
+    .tren-tema::before {
+      content: '';
+      flex: none;
+      width: 1.1rem;
+      height: 1.1rem;
+      border: 2px solid currentColor;
+      border-radius: 0.3rem;
+      opacity: 0.6;
+    }
+    .tren-tema[aria-pressed='true']::before {
+      content: '✓';
+      content: '✓' / '';
+      display: grid;
+      place-items: center;
+      font-size: 0.8rem;
+      line-height: 1;
+      opacity: 1;
+    }
+    .tren-tema[aria-pressed='true'] {
+      box-shadow: 0 2px 0 color-mix(in srgb, var(--dt-h-1) 60%, #000);
+    }
+    .tren-vsi {
+      margin: 0;
+    }
+
+    /* Рівні — три однакові плитки в один рядок: тваринка над словом. */
+    .tren-rivni {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .tren-riven {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+      min-width: 0;
+      padding: 0.5rem 0.25rem;
+      border-radius: 1rem !important;
+      font-size: 0.9rem;
+    }
+    .tren-riven-ikonka {
+      font-size: 1.5rem;
+      line-height: 1.2;
+    }
+
+    /* Великі кнопки — на всю ширину, щоб легко влучити пальцем. */
+    .tren-hraty,
+    .tren-dali,
+    .tren-znovu {
+      width: 100%;
+      max-width: 20rem;
+    }
+    .tren-kinets .tren-znovu {
+      display: block;
+      margin: 0 auto 0.5rem;
+    }
+
+    .tren-pytannia {
+      font-size: 1.05rem;
+    }
+    .tren-forma {
+      gap: 0.5rem 0.75rem;
+    }
+    .tren-ok {
+      padding: 0.7rem 1.15rem;
+    }
+    .tren-odynytsi {
+      font-size: 1.15rem;
+    }
+
+    /* Варіанти відповіді — сіткою з однакових кнопок (розкладку обирає скрипт за довжиною варіантів). */
+    .tren-varianty {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.55rem;
+    }
+    .tren-varianty[data-vyd='riadok'] {
+      grid-template-columns: repeat(var(--kilkist, 3), 1fr);
+    }
+    .tren-varianty[data-vyd='stovpchyk'] {
+      grid-template-columns: 1fr;
+    }
+    /* Непарний останній варіант у сітці по два — на весь рядок. */
+    .tren-varianty[data-vyd='dva'] :global(.tren-variant:last-child:nth-child(odd)) {
+      grid-column: 1 / -1;
+    }
+    .tren :global(.tren-variant) {
+      min-width: 0;
+      padding: 0.7rem 0.6rem;
+      font-size: 1.15rem;
+      line-height: 1.25;
+    }
+    .tren-varianty[data-vyd='riadok'] :global(.tren-variant) {
+      font-size: 1.3rem;
+    }
+    .tren-varianty[data-vyd='stovpchyk'] :global(.tren-variant) {
+      padding-inline: 1rem;
+      border-radius: 1rem;
+      font-size: 1.05rem;
+    }
+
+    .tren-vidhuk {
+      font-size: 1.05rem;
+    }
+    /* Підказка — спокійним блоком з текстом ліворуч: так довгий текст читати легше, ніж червоний по центру. */
+    .tren-vidhuk.pidkazka {
+      padding: 0.6rem 0.85rem;
+      border-radius: 0.9rem;
+      background: var(--dt-err-bg);
+      color: var(--sl-color-white);
+      font-weight: 600;
+      text-align: start;
+    }
+    .tren-vidhuk.pidkazka strong {
+      color: var(--dt-err);
+    }
+    .tren-rozviazok {
+      padding: 0.6rem 0.85rem;
+    }
+    .tren-pokazaty {
+      font-size: 0.95rem;
+      line-height: 1.35;
+    }
+    .tren-zirky {
+      font-size: 2.5rem;
+    }
+    .tren-rezultat {
+      font-size: 1.05rem;
+    }
+  }
+  /* Найвужчі телефони (320 px): «Середньо» має влізти в плитку. */
+  @media (max-width: 22rem) {
+    .tren-rivni {
+      gap: 0.35rem;
+    }
+    .tren-riven {
+      font-size: 0.82rem;
+    }
   }
 </style>
