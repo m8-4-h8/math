@@ -35,7 +35,15 @@ const { nazva } = Astro.props;
   .pravylo-tekst :global(p) {
     margin: 0;
   }
-  .pravylo-tekst :global(p + p) {
+  .pravylo-tekst :global(p + p),
+  .pravylo-tekst :global(table + p) {
     margin-top: 0.4rem;
+  }
+  /* Таблиця в правилі: дрібніший шрифт, а якщо все одно не влазить — гортається вбік. */
+  .pravylo-tekst :global(table) {
+    display: block;
+    overflow-x: auto;
+    margin: 0 0 0.4rem;
+    font-size: var(--sl-text-base);
   }
 </style>

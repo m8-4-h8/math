@@ -18,6 +18,7 @@ export default defineConfig({
     '/5-klas/dilennia-z-ostacheiu': '/math/4-klas/dilennia-z-ostacheiu/',
     // 6 клас за параграфами Істера: об'єднані теми розділено.
     '/6-klas/priama-i-obernena-proportsiinist': '/math/6-klas/priama-proportsiinist/',
+    '/6-klas/perpendykuliarni-i-paralelni-priami': '/math/6-klas/perpendykuliarni-priami/',
     '/6-klas/dovzhyna-kola-i-ploshcha-kruha': '/math/6-klas/dovzhyna-kola/',
   },
   markdown: {

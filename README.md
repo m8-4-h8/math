@@ -101,6 +101,10 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Termometr` | вертикальні термометри: додатна температура одним кольором, від'ємна — іншим | `<Termometr temperatury={[5, -3]} pidpysy={['день', 'ніч']} />` |
   | `ZnakoviDodanky` | сума доданків зі знаками: протилежні закреслено, окремо додатні й від'ємні, разом | `<ZnakoviDodanky dodanky={[50, -20, 30, -50, -10]} />` |
   | `ZruchniMnozhnyky` | добуток кількох множників: знак за кількістю мінусів, зручні пари одним кольором | `<ZruchniMnozhnyky mnozhnyky={[-25, 7, -4]} pary={[[0, 2]]} />` |
+  | `ModelZadachi` | модель текстової задачі смужками: шматки «x», додаткові одиниці (+3) чи заштриховані (−3), дужка «разом» і рівняння | `<ModelZadachi riadky={[{ nazva: 'I', x: 2 }, { nazva: 'II', x: 1, dodatok: 3 }]} razom={35} rivniannia="2x + (x + 3) = 35" />` |
+  | `HrafikZalezhnosti` | графік залежності (температура, відстань від часу) на сітці; пунктир `chytaty` показує, як читати графік. Той самий малюнок — `hrafik()` у `src/trenazhery/malunky.ts` для тренажерів | `<HrafikZalezhnosti tochky={[[0, -3], [2, -4], [4, 1]]} krokX={2} krokY={1} osX="t, год" osY="T, °C" chytaty={{ x: 2 }} />` |
+  | `RozhortkaParalelepipeda` | розгортка паралелепіпеда (куба) хрестом, протилежні грані одним кольором, площа поверхні по парах граней | `<RozhortkaParalelepipeda a={4} b={2} c={3} />` |
+  | `Kulky` | ймовірність на кульках: коробка з кульками кількох кольорів, сприятливі обведено, P = m/n | `<Kulky kulky={[{ kolir: 1, nazva: 'сині', kilkist: 3 }, { kolir: 3, nazva: 'зелені', kilkist: 5 }]} shukaty={1} />` |
   | `RozkryttiaDuzhok` | розкриття дужок: множник «дістає» до кожного доданка, змінені знаки виділено | `<RozkryttiaDuzhok mnozhnyk={-1} dodanky={[{ k: 1, b: 'a' }, { k: -5 }]} />` |
   | `PerenosDodankiv` | рівняння ax + b = cx + d: перенесення доданків зі зміною знака і розв'язок | `<PerenosDodankiv a={5} b={3} c={2} d={12} />` |
   | `PeretynPriamykh` | перпендикулярні, паралельні й просто прямі, що перетинаються, на клітинках | `<PeretynPriamykh vydy={['perpendykuliarni', 'paralelni']} />` |
@@ -151,7 +155,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
 | `KoordynatnyiPromin` | координатний промінь з точками, ціна поділки будь-яка; звичайні дроби — `znamennyk={4}` і `drib: '3/4'` у точці | `<KoordynatnyiPromin krok={5} dovzhyna={10} tochky={[{ nazva: 'A', x: 15 }]} />` |
 | `Diahrama` | стовпчаста або лінійна діаграма | `<Diahrama dani={[['Пн', 12], ['Вт', 18]]} vyd="liniia" />` |
 | `RozpodilnyiZakon` | розподільний закон прямокутником з клітинок | `<RozpodilnyiZakon a={4} b={5} c={3} />` |
-| `PoriadokDii` | номери дій над знаками і обчислення по кроках | `<PoriadokDii vyraz="48 : (2 + 6) · 3 − 5" />` |
+| `PoriadokDii` | номери дій над знаками і обчислення по кроках; працює і з від'ємними числами | `<PoriadokDii vyraz="(−3,6 + 1,2) : (−0,8)" />` |
 | `Techiia` | швидкість за течією і проти течії | `<Techiia vlasna={12} techiia={2} />` |
 | `Liniyi` | відрізок, промінь, пряма; відрізок з лінійкою | `<Liniyi vydy={['vidrizok']} dovzhyna={5} />` |
 | `Transportyr` | транспортир, прикладений до кута; `bez_hradusiv` — без підписаної величини (для задач) | `<Transportyr hradusy={65} nazva="AOB" />` |

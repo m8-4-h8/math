@@ -158,3 +158,94 @@ export function ploshchyna(tochky: TochkaPloshchyny[], m = 5) {
     .join('');
   return `<svg viewBox="0 0 ${W} ${W}" width="${W}" height="${W}" role="img" aria-label="Координатна площина з точками ${tochky.map((tt) => tt.nazva).join(', ')}">${sitka}${osi}${t}</svg>`;
 }
+
+export interface Hrafik {
+  /** Вузли ламаної (x; y), x — зростають. Перший x — зазвичай 0. */
+  tochky: [number, number][];
+  /** Крок клітинки по осях (в одиницях величин). */
+  krokX: number;
+  krokY: number;
+  /** Підписи осей: «t, год», «T, °C». */
+  osX: string;
+  osY: string;
+  /** Пунктир «читання» графіка: від x до графіка й до осі y, або горизонталь на рівні y. */
+  chytaty?: { x?: number; y?: number };
+}
+
+/** Значення ламаної в точці x (лінійно між вузлами). */
+export function hrafikY(tochky: [number, number][], x: number) {
+  for (let i = 1; i < tochky.length; i++) {
+    const [x1, y1] = tochky[i - 1];
+    const [x2, y2] = tochky[i];
+    if (x >= x1 && x <= x2) return y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
+  }
+  return NaN;
+}
+
+/** Графік залежності: сітка, осі з підписами, ламана через точки. Від'ємні y — нижче осі x. */
+export function hrafik({ tochky, krokX, krokY, osX, osY, chytaty }: Hrafik) {
+  const xs = tochky.map((p) => p[0]);
+  const ys = tochky.map((p) => p[1]);
+  const xMin = Math.min(0, ...xs);
+  const xMax = Math.max(...xs);
+  const yMin = Math.min(0, Math.floor(Math.min(...ys) / krokY) * krokY);
+  const yMax = Math.max(krokY, Math.ceil(Math.max(...ys) / krokY) * krokY);
+  const nx = Math.round((xMax - xMin) / krokX);
+  const ny = Math.round((yMax - yMin) / krokY);
+  const kx = Math.min(30, 420 / nx);
+  const ky = Math.min(24, 250 / ny);
+  const [livo, verkh, pravo, nyz] = [38, 24, 54, 22];
+  const W = livo + nx * kx + pravo;
+  const H = verkh + ny * ky + nyz;
+  const X = (x: number) => livo + ((x - xMin) / krokX) * kx;
+  const Y = (y: number) => verkh + ((yMax - y) / krokY) * ky;
+  const zn = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+  const kozhnyiX = nx > 14 ? 2 : 1;
+  const kozhnyiY = ny > 14 ? 2 : 1;
+  let sitka = '';
+  for (let i = 0; i <= nx; i++) {
+    const v = xMin + i * krokX;
+    sitka += `<line x1="${X(v)}" y1="${Y(yMax)}" x2="${X(v)}" y2="${Y(yMin)}" stroke="var(--ill-line)" stroke-width="0.6" opacity="0.6"/>`;
+    if (v !== 0 && i % kozhnyiX === 0) sitka += `<text x="${X(v)}" y="${Y(0) + 14}" text-anchor="middle" font-size="10" fill="var(--ill-muted)">${zn(v)}</text>`;
+  }
+  for (let j = 0; j <= ny; j++) {
+    const v = yMin + j * krokY;
+    sitka += `<line x1="${X(xMin)}" y1="${Y(v)}" x2="${X(xMax)}" y2="${Y(v)}" stroke="var(--ill-line)" stroke-width="0.6" opacity="0.6"/>`;
+    if (v !== 0 && j % kozhnyiY === 0) sitka += `<text x="${X(0) - 5}" y="${Y(v) + 3.5}" text-anchor="end" font-size="10" fill="var(--ill-muted)">${zn(v)}</text>`;
+  }
+  const osi =
+    `<line x1="${X(xMin)}" y1="${Y(0)}" x2="${X(xMax) + 22}" y2="${Y(0)}" stroke="var(--ill-ink)" stroke-width="1.8"/>` +
+    `<path d="M ${X(xMax) + 24} ${Y(0)} l -8 -4 v 8 z" fill="var(--ill-ink)"/>` +
+    `<line x1="${X(0)}" y1="${Y(yMin)}" x2="${X(0)}" y2="${Y(yMax) - 16}" stroke="var(--ill-ink)" stroke-width="1.8"/>` +
+    `<path d="M ${X(0)} ${Y(yMax) - 18} l -4 8 h 8 z" fill="var(--ill-ink)"/>` +
+    `<text x="${X(xMax) + 4}" y="${Y(0) - 8}" font-size="12" font-style="italic" fill="var(--ill-ink)">${osX}</text>` +
+    `<text x="${X(0) + 8}" y="${Y(yMax) - 8}" font-size="12" font-style="italic" fill="var(--ill-ink)">${osY}</text>` +
+    `<text x="${X(0) - 5}" y="${Y(0) + 14}" text-anchor="end" font-size="10" fill="var(--ill-muted)">0</text>`;
+  let chyt = '';
+  if (chytaty?.x !== undefined) {
+    const y = hrafikY(tochky, chytaty.x);
+    chyt +=
+      `<path d="M ${X(chytaty.x)} ${Y(0)} V ${Y(y)} H ${X(0)}" fill="none" stroke="var(--ill-1)" stroke-width="1.8" stroke-dasharray="5 4"/>` +
+      `<circle cx="${X(chytaty.x)}" cy="${Y(y)}" r="5" fill="var(--ill-1)"/>`;
+  }
+  if (chytaty?.y !== undefined) {
+    // Де графік перетинає рівень y. Одна точка — пунктир до неї і вниз на вісь; кілька — лінія через увесь графік.
+    const yy = chytaty.y;
+    const perety = new Set<number>();
+    for (let i = 1; i < tochky.length; i++) {
+      const [[x1, y1], [x2, y2]] = [tochky[i - 1], tochky[i]];
+      if ((y1 - yy) * (y2 - yy) <= 0 && y1 !== y2) perety.add(x1 + ((yy - y1) / (y2 - y1)) * (x2 - x1));
+      else if (y1 === yy) perety.add(x1);
+    }
+    if (tochky.at(-1)?.[1] === yy) perety.add(tochky.at(-1)![0]);
+    const [xp] = [...perety];
+    chyt +=
+      perety.size === 1
+        ? `<path d="M ${X(0)} ${Y(yy)} H ${X(xp)} V ${Y(0)}" fill="none" stroke="var(--ill-1)" stroke-width="1.8" stroke-dasharray="5 4"/>` +
+          `<circle cx="${X(xp)}" cy="${Y(yy)}" r="5" fill="var(--ill-1)"/>`
+        : `<line x1="${X(0)}" y1="${Y(yy)}" x2="${X(xMax)}" y2="${Y(yy)}" stroke="var(--ill-1)" stroke-width="1.8" stroke-dasharray="5 4"/>`;
+  }
+  const liniia = `<polyline points="${tochky.map(([x, y]) => `${X(x)},${Y(y)}`).join(' ')}" fill="none" stroke="var(--ill-4)" stroke-width="2.6" stroke-linejoin="round"/>`;
+  const krapky = tochky.map(([x, y]) => `<circle cx="${X(x)}" cy="${Y(y)}" r="3.2" fill="var(--ill-4)"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Графік залежності: по горизонталі ${osX}, по вертикалі ${osY}">${sitka}${osi}${liniia}${krapky}${chyt}</svg>`;
+}

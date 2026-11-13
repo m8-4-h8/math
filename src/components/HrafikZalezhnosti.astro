@@ -1,0 +1,25 @@
+---
+// Графік залежності однієї величини від іншої (температура від часу, відстань від часу): ламана через точки
+// на клітчастій сітці, від'ємні значення — під віссю. Пунктир `chytaty` показує, як читати графік.
+//   <HrafikZalezhnosti tochky={[[0, -3], [2, -4], [4, 1]]} krokX={2} krokY={1} osX="t, год" osY="T, °C" chytaty={{ x: 2 }} />
+import { hrafik, type Hrafik } from '../trenazhery/malunky.ts';
+type Props = Hrafik & { pidpys?: string };
+const { pidpys, ...h } = Astro.props;
+const svg = hrafik(h);
+---
+
+<figure class="ill not-content hrafik-zalezhnosti">
+  <Fragment set:html={svg} />
+  {pidpys && <figcaption class="ill-caption">{pidpys}</figcaption>}
+</figure>
+
+<style>
+  .hrafik-zalezhnosti :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 560px;
+    max-height: 24rem; /* високий графік (s = 60t) не розтягується на весь екран */
+    margin: 0 auto;
+  }
+</style>

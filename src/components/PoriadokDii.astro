@@ -115,6 +115,13 @@ for (let krok = 1; !('chyslo' in derevo) && krok < 30; krok++) {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
+  /* На телефоні довгий вираз з від'ємними числами має влазити в один рядок. */
+  @media (max-width: 30rem) {
+    .poriadok {
+      gap: 0.25em;
+      font-size: 1.1rem;
+    }
+  }
   .znak {
     display: inline-flex;
     flex-direction: column;

@@ -81,6 +81,16 @@ const opys = `${mnozhnyky.map(vd).join(' · ')} = ${fmt(rezultat)}`;
   .zruchni .krapka {
     font-weight: 800;
   }
+  /* На телефоні п'ять множників мають влізти в один рядок. */
+  @media (max-width: 30rem) {
+    .zruchni .riadok {
+      gap: 0.25rem;
+    }
+    .zruchni .chip {
+      min-width: 2.4rem;
+      padding: 0.25rem 0.45rem;
+    }
+  }
   .zruchni .c1 {
     color: var(--ill-1);
     border-color: var(--ill-1);
