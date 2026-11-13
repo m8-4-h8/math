@@ -1,0 +1,100 @@
+---
+// Добуток кількох множників, обчислений зручно: спершу знак (рахуємо мінуси), потім модулі, згруповані в
+// «круглі» пари. Пари — одним кольором. Показує переставну й сполучну властивості множення.
+//   <ZruchniMnozhnyky mnozhnyky={[-25, 7, -4]} pary={[[0, 2]]} />   — (−25) · 7 · (−4): пара 25 · 4 = 100
+interface Props {
+  mnozhnyky: number[];
+  /** Індекси множників, які зручно перемножити разом. */
+  pary: [number, number][];
+}
+const { mnozhnyky, pary } = Astro.props;
+
+const fmt = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const vd = (v: number) => (v < 0 ? `(${fmt(v)})` : fmt(v));
+const okr = (x: number) => Math.round(x * 1e6) / 1e6;
+const KOL = ['c1', 'c2', 'c3'];
+const hrupa = (i: number) => pary.findIndex((p) => p.includes(i));
+const minusiv = mnozhnyky.filter((v) => v < 0).length;
+const plus = minusiv % 2 === 0;
+const moduli = mnozhnyky.map(Math.abs);
+const dobutkyPar = pary.map(([i, j]) => okr(moduli[i] * moduli[j]));
+const reshta = moduli.filter((_, i) => hrupa(i) < 0);
+const chastyny = [...dobutkyPar, ...reshta];
+const modul = okr(chastyny.reduce((a, b) => a * b, 1));
+const rezultat = plus ? modul : -modul;
+const opys = `${mnozhnyky.map(vd).join(' · ')} = ${fmt(rezultat)}`;
+---
+
+<figure class="ill not-content zruchni" aria-label={opys}>
+  <div class="riadok">
+    {
+      mnozhnyky.map((v, i) => (
+        <>
+          {i > 0 && <span class="krapka">·</span>}
+          <span class={`chip ${hrupa(i) >= 0 ? KOL[hrupa(i) % KOL.length] : 'inshyi'}`}>{vd(v)}</span>
+        </>
+      ))
+    }
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Знак: {minusiv} {minusiv === 1 ? 'мінус' : minusiv >= 2 && minusiv <= 4 ? 'мінуси' : 'мінусів'} —{' '}
+      {plus ? 'парна кількість, добуток додатний' : 'непарна кількість, добуток від’ємний'}.
+    </li>
+    <li>
+      Зручні пари модулів:{' '}
+      {pary.map(([i, j], k) => (
+        <>
+          {k > 0 && '; '}
+          <b class={`num ${KOL[k % KOL.length]}`}>
+            {fmt(moduli[i])} · {fmt(moduli[j])} = {fmt(dobutkyPar[k])}
+          </b>
+        </>
+      ))}
+      .
+    </li>
+    <li>
+      Разом: <b class="num">{chastyny.length > 1 ? `${chastyny.map(fmt).join(' · ')} = ` : ''}{fmt(modul)}</b>, зі знаком:{' '}
+      <b class="num">{fmt(rezultat)}</b>.
+    </li>
+  </ol>
+</figure>
+
+<style>
+  .zruchni .riadok {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
+    align-items: center;
+  }
+  .zruchni .chip {
+    display: inline-block;
+    min-width: 3rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    border: 2px solid;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .zruchni .krapka {
+    font-weight: 800;
+  }
+  .zruchni .c1 {
+    color: var(--ill-1);
+    border-color: var(--ill-1);
+  }
+  .zruchni .c2 {
+    color: var(--ill-2);
+    border-color: var(--ill-2);
+  }
+  .zruchni .c3 {
+    color: var(--ill-3);
+    border-color: var(--ill-3);
+  }
+  .zruchni .inshyi {
+    border-style: dashed;
+    opacity: 0.8;
+  }
+</style>

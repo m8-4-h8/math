@@ -98,6 +98,9 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `KruhovaDiahrama` | кругова діаграма з відсотками і градусами (1% = 3,6°) | `<KruhovaDiahrama dani={[['Футбол', 40], ['Плавання', 25], ['Танці', 35]]} />` |
   | `KoordynatnaPriama` | координатна пряма з від'ємними числами, точки, модуль, стрибок-додавання (`strybok`) | `<KoordynatnaPriama min={-6} max={6} tochky={[{ nazva: 'A', x: -4 }]} modul />` |
   | `KoordynatnaPloshchyna` | координатна площина: осі x і y, чверті, точки з пунктиром від осей, прямі через точки (`priami`), точки-опори без позначки (`skhovaty`) | `<KoordynatnaPloshchyna rozmir={5} tochky={[{ nazva: 'A', x: 3, y: 2 }]} />` |
+  | `Termometr` | вертикальні термометри: додатна температура одним кольором, від'ємна — іншим | `<Termometr temperatury={[5, -3]} pidpysy={['день', 'ніч']} />` |
+  | `ZnakoviDodanky` | сума доданків зі знаками: протилежні закреслено, окремо додатні й від'ємні, разом | `<ZnakoviDodanky dodanky={[50, -20, 30, -50, -10]} />` |
+  | `ZruchniMnozhnyky` | добуток кількох множників: знак за кількістю мінусів, зручні пари одним кольором | `<ZruchniMnozhnyky mnozhnyky={[-25, 7, -4]} pary={[[0, 2]]} />` |
   | `RozkryttiaDuzhok` | розкриття дужок: множник «дістає» до кожного доданка, змінені знаки виділено | `<RozkryttiaDuzhok mnozhnyk={-1} dodanky={[{ k: 1, b: 'a' }, { k: -5 }]} />` |
   | `PerenosDodankiv` | рівняння ax + b = cx + d: перенесення доданків зі зміною знака і розв'язок | `<PerenosDodankiv a={5} b={3} c={2} d={12} />` |
   | `PeretynPriamykh` | перпендикулярні, паралельні й просто прямі, що перетинаються, на клітинках | `<PeretynPriamykh vydy={['perpendykuliarni', 'paralelni']} />` |
