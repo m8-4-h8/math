@@ -1,100 +1,111 @@
-// Розкриття дужок і подібні доданки: множник перед дужками множимо на кожен доданок (з його знаком);
-// мінус перед дужками змінює знаки всіх доданків; подібні доданки — додаємо коефіцієнти; значення виразу
-// після спрощення.
-import { ch, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+// Розкриття дужок (Істер § 35): «+» перед дужками — знаки не змінюються; «−» перед дужками — змінюємо знак
+// кожного доданка; зручні обчислення з розкриттям дужок (протилежні доданки); значення виразу, у якому
+// після розкриття дужок одна буква зникає.
+import { ch, des, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 const BUKVY = ['x', 'y', 'a', 'b', 'm', 'n'];
-const tz = (n: number) => (n < 0 ? `-${-n}` : `${n}`);
-/** Коефіцієнт перед буквою: 1 → «», −1 → «-», 3 → «3». */
-const koef = (k: number, b: string) => (k === 1 ? b : k === -1 ? `-${b}` : `${tz(k)}${b}`);
-/** Доданок зі знаком для продовження виразу: « + 5», « - 5», « + 3x». */
-const dalі = (k: number, b = '') => (k < 0 ? ` - ${koef(-k, b) || -k}` : ` + ${koef(k, b) || k}`);
 const tekst = (s: string) => s.replace(/-/g, '−');
 
-function mnozhnyk(r: Vypadok): TrenZavdannia {
+/** Два доданки в дужках: буква і число, у випадковому порядку й зі знаками. */
+function dvaDodanky(r: Vypadok) {
   const b = r.vybir(BUKVY);
-  const k = r.krim(-9, 9, [0, 1, -1]);
-  const a = r.chyslo(1, 6);
-  const c = r.krim(-9, 9, [0]);
-  const [p1, p2] = [k * a, k * c];
-  const zliva = `${tz(k)}(${koef(a, b)}${dalі(c)})`;
-  if (r.shans()) {
-    return {
-      pytannia: 'Розкрий дужки. Яке число має стояти замість квадратика?',
-      vyraz: `$${zliva} = ${koef(p1, b)} ${p2 < 0 ? '-' : '+'} \\square$`,
-      vidpovid: Math.abs(p2),
-      pidkazka: `Помнож ${ch(k)} на ${ch(c)}.`,
-      rozviazok: `${ch(k)} · ${c < 0 ? `(${ch(c)})` : c} = ${ch(p2)}, тож ${tekst(`${koef(p1, b)}${dalі(p2)}`)}.`,
-    };
-  }
-  return {
-    pytannia: `Розкрий дужки. Який коефіцієнт при ${b}?`,
-    vyraz: `$${zliva} = \\square ${b}${dalі(p2)}$`,
-    vidpovid: ch(p1),
-    pidkazka: `Помнож ${ch(k)} на ${a}${b}.`,
-    rozviazok: `${ch(k)} · ${a} = ${ch(p1)}, тож ${tekst(`${koef(p1, b)}${dalі(p2)}`)}.`,
-  };
+  const c = r.chyslo(1, 12);
+  const [zb, zc] = [r.shans() ? 1 : -1, r.shans() ? 1 : -1];
+  const bukvaPersha = r.shans();
+  const chleny: [number, string][] = bukvaPersha ? [[zb, b], [zc, String(c)]] : [[zc, String(c)], [zb, b]];
+  const zapys = (ch_: [number, string][]) => ch_.map(([z, t], i) => (i === 0 ? (z < 0 ? `-${t}` : t) : `${z < 0 ? '-' : '+'} ${t}`)).join(' ');
+  return { chleny, zapys };
 }
 
 function minus(r: Vypadok): TrenZavdannia {
-  const b = r.vybir(BUKVY);
-  const c = r.chyslo(1, 12);
-  const pershaBukva = r.shans();
-  const plius = r.shans();
-  // −(c − b), −(c + b), −(b − c), −(b + c)
-  const vseredyni = pershaBukva ? `${b} ${plius ? '+' : '-'} ${c}` : `${c} ${plius ? '+' : '-'} ${b}`;
-  const pravylno = pershaBukva ? `-${b} ${plius ? '-' : '+'} ${c}` : `-${c} ${plius ? '-' : '+'} ${b}`;
-  const bezZminy = pershaBukva ? `-${b} ${plius ? '+' : '-'} ${c}` : `-${c} ${plius ? '+' : '-'} ${b}`;
-  const vtrachenyiMinus = pershaBukva ? `${b} ${plius ? '-' : '+'} ${c}` : `${c} ${plius ? '-' : '+'} ${b}`;
+  const { chleny, zapys } = dvaDodanky(r);
+  const pravylno = zapys(chleny.map(([z, t]) => [-z, t]));
+  const lyshePershyi = zapys(chleny.map(([z, t], i) => [i === 0 ? -z : z, t]));
+  const bezZminy = zapys(chleny);
   return {
-    pytannia: `Розкрий дужки: $-(${vseredyni})$`,
+    pytannia: `Розкрий дужки: $-(${zapys(chleny)})$`,
     vidpovid: tekst(pravylno),
-    varianty: r.peremishaty([pravylno, bezZminy, vtrachenyiMinus].map(tekst)),
+    varianty: r.peremishaty([...new Set([pravylno, lyshePershyi, bezZminy])].map(tekst)),
     pidkazka: 'Мінус перед дужками змінює знак КОЖНОГО доданка.',
     rozviazok: `Кожен знак змінюємо на протилежний: ${tekst(pravylno)}.`,
   };
 }
 
-function podibni(r: Vypadok): TrenZavdannia {
-  const b = r.vybir(BUKVY);
-  const k = Array.from({ length: r.chyslo(3, 4) }, () => r.krim(-9, 9, [0]));
-  if (k[0] < 0) k[0] = -k[0];
-  const s = k.reduce((x, y) => x + y, 0);
-  if (s === 0) return podibni(r);
-  const vyraz = k.map((v, i) => (i === 0 ? koef(v, b) : dalі(v, b))).join('');
+function plus(r: Vypadok): TrenZavdannia {
+  const { chleny, zapys } = dvaDodanky(r);
+  const insha = r.vybir(['p', 'k', 'c']);
+  const pravylno = `${insha} ${chleny.map(([z, t]) => `${z < 0 ? '-' : '+'} ${t}`).join(' ')}`;
+  const zminene = `${insha} ${chleny.map(([z, t]) => `${z < 0 ? '+' : '-'} ${t}`).join(' ')}`;
+  const lysheDruhyi = `${insha} ${chleny.map(([z, t], i) => `${(i === 1 ? -z : z) < 0 ? '-' : '+'} ${t}`).join(' ')}`;
   return {
-    pytannia: 'Зведи подібні доданки. Яке число замість квадратика?',
-    vyraz: `$${vyraz} = \\square ${b}$`,
-    vidpovid: ch(s),
-    pidkazka: 'Додай коефіцієнти з їхніми знаками.',
-    rozviazok: `${k.map((v, i) => (i === 0 ? ch(v) : v < 0 ? `(${ch(v)})` : v)).join(' + ')} = ${ch(s)}, тож ${tekst(koef(s, b))}.`,
+    pytannia: `Розкрий дужки: $${insha} + (${zapys(chleny)})$`,
+    vidpovid: tekst(pravylno),
+    varianty: r.peremishaty([...new Set([pravylno, zminene, lysheDruhyi])].map(tekst)),
+    pidkazka: 'Плюс перед дужками — знаки доданків не змінюються.',
+    rozviazok: `Знаки залишаються: ${tekst(pravylno)}.`,
   };
 }
 
-function znachennia(r: Vypadok): TrenZavdannia {
-  const b = r.vybir(BUKVY);
-  const k = r.chyslo(2, 6);
-  const c = r.krim(-6, 6, [0]);
-  const m = r.krim(-5, 5, [0, k]);
-  const n = r.krim(-6, 6, [0]);
-  // k(b + c) − m·b → (k − m)b + kc
-  const kx = k - m;
-  const vilnyi = k * c;
-  const zn = kx * n + vilnyi;
+/** a − (b − a) чи a − (b + a): зручне обчислення з протилежними доданками. */
+function zruchno(r: Vypadok): TrenZavdannia {
+  const a = r.chyslo(11, 99);
+  const b = r.chyslo(2, 60);
+  const typ = r.chyslo(0, 2);
+  if (typ === 0) {
+    // −a − (b − a) = −b
+    return {
+      pytannia: 'Обчисли зручно.',
+      vyraz: `$-${a} - (${b} - ${a}) =$`,
+      vidpovid: ch(-b),
+      pidkazka: 'Розкрий дужки, змінивши знаки, і знайди протилежні доданки.',
+      rozviazok: `−${a} − ${b} + ${a} = −${b} (−${a} і ${a} — протилежні).`,
+    };
+  }
+  if (typ === 1) {
+    // a − (a + b) = −b
+    return {
+      pytannia: 'Обчисли зручно.',
+      vyraz: `$${a} - (${a} + ${b}) =$`,
+      vidpovid: ch(-b),
+      pidkazka: 'Розкрий дужки: обидва доданки в дужках змінять знак.',
+      rozviazok: `${a} − ${a} − ${b} = −${b}`,
+    };
+  }
+  // (a + b) − (a − c) = b + c, десяткові
+  const [x, y, z] = [r.chyslo(11, 99), r.chyslo(1, 50), r.chyslo(1, 50)];
+  const d = (n: number) => des(n, 1).replace(',', '{,}');
   return {
-    pytannia: `Спрости вираз і знайди його значення при $${b} = ${tz(n)}$.`,
-    vyraz: `$${k}(${b}${dalі(c)})${dalі(-m, b)}$`,
+    pytannia: 'Обчисли зручно.',
+    vyraz: `$(${d(x)} + ${d(y)}) - (${d(x)} - ${d(z)}) =$`,
+    vidpovid: des(y + z, 1),
+    pidkazka: 'Розкрий обидві дужки: перед другими стоїть «−».',
+    rozviazok: `${des(x, 1)} + ${des(y, 1)} − ${des(x, 1)} + ${des(z, 1)} = ${des(y, 1)} + ${des(z, 1)} = ${des(y + z, 1)}`,
+  };
+}
+
+/** Значення виразу, у якому після розкриття дужок одна буква зникає. */
+function znachennia(r: Vypadok): TrenZavdannia {
+  const [b1, b2] = r.vybir([['a', 'b'], ['x', 'y'], ['m', 'n']]);
+  const c = r.krim(-15, 15, [0]);
+  const v = r.krim(-20, 20, [0]);
+  const typ = r.shans();
+  // typ: b1 − (b2 + c + b1) = −b2 − c;  інакше: (b1 − b2) − (b1 + c) = −b2 − c
+  const vnutr = c < 0 ? `- ${-c}` : `+ ${c}`;
+  const vyraz = typ ? `${b1} - (${b2} ${vnutr} + ${b1})` : `(${b1} - ${b2}) - (${b1} ${vnutr})`;
+  const zn = -v - c;
+  return {
+    pytannia: `Знайди значення виразу $${vyraz}$, якщо $${b2} = ${v < 0 ? `-${-v}` : v}$.`,
     vidpovid: ch(zn),
-    pidkazka: `Спершу розкрий дужки і зведи подібні: вийде ${tekst(`${koef(kx, b) || '0'}${dalі(vilnyi)}`)}.`,
-    rozviazok: `${tekst(`${koef(k, b)}${dalі(vilnyi)}${dalі(-m, b)} = ${koef(kx, b) || '0'}${dalі(vilnyi)}`)}; ${ch(kx)} · ${n < 0 ? `(${ch(n)})` : n} + ${vilnyi < 0 ? `(${ch(vilnyi)})` : vilnyi} = ${ch(zn)}.`,
+    pidkazka: `Розкрий дужки — ${b1} зникне.`,
+    rozviazok: `${tekst(typ ? `${b1} - ${b2} ${c < 0 ? `+ ${-c}` : `- ${c}`} - ${b1}` : `${b1} - ${b2} - ${b1} ${c < 0 ? `+ ${-c}` : `- ${c}`}`)} = −${b2} ${c < 0 ? `+ ${-c}` : `− ${c}`}; −(${ch(v)}) ${c < 0 ? `+ ${-c}` : `− ${c}`} = ${ch(zn)}.`,
   };
 }
 
 export default {
-  rivni: ['множник перед дужками', 'мінус перед дужками, подібні доданки', 'спрости і знайди значення'],
+  rivni: ['мінус перед дужками', 'плюс і мінус перед дужками, зручні обчислення', 'значення виразу після розкриття дужок'],
   zavdannia(r, riven) {
-    if (riven === 1) return mnozhnyk(r);
-    if (riven === 2) return r.vybir([minus, podibni, podibni, mnozhnyk])(r);
-    return r.vybir([znachennia, znachennia, podibni, minus])(r);
+    if (riven === 1) return r.shans(0.75) ? minus(r) : plus(r);
+    if (riven === 2) return r.vybir([minus, plus, zruchno, zruchno])(r);
+    return r.vybir([znachennia, znachennia, zruchno, minus])(r);
   },
 } satisfies Henerator;
