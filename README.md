@@ -84,6 +84,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `VidDesiatkyNazad` | цифра частки від десятки назад: дільник · 10 мінус зайві дільники | `<VidDesiatkyNazad dilene={344} dilnyk={43} />` |
   | `Zvedennia` | зведення до одиниці табличкою (одна або дві величини) | `<Zvedennia nazvy={['Корови', 'Дні']} vidomo={[5, 4]} rezultat={100} shukaty={[3, 6]} odynytsia="Сіно, кг" />` |
   | `Kolo` | коло або круг з центром, радіусом і діаметром; `formuly` — ще довжина кола і площа (π ≈ 3,14) | `<Kolo radius={3} pokazaty="obydva" />` |
+  | `RozhortkaKola` | колесо котиться по прямій: за один оберт — довжина кола, три діаметри і ще ≈ 0,14 d, тож C ≈ 3,14 · d | `<RozhortkaKola />`, `<RozhortkaKola d={50} odynytsi="см" />` |
   | `SumaRiznytsia` | два числа за сумою і різницею: смужки + кроки | `<SumaRiznytsia suma={30} riznytsia={6} imena={['Оля', 'Марко']} />` |
   | `Skorochennia` | скорочення дробу: ланцюжок і одним кроком через НСД | `<Skorochennia chys={24} znam={36} />` |
   | `SpilnyiZnamennyk` | два дроби до спільного знаменника, порівняння, `+` або `−`; `dia="zvesty"` — лише зведення | `<SpilnyiZnamennyk a={[3, 4]} b={[5, 6]} dia="+" />` |

@@ -16,6 +16,9 @@ export default defineConfig({
     '/5-klas/ploshcha-i-perymetr': '/math/4-klas/ploshcha-i-perymetr/',
     '/5-klas/odynytsi-ploshchi': '/math/4-klas/odynytsi-ploshchi/',
     '/5-klas/dilennia-z-ostacheiu': '/math/4-klas/dilennia-z-ostacheiu/',
+    // 6 клас за параграфами Істера: об'єднані теми розділено.
+    '/6-klas/priama-i-obernena-proportsiinist': '/math/6-klas/priama-proportsiinist/',
+    '/6-klas/dovzhyna-kola-i-ploshcha-kruha': '/math/6-klas/dovzhyna-kola/',
   },
   markdown: {
     // Формули: $...$ у рядку та $$...$$ окремим блоком. rehypePoshukFormul — щоб формули в пошуку
