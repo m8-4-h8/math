@@ -1,0 +1,119 @@
+---
+// Відсоткова смужка (подвійна числова пряма): зверху відсотки 0 % … 100 %, знизу — ті самі місця в числах.
+// Ціле (100 %) — уся смужка, зафарбована частина — p %. Невідоме підписано «?», а під малюнком — кроки:
+// через 1 % (sposib="odyn") або множенням / діленням на десятковий дріб (sposib="drib").
+//   <VidsotkovaSmuzhka vidsotky={30} tsile={800} odynytsi="кг" />           — 30 % від 800 = ?
+//   <VidsotkovaSmuzhka vidsotky={30} chastyna={240} shukaty="tsile" />    — 30 % числа = 240, число = ?
+//   <VidsotkovaSmuzhka vidsotky={120} tsile={500} sposib="drib" />        — більше за 100 % теж можна
+//   <VidsotkovaSmuzhka vidsotky={30} tsile={800} bez_vidpovidi />          — без відповіді (для задачі)
+
+interface Props {
+  vidsotky: number; // p — скільки відсотків (від 0 до 200)
+  tsile?: number; // число, що становить 100 %
+  chastyna?: number; // число, що становить p %
+  shukaty?: 'chastyna' | 'tsile';
+  sposib?: 'odyn' | 'drib';
+  odynytsi?: string;
+  bez_vidpovidi?: boolean; // не показувати кроків і числа замість «?»
+}
+const { vidsotky: p, odynytsi = '', sposib = 'odyn', bez_vidpovidi = false } = Astro.props;
+const shukaty = Astro.props.shukaty ?? (Astro.props.tsile !== undefined ? 'chastyna' : 'tsile');
+
+const okr = (x: number) => Math.round(x * 1e6) / 1e6;
+const tsile = okr(Astro.props.tsile ?? ((Astro.props.chastyna ?? 0) * 100) / p);
+const chastyna = okr(Astro.props.chastyna ?? (tsile * p) / 100);
+const odyn = okr(tsile / 100);
+const fmt = (x: number) => {
+  const [c, d] = String(okr(Math.abs(x))).split('.');
+  const tsila = c.length > 4 ? c.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : c;
+  return (x < 0 ? '−' : '') + tsila + (d ? ',' + d : '');
+};
+const desDrib = fmt(p / 100); // 30 % → 0,3
+const u = odynytsi ? ` ${odynytsi}` : '';
+
+// Розміри: 100 % — 400 px; якщо відсотків більше, смужка довша.
+const pad = 30;
+const sto = 400;
+const maks = Math.max(100, p);
+const shyryna = (sto * maks) / 100;
+const x = (v: number) => pad + (sto * v) / 100;
+const W = shyryna + 2 * pad;
+const top = 34;
+const barH = 34;
+const H = top + barH + 40;
+
+const pidpysTsile = shukaty === 'tsile' ? '?' : fmt(tsile);
+const pidpysChastyna = shukaty === 'chastyna' ? '?' : fmt(chastyna);
+const blyzko = Math.abs(p - 100) < 14; // підписи p % і 100 % не мають наїжджати
+const label =
+  shukaty === 'chastyna'
+    ? `Смужка: ${fmt(tsile)}${u} — це 100 %, шукаємо ${p} %`
+    : `Смужка: ${fmt(chastyna)}${u} — це ${p} %, шукаємо 100 %`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} role="img" aria-label={label}>
+      {
+        Array.from({ length: maks / 10 + 1 }, (_, i) => (
+          <line x1={x(i * 10)} y1={top} x2={x(i * 10)} y2={top + barH} stroke="var(--ill-line)" stroke-opacity="0.35" />
+        ))
+      }
+      <rect x={x(0)} y={top} width={(sto * Math.min(p, 100)) / 100} height={barH} fill="var(--ill-1)" fill-opacity="0.35" />
+      {p > 100 && <rect x={x(100)} y={top} width={(sto * (p - 100)) / 100} height={barH} fill="var(--ill-2)" fill-opacity="0.35" />}
+      <rect x={x(0)} y={top} width={sto} height={barH} fill="none" stroke="var(--ill-line)" stroke-width="2" />
+      {p > 100 && <rect x={x(100)} y={top} width={(sto * (p - 100)) / 100} height={barH} fill="none" stroke="var(--ill-2)" stroke-width="2" stroke-dasharray="5 4" />}
+      <line x1={x(p)} y1={top - 6} x2={x(p)} y2={top + barH + 6} stroke="var(--ill-1)" stroke-width="3" />
+
+      <text x={x(0)} y={top - 12} text-anchor="middle" font-size="13" fill="var(--ill-muted)">0 %</text>
+      <text x={x(100)} y={top - 12} text-anchor={blyzko && p < 100 ? 'start' : 'middle'} dx={blyzko && p < 100 ? 4 : 0} font-size="13" font-weight="700" fill="var(--ill-ink)">100 %</text>
+      {p !== 100 && <text x={x(p)} y={top - 12} text-anchor={blyzko && p < 100 ? 'end' : blyzko ? 'start' : 'middle'} dx={blyzko ? (p < 100 ? -4 : 4) : 0} font-size="13" font-weight="700" fill="var(--ill-1)">{p} %</text>}
+
+      <text x={x(0)} y={top + barH + 22} text-anchor="middle" font-size="14" fill="var(--ill-muted)">0</text>
+      <text x={x(100)} y={top + barH + 22} text-anchor={blyzko && p < 100 ? 'start' : 'middle'} dx={blyzko && p < 100 ? 4 : 0} font-size="15" font-weight="800" fill={shukaty === 'tsile' ? 'var(--ill-4)' : 'var(--ill-ink)'}>{pidpysTsile}</text>
+      {p !== 100 && <text x={x(p)} y={top + barH + 22} text-anchor={blyzko && p < 100 ? 'end' : blyzko ? 'start' : 'middle'} dx={blyzko ? (p < 100 ? -4 : 4) : 0} font-size="15" font-weight="800" fill={shukaty === 'chastyna' ? 'var(--ill-4)' : 'var(--ill-1)'}>{pidpysChastyna}</text>}
+    </svg>
+  </div>
+  {
+    !bez_vidpovidi &&
+      (shukaty === 'chastyna' ? (
+        sposib === 'odyn' ? (
+          <ol class="ill-steps">
+            <li>
+              1 % — сота частина: <b class="num">{fmt(tsile)} : 100 = {fmt(odyn)}</b>{u}.
+            </li>
+            <li>
+              {p} % — це {p} таких частин: <b class="num">{fmt(odyn)} · {p} = {fmt(chastyna)}</b>{u}.
+            </li>
+          </ol>
+        ) : (
+          <ol class="ill-steps">
+            <li>
+              {p} % = {p} : 100 = <b class="num">{desDrib}</b>.
+            </li>
+            <li>
+              {p} % від {fmt(tsile)} — множимо: <b class="num">{fmt(tsile)} · {desDrib} = {fmt(chastyna)}</b>{u}.
+            </li>
+          </ol>
+        )
+      ) : sposib === 'odyn' ? (
+        <ol class="ill-steps">
+          <li>
+            {p} % — це {fmt(chastyna)}{u}, тому 1 %: <b class="num">{fmt(chastyna)} : {p} = {fmt(odyn)}</b>{u}.
+          </li>
+          <li>
+            Усе число — 100 %: <b class="num">{fmt(odyn)} · 100 = {fmt(tsile)}</b>{u}.
+          </li>
+        </ol>
+      ) : (
+        <ol class="ill-steps">
+          <li>
+            {p} % = <b class="num">{desDrib}</b>, тобто число · {desDrib} = {fmt(chastyna)}.
+          </li>
+          <li>
+            Невідомий множник — ділимо: <b class="num">{fmt(chastyna)} : {desDrib} = {fmt(tsile)}</b>{u}.
+          </li>
+        </ol>
+      ))
+  }
+</figure>

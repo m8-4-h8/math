@@ -1,0 +1,113 @@
+---
+// Найменший спільний знаменник перебором: кратні найбільшого знаменника по черзі (8, 16, 24…) і чи ділиться
+// кожне на інші знаменники (✓ / ✗). Перше кратне, що ділиться на всі, — найменший спільний знаменник.
+//   <KratniZnamennyka znamennyky={[6, 8]} />
+//   <KratniZnamennyka znamennyky={[4, 6, 9]} />
+//   <KratniZnamennyka znamennyky={[6, 8]} bez_vidpovidi />   — лише перші кратні, без позначок (для задачі)
+
+interface Props {
+  znamennyky: number[];
+  bez_vidpovidi?: boolean;
+}
+const { znamennyky, bez_vidpovidi = false } = Astro.props;
+
+const naibilshyi = Math.max(...znamennyky);
+const inshi = [...new Set(znamennyky.filter((z) => z !== naibilshyi))];
+const kratni: { k: number; dilytsia: boolean[] }[] = [];
+for (let i = 1; i <= 30; i++) {
+  const k = naibilshyi * i;
+  const dilytsia = inshi.map((z) => k % z === 0);
+  kratni.push({ k, dilytsia });
+  if (dilytsia.every(Boolean)) break;
+}
+const nsz = kratni.at(-1)!.k;
+const pokazaty = bez_vidpovidi ? kratni.slice(0, Math.min(3, kratni.length - 1) || 1) : kratni;
+const label = bez_vidpovidi
+  ? `Кратні числа ${naibilshyi}: ${pokazaty.map((x) => x.k).join(', ')} і далі`
+  : `Кратні числа ${naibilshyi}: ${kratni.map((x) => x.k).join(', ')}. Перше, що ділиться на ${inshi.join(' і ')}, — ${nsz}`;
+---
+
+<figure class="ill not-content kratni" aria-label={label}>
+  <p class="kratni-zah">Кратні найбільшого знаменника <b class="c1">{naibilshyi}</b>:</p>
+  <ul class="kratni-riad">
+    {
+      pokazaty.map((x, i) => (
+        <li class:list={['kratne', { vlucheno: !bez_vidpovidi && i === kratni.length - 1 }]}>
+          <span class="kratne-chyslo">{x.k}</span>
+          {!bez_vidpovidi && (
+            <span class="kratne-poznachky">
+              {inshi.map((z, j) => (
+                <span class:list={[x.dilytsia[j] ? 'tak' : 'ni']}>
+                  :{z} {x.dilytsia[j] ? '✓' : '✗'}
+                </span>
+              ))}
+            </span>
+          )}
+        </li>
+      ))
+    }
+    {bez_vidpovidi && <li class="kratne krapky">…</li>}
+  </ul>
+  {
+    !bez_vidpovidi && (
+      <ol class="ill-steps">
+        <li>
+          Беремо найбільший знаменник {naibilshyi} і йдемо його кратними: {kratni.map((x) => x.k).join(', ')}.
+        </li>
+        <li>
+          Кожне перевіряємо: чи ділиться на {inshi.join(' і на ')}? Перше, що ділиться, —{' '}
+          <b class="c1">найменший спільний знаменник {nsz}</b>.
+        </li>
+      </ol>
+    )
+  }
+</figure>
+
+<style>
+  .kratni-zah {
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+  }
+  .kratni-riad {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .kratne {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 3.6rem;
+    padding: 0.35rem 0.6rem;
+    border: 2px solid var(--ill-line);
+    border-radius: 0.7rem;
+  }
+  .kratne.vlucheno {
+    border-color: var(--ill-3);
+    background: color-mix(in srgb, var(--ill-3) 18%, transparent);
+  }
+  .kratne.krapky {
+    justify-content: center;
+    border-style: dashed;
+  }
+  .kratne-chyslo {
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+  .kratne-poznachky {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .tak {
+    color: var(--ill-3);
+  }
+  .ni {
+    color: var(--ill-4);
+  }
+</style>

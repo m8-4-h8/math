@@ -1,0 +1,72 @@
+---
+// Дія зі звичайним і десятковим дробом: який запис обрати? Зверху — питання про знаменник,
+// під ним дві гілки: «так» — рахуємо десятковими, «ні» — звичайними. Приклади — у слотах (з формулами):
+//   <VybirZapysu>
+//     <span slot="tak">$\frac{3}{4} + 0{,}6 = 0{,}75 + 0{,}6 = 1{,}35$</span>
+//     <span slot="ni">$\frac{1}{3} + 0{,}5 = \frac{1}{3} + \frac{1}{2} = \frac{5}{6}$</span>
+//   </VybirZapysu>
+---
+
+<figure class="ill not-content vybir">
+  <p class="vybir-pytannia">
+    Чи має знаменник звичайного дробу <b>лише множники 2 і 5</b> <span class="muted">(2, 4, 5, 8, 10, 20, 25…)</span>?
+  </p>
+  <div class="vybir-hilky">
+    <div class="vybir-hilka tak">
+      <p class="vybir-vidpovid"><span aria-hidden="true">✓</span> Так</p>
+      <p>Дріб записується скінченним десятковим — <b class="c1">рахуємо десятковими</b>.</p>
+      <p class="vybir-pryklad"><slot name="tak" /></p>
+    </div>
+    <div class="vybir-hilka ni">
+      <p class="vybir-vidpovid"><span aria-hidden="true">✗</span> Ні — є 3, 7, 9…</p>
+      <p>Десятковий запис нескінченний — <b class="c2">рахуємо звичайними дробами</b>.</p>
+      <p class="vybir-pryklad"><slot name="ni" /></p>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .vybir-pytannia {
+    margin: 0 0 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--ill-line);
+    border-radius: 0.5rem;
+    text-align: center;
+    font-size: var(--sl-text-base);
+  }
+  .vybir-hilky {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .vybir-hilka {
+    flex: 1 1 14rem;
+    min-width: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    border-top: 4px solid;
+    background: var(--ill-paper);
+  }
+  .vybir-hilka.tak {
+    border-color: var(--ill-1);
+  }
+  .vybir-hilka.ni {
+    border-color: var(--ill-2);
+  }
+  .vybir-hilka p {
+    margin: 0 0 0.4rem;
+  }
+  .vybir-vidpovid {
+    font-weight: 700;
+    font-size: var(--sl-text-base);
+  }
+  .tak .vybir-vidpovid {
+    color: var(--ill-1);
+  }
+  .ni .vybir-vidpovid {
+    color: var(--ill-2);
+  }
+  .vybir-pryklad {
+    overflow-x: auto;
+  }
+</style>

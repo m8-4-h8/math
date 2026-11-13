@@ -1,0 +1,118 @@
+---
+// Звичайний дріб → десятковий діленням «кутом» по кроках: кожна остача · 10 дає наступну цифру.
+// Якщо остача стала 0 — дріб скінченний; якщо остача повторилась — цифри підуть по колу (період).
+// Рядки періоду виділено кольором, під таблицею — запис 0,41(6) і пояснення.
+//   <PeriodychnyiDrib chys={5} znam={12} />
+//   <PeriodychnyiDrib chys={3} znam={8} />
+
+interface Props {
+  chys: number;
+  znam: number;
+}
+const { chys, znam } = Astro.props;
+
+const tsila = Math.floor(chys / znam);
+let ostacha = chys % znam;
+const kroky: { dilene: number; tsyfra: number; ostacha: number }[] = [];
+const bachyly = new Map<number, number>(); // остача → номер кроку, з якого вона почала
+let pochatokPeriodu = -1;
+while (ostacha !== 0 && kroky.length < 24) {
+  if (bachyly.has(ostacha)) {
+    pochatokPeriodu = bachyly.get(ostacha)!;
+    break;
+  }
+  bachyly.set(ostacha, kroky.length);
+  const dilene = ostacha * 10;
+  const tsyfra = Math.floor(dilene / znam);
+  ostacha = dilene % znam;
+  kroky.push({ dilene, tsyfra, ostacha });
+}
+const tsyfry = kroky.map((k) => k.tsyfra).join('');
+const periodychnyi = pochatokPeriodu >= 0;
+const zapys = periodychnyi
+  ? `${tsila},${tsyfry.slice(0, pochatokPeriodu)}(${tsyfry.slice(pochatokPeriodu)})`
+  : `${tsila}${tsyfry ? ',' + tsyfry : ''}`;
+const dovhyi = periodychnyi
+  ? `${tsila},${tsyfry}${tsyfry.slice(pochatokPeriodu)}${tsyfry.slice(pochatokPeriodu)}…`
+  : zapys;
+const povtor = periodychnyi ? kroky[kroky.length - 1].ostacha : 0;
+---
+
+<figure class="ill not-content perdr" aria-label={`${chys}/${znam} = ${zapys}`}>
+  <p class="perdr-zah">
+    <span class="frac" aria-hidden="true"><span>{chys}</span><span>{znam}</span></span> = {chys} : {znam}
+  </p>
+  <table class="perdr-tab">
+    <thead>
+      <tr><th>Ділимо</th><th>Цифра</th><th>Остача</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{chys} : {znam}</td>
+        <td><b>{tsila}</b>,</td>
+        <td>{chys % znam}</td>
+      </tr>
+      {
+        kroky.map((k, i) => (
+          <tr class:list={[{ period: periodychnyi && i >= pochatokPeriodu }]}>
+            <td>{k.dilene} : {znam}</td>
+            <td><b>{k.tsyfra}</b></td>
+            <td class:list={[{ povtor: periodychnyi && i === kroky.length - 1 }]}>{k.ostacha}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <ol class="ill-steps">
+    <li>Кожну остачу множимо на 10 (дописуємо нуль) і ділимо далі — так з'являється наступна цифра після коми.</li>
+    {
+      periodychnyi ? (
+        <li>
+          Остача <b class="c4">{povtor}</b> вже була — далі ділення повторюватиметься, і цифри підуть по колу:{' '}
+          <b>{dovhyi}</b>
+        </li>
+      ) : (
+        <li>Остача стала 0 — ділення закінчилось, дріб скінченний.</li>
+      )
+    }
+  </ol>
+  <figcaption class="ill-caption">
+    <span class="frac" aria-hidden="true"><span>{chys}</span><span>{znam}</span></span> = <span class="c1">{zapys}</span>
+    {periodychnyi && <span class="perdr-pidpys"> (у дужках — період)</span>}
+  </figcaption>
+</figure>
+
+<style>
+  .perdr-zah {
+    margin: 0 0 0.5rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .perdr-tab {
+    width: auto;
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  .perdr-tab th,
+  .perdr-tab td {
+    padding: 0.2rem 0.9rem;
+    border-bottom: 1px solid var(--ill-line);
+    text-align: center;
+  }
+  .perdr-tab th {
+    color: var(--ill-muted);
+    font-weight: 700;
+  }
+  .perdr-tab tr.period td {
+    background: color-mix(in srgb, var(--ill-1) 16%, transparent);
+  }
+  .perdr-tab td.povtor {
+    color: var(--ill-4);
+    font-weight: 800;
+  }
+  .perdr-pidpys {
+    color: var(--ill-muted);
+    font-weight: 600;
+  }
+</style>

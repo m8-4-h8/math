@@ -1,6 +1,7 @@
 ---
 // Картки класів на головній сторінці. Класи й теми беремо прямо з src/content/docs,
 // тож нова тема чи новий клас з'являються тут самі. Значок теми — поле `ikonka` на початку файлу.
+// Якщо теми класу мають поле `rozdil`, над першою темою кожного розділу стоїть його назва.
 import { getCollection } from 'astro:content';
 import { znachokKlasu } from '../../klasy.mjs';
 
@@ -22,7 +23,8 @@ const spysok = [...klasy.entries()]
     nomer,
     znachok: znachokKlasu(nomer),
     kolir: ((nomer - 1) % 6) + 1,
-    temy: temy.sort(sortuvaty).map((t) => ({
+    temy: temy.sort(sortuvaty).map((t, i, usi) => ({
+      rozdil: t.data.rozdil !== usi[i - 1]?.data.rozdil ? t.data.rozdil : undefined,
       nazva: t.data.title,
       ikonka: t.data.ikonka || '📘',
       shliakh: `${baza}/${t.id}/`,
@@ -56,6 +58,7 @@ function temy(n: number) {
         <ul class="klas-temy">
           {klas.temy.map((t) => (
             <li>
+              {t.rozdil && <p class="klas-rozdil">{t.rozdil}</p>}
               <a href={t.shliakh} data-shliakh={t.shliakh} data-zavdan={t.zavdan}>
                 <span class="tema-ikonka" aria-hidden="true">
                   {t.ikonka}
@@ -206,6 +209,14 @@ function temy(n: number) {
   .klas-temy a:focus-visible {
     background: color-mix(in srgb, var(--kolir) 16%, transparent);
     transform: translateX(4px);
+  }
+  .klas-rozdil {
+    margin: 0.6rem 0.75rem 0.15rem;
+    color: color-mix(in srgb, var(--kolir) 70%, var(--sl-color-white));
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
   }
   .tema-ikonka {
     flex: none;

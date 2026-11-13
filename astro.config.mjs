@@ -5,7 +5,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { unified } from '@astrojs/markdown-remark';
 import rehypePoshukFormul from './src/poshuk-formul.mjs';
-import { papkyKlasiv, znachokKlasu } from './src/klasy.mjs';
+import { meniuKlasu, papkyKlasiv, znachokKlasu } from './src/klasy.mjs';
 
 export default defineConfig({
   site: 'https://m8-4-h8.github.io',
@@ -43,12 +43,13 @@ export default defineConfig({
       // Один клас = одна папка в src/content/docs (наприклад `6-klas`). Меню будується само:
       // нова папка = новий клас, новий .md/.mdx файл у ній = нова тема.
       // Групи згорнуті, тож меню коротке; група з відкритою темою розгортається сама.
+      // Якщо теми класу мають поле `rozdil`, усередині класу є ще й розділи, як у підручнику.
       sidebar: [
         { label: '🎮 Тренажер', link: '/trenazher/' },
         ...papkyKlasiv().map(({ papka, nomer }) => ({
           label: `${znachokKlasu(nomer)} ${nomer} клас`,
           collapsed: true,
-          items: [{ autogenerate: { directory: papka } }],
+          items: meniuKlasu(papka),
         })),
         { label: '✏️ Як намалювати задачу', collapsed: true, items: [{ autogenerate: { directory: 'vizualizatsiia-zadach' } }] },
         { label: '💡 Поради для навчання', collapsed: true, items: [{ autogenerate: { directory: 'porady' } }] },
