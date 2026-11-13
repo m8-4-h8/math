@@ -1,0 +1,147 @@
+---
+// Модель задачі смужками: кожна величина — смужка з однакових шматків «x» і, можливо, ще кількох одиниць
+// (+3) або без кількох одиниць (−3, заштриховано). Праворуч дужка — сума всіх величин. Під малюнком — рівняння.
+//   <ModelZadachi riadky={[{ nazva: 'I', x: 2 }, { nazva: 'II', x: 1 }, { nazva: 'III', x: 1, dodatok: 3 }]} razom={35} rivniannia="2x + x + (x + 3) = 35" />
+interface Riadok {
+  nazva: string;
+  x: number; // скільки шматків «x»
+  dodatok?: number; // скільки ще одиниць додати (+) чи відняти (−)
+}
+interface Props {
+  riadky: Riadok[];
+  razom?: number | string;
+  zminna?: string;
+  rivniannia?: string;
+}
+const { riadky, razom, zminna = 'x', rivniannia } = Astro.props;
+
+const U = 58; // ширина шматка «x»
+const D = 40; // ширина шматка-додатка
+const H = 30;
+const krok = 46;
+const x0 = 84;
+const y0 = 16;
+const dovzhyna = (r: Riadok) => r.x * U + (r.dodatok && r.dodatok > 0 ? D : 0);
+const maks = Math.max(...riadky.map(dovzhyna));
+const W = x0 + maks + (razom !== undefined ? 80 : 16);
+const VH = y0 + riadky.length * krok + 6;
+const yB = (i: number) => y0 + i * krok;
+const fmt = (v: number) => (v < 0 ? `−${-v}` : `+${v}`);
+const vyraz = (r: Riadok) =>
+  `${r.x === 1 ? '' : r.x}${zminna}${r.dodatok ? ` ${r.dodatok < 0 ? '−' : '+'} ${Math.abs(r.dodatok)}` : ''}`;
+const opys = `${riadky.map((r) => `${r.nazva}: ${vyraz(r)}`).join('; ')}${razom !== undefined ? `; разом ${razom}` : ''}`;
+const xBrace = x0 + maks + 14;
+const yTop = yB(0);
+const yBot = yB(riadky.length - 1) + H;
+const id = `mz-${riadky.length}-${riadky.map((r) => r.x).join('')}`;
+---
+
+<figure class="ill not-content model-zadachi">
+  <svg viewBox={`0 0 ${W} ${VH}`} role="img" aria-label={opys} style={`max-width:${W}px`}>
+    <defs>
+      <pattern id={`${id}-shtr`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="6" stroke="var(--ill-4)" stroke-width="2"></line>
+      </pattern>
+    </defs>
+    {
+      riadky.map((r, i) => (
+        <g>
+          <text x={x0 - 10} y={yB(i) + H / 2 + 5} text-anchor="end" class="nazva">
+            {r.nazva}
+          </text>
+          {Array.from({ length: r.x }, (_, k) => (
+            <g>
+              <rect x={x0 + k * U} y={yB(i)} width={U} height={H} rx="4" class="shmatok" />
+              <text x={x0 + k * U + U / 2} y={yB(i) + H / 2 + 5} text-anchor="middle" class="bukva">
+                {zminna}
+              </text>
+            </g>
+          ))}
+          {r.dodatok && r.dodatok > 0 && (
+            <g>
+              <rect x={x0 + r.x * U} y={yB(i)} width={D} height={H} rx="4" class="dodatok" />
+              <text x={x0 + r.x * U + D / 2} y={yB(i) + H / 2 + 5} text-anchor="middle" class="chyslo">
+                {fmt(r.dodatok)}
+              </text>
+            </g>
+          )}
+          {r.dodatok && r.dodatok < 0 && (
+            <g>
+              <rect x={x0 + r.x * U - D} y={yB(i)} width={D} height={H} fill={`url(#${id}-shtr)`} class="minus" />
+              <text x={x0 + r.x * U - D / 2} y={yB(i) - 3} text-anchor="middle" class="chyslo minus-t">
+                {fmt(r.dodatok)}
+              </text>
+            </g>
+          )}
+        </g>
+      ))
+    }
+    {
+      razom !== undefined && (
+        <g>
+          <path
+            d={`M ${xBrace} ${yTop} q 8 0 8 8 L ${xBrace + 8} ${(yTop + yBot) / 2 - 6} q 0 6 8 6 q -8 0 -8 6 L ${xBrace + 8} ${yBot - 8} q 0 8 -8 8`}
+            class="duzhka"
+          />
+          <text x={xBrace + 22} y={(yTop + yBot) / 2 + 6} class="razom">
+            {razom}
+          </text>
+        </g>
+      )
+    }
+  </svg>
+  {rivniannia && <figcaption class="num">{rivniannia}</figcaption>}
+</figure>
+
+<style>
+  .model-zadachi svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  .model-zadachi .shmatok {
+    fill: color-mix(in srgb, var(--ill-1) 22%, transparent);
+    stroke: var(--ill-1);
+    stroke-width: 2;
+  }
+  .model-zadachi .dodatok {
+    fill: color-mix(in srgb, var(--ill-3) 22%, transparent);
+    stroke: var(--ill-3);
+    stroke-width: 2;
+  }
+  .model-zadachi .minus {
+    stroke: var(--ill-4);
+    stroke-width: 2;
+    stroke-dasharray: 4 3;
+  }
+  .model-zadachi .nazva,
+  .model-zadachi .bukva,
+  .model-zadachi .chyslo,
+  .model-zadachi .razom {
+    fill: var(--ill-ink);
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .model-zadachi .bukva {
+    font-style: italic;
+    fill: var(--ill-1);
+  }
+  .model-zadachi .minus-t {
+    fill: var(--ill-4);
+    font-size: 13px;
+  }
+  .model-zadachi .razom {
+    font-size: 18px;
+  }
+  .model-zadachi .duzhka {
+    fill: none;
+    stroke: var(--ill-ink);
+    stroke-width: 2;
+  }
+  .model-zadachi figcaption {
+    text-align: center;
+    font-weight: 700;
+    margin-top: 0.4rem;
+  }
+</style>
