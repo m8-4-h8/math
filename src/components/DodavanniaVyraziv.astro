@@ -1,0 +1,170 @@
+---
+// Додавання і віднімання раціональних дробів: знаменники розкладено на множники, над кожним дробом — додатковий
+// множник (чого бракує його знаменнику до спільного), далі — один дріб зі спільним знаменником. Віднімаємо
+// многочлен — він у дужках. Якщо знаменники однакові, додаткових множників немає.
+//   <DodavanniaVyraziv drobi={[{ ch: '3', zn: ['x'] }, { ch: '2', zn: ['(x − 1)'] }]} dia="+"
+//     chysRazom="5x − 3" />
+//   <DodavanniaVyraziv drobi={[{ ch: '5x + 1', zn: ['x'] }, { ch: '2x − 3', zn: ['x'] }]} dia="−" chysRazom="3x + 4" />
+interface Drib {
+  /** Чисельник, як його пишемо: «3», «x + 1». */
+  ch: string;
+  /** Множники знаменника: ['x', '(x − 1)'], ['3', 'a']. */
+  zn: string[];
+}
+interface Props {
+  drobi: [Drib, Drib];
+  dia?: '+' | '−';
+  /** Множники спільного знаменника. За замовчуванням — усі множники обох знаменників без повторів. */
+  spilnyi?: string[];
+  /** Чисельник після розкриття дужок і зведення подібних. */
+  chysRazom?: string;
+  /** Відповідь після скорочення: [чисельник, знаменник]; знаменник '1' — ціле. */
+  rezultat?: [string, string];
+}
+const { drobi, dia = '+', spilnyi: zadanyi, chysRazom, rezultat } = Astro.props;
+
+/** Мультимножинна різниця: що є в `a`, але бракує в `b` (з урахуванням повторів). */
+function riznytsia(a: string[], b: string[]) {
+  const zalyshok = [...b];
+  return a.filter((m) => {
+    const i = zalyshok.indexOf(m);
+    if (i < 0) return true;
+    zalyshok.splice(i, 1);
+    return false;
+  });
+}
+const spilnyi = zadanyi ?? drobi.reduce<string[]>((s, d) => [...s, ...riznytsia(d.zn, s)], []);
+const dod = drobi.map((d) => riznytsia(spilnyi, d.zn));
+const odnakovi = dod.every((m) => m.length === 0);
+
+/** Добуток множників: числа перемножуємо й ставимо попереду; одну дужку пишемо без дужок. */
+function dobutok(ms: string[], bezDuzhok = true) {
+  if (ms.length === 0) return '1';
+  const chysla = ms.filter((m) => /^\d+$/.test(m));
+  const inshi = ms.filter((m) => !/^\d+$/.test(m));
+  const k = chysla.reduce((a, m) => a * Number(m), 1);
+  const vse = [...(chysla.length && (k !== 1 || !inshi.length) ? [String(k)] : []), ...inshi];
+  if (vse.length === 1 && bezDuzhok) return vse[0].replace(/^\((.*)\)$/, '$1');
+  return vse.join('');
+}
+const bagato = (v: string) => / [+−-] /.test(v);
+/** Чисельник, помножений на додатковий множник: 3 і x → 3x, 3 і 3 → 9, x + 1 і 2 → 2(x + 1). */
+function pomnozh(ch: string, ms: string[]) {
+  if (ms.length === 0) return ch;
+  const d = dobutok(ms, false);
+  const chyslo = /^\d+$/;
+  if (ch === '1') return dobutok(ms);
+  if (chyslo.test(ch) && chyslo.test(d)) return String(Number(ch) * Number(d));
+  if (chyslo.test(ch)) return `${ch}${d}`;
+  const chW = bagato(ch) ? `(${ch})` : ch;
+  if (d.startsWith('(') || !chyslo.test(d)) return bagato(ch) ? `${d}${chW}` : `${chW}${d}`;
+  return `${d}${chW}`;
+}
+const chleny = drobi.map((d, i) => pomnozh(d.ch, dod[i]));
+// Віднімаємо многочлен без додаткового множника — беремо його в дужки.
+const druhyi = dia === '−' && dod[1].length === 0 && bagato(drobi[1].ch) ? `(${drobi[1].ch})` : chleny[1];
+const duzhkyMinus = dia === '−' && bagato(drobi[1].ch);
+const zn = dobutok(spilnyi);
+const opys = `${drobi.map((d) => `${d.ch} на ${dobutok(d.zn)}`).join(` ${dia === '+' ? 'плюс' : 'мінус'} `)}. Спільний знаменник ${zn}.${
+  odnakovi ? '' : ` Додаткові множники: ${dod.map((m) => dobutok(m)).join(' і ')}.`
+} Чисельник: ${chleny[0]} ${dia} ${druhyi}`;
+---
+
+<figure class="ill not-content" aria-label={opys}>
+  <p class="dv-riad" aria-hidden="true">
+    {
+      drobi.map((d, i) => (
+        <>
+          {i > 0 && <span class="dv-znak">{dia}</span>}
+          <span class="dv-mn">
+            {!odnakovi && <sup class:list={['dv-dod', i === 0 ? 'c2' : 'c4']}>{dobutok(dod[i], false)}</sup>}
+            <span class="frac">
+              <span>{d.ch}</span>
+              <span>{dobutok(d.zn)}</span>
+            </span>
+          </span>
+        </>
+      ))
+    }
+    <span class="dv-znak">=</span>
+    <span class="frac">
+      <span>
+        <span class={odnakovi ? '' : 'c2'}>{chleny[0]}</span> {dia} <span class={odnakovi ? '' : 'c4'}>{druhyi}</span>
+      </span>
+      <span>{zn}</span>
+    </span>
+    {
+      chysRazom && (
+        <>
+          <span class="dv-znak">=</span>
+          <span class="frac">
+            <span>{chysRazom}</span>
+            <span>{zn}</span>
+          </span>
+        </>
+      )
+    }
+    {
+      rezultat && (
+        <>
+          <span class="dv-znak">=</span>
+          {rezultat[1] === '1' ? (
+            <span class="c3 dv-rez">{rezultat[0]}</span>
+          ) : (
+            <span class="frac c3">
+              <span>{rezultat[0]}</span>
+              <span>{rezultat[1]}</span>
+            </span>
+          )}
+        </>
+      )
+    }
+  </p>
+  <ol class="ill-steps">
+    {
+      odnakovi ? (
+        <li>Знаменники однакові — {dia === '+' ? 'додаємо' : 'віднімаємо'} лише чисельники, знаменник <b>{zn}</b> лишається.</li>
+      ) : (
+        <>
+          <li>
+            Спільний знаменник — <b>{zn}</b>: у ньому є всі множники обох знаменників.
+          </li>
+          <li>
+            Додаткові множники — чого бракує кожному знаменнику до спільного: для першого дробу{' '}
+            <b class="c2">{dobutok(dod[0])}</b>, для другого — <b class="c4">{dobutok(dod[1])}</b>. На них множимо чисельники.
+          </li>
+        </>
+      )
+    }
+    {duzhkyMinus && <li>Перед другим дробом мінус — віднімаємо <b>весь</b> його чисельник, тому він у дужках.</li>}
+    {chysRazom && <li>Розкриваємо дужки й зводимо подібні: чисельник дорівнює <b>{chysRazom}</b>.</li>}
+    {rezultat && <li>Скорочуємо, якщо можна, — відповідь <b class="c3">{rezultat[1] === '1' ? rezultat[0] : `${bagato(rezultat[0]) ? `(${rezultat[0]})` : rezultat[0]} / ${bagato(rezultat[1]) ? `(${rezultat[1]})` : rezultat[1]}`}</b>.</li>}
+  </ol>
+</figure>
+
+<style>
+  .dv-riad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    margin: 0.4rem 0;
+  }
+  .dv-znak,
+  .dv-rez {
+    font-weight: 700;
+  }
+  .dv-mn {
+    display: inline-flex;
+    align-items: flex-start;
+  }
+  .dv-dod {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-right: 0.1rem;
+    border-bottom: 2px solid currentColor;
+    line-height: 1.1;
+  }
+</style>

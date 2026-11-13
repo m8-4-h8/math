@@ -3,15 +3,16 @@
 // Повертає SVG-рядок: його вставляють і компонент Chotyrykutnyk, і тренажери (поле `malunok`).
 // Невідоме підписуємо «?», тож малюнок не видає відповідь.
 // Файл не є генератором: генератори лежать у `<N>-klas/`.
-import { type P, kontur, litera, napys, pidpysStorony, svg, tochka, vidrizok } from './trykutnyky.ts';
+import { type P, kontur, litera, napys, pidpysStorony, rysky, svg, tochka, vidrizok } from './trykutnyky.ts';
 
-export type FormaChotyrykutnyka = 'dovilnyi' | 'neopuklyi' | 'opuklyi2';
+export type FormaChotyrykutnyka = 'dovilnyi' | 'neopuklyi' | 'opuklyi2' | 'paralelohram';
 
 /** Одиничні координати (y — донизу), вершини A, B, C, D по колу. */
 const FORMY: Record<FormaChotyrykutnyka, P[]> = {
   dovilnyi: [[0, 1], [0.18, 0.12], [1.05, 0], [1.3, 0.95]],
   opuklyi2: [[0, 0.8], [0.45, 0], [1.3, 0.3], [0.95, 1.05]],
   neopuklyi: [[0, 1], [0.55, 0], [1.1, 1], [0.55, 0.62]],
+  paralelohram: [[0, 0.8], [0.4, 0], [1.5, 0], [1.1, 0.8]],
 };
 
 export interface ChotyrykutnykOpts {
@@ -30,6 +31,18 @@ export interface ChotyrykutnykOpts {
   storony?: (string | undefined)[];
   /** Розбити діагоналлю AC на два трикутники різного кольору з дугами їхніх кутів. */
   rozbyttia?: boolean;
+  /** Рисочки рівних сторін 0..3 (AB, BC, CD, DA): скільки рисочок. */
+  rysky?: number[];
+  /** Стрілочки паралельних сторін 0..3: скільки стрілочок (однакова кількість — паралельні). */
+  strilky?: number[];
+  /** Точка перетину діагоналей з цією назвою (діагоналі AC і BD малюються самі). */
+  peretyn?: string;
+  /** Рисочки на половинах діагоналей: [для AO і OC, для BO і OD]. */
+  ryskyDiahonalei?: [number, number];
+  /** Підписи половин діагоналей: [AO, OC, BO, OD] ('?' — шукане). */
+  pidpysyDiahonalei?: (string | undefined)[];
+  /** Відрізок з вершини до точки на протилежній стороні: [вершина, сторона, частка від її початку, назва точки]. */
+  vidrizok?: [number, number, number, string];
   W?: number;
   H?: number;
 }
@@ -41,6 +54,31 @@ const odyn = (a: P): P => {
   return [a[0] / l, a[1] / l];
 };
 const cross = (a: P, b: P) => a[0] * b[1] - a[1] * b[0];
+
+/** Точка перетину діагоналей AC і BD. */
+function peretynDiahonalei(t: P[]): P {
+  const [a, c, b, d] = [t[0], t[2], t[1], t[3]];
+  const r = riz(c, a);
+  const q = riz(d, b);
+  const k = cross(riz(b, a), q) / cross(r, q);
+  return [a[0] + r[0] * k, a[1] + r[1] * k];
+}
+
+/** n стрілочок «>» на стороні ab (у частці `de` від a) — позначка паралельних сторін. */
+function strilky(a: P, b: P, n: number, de = 0.5): string {
+  // Стрілочки на паралельних сторонах дивляться в один бік: праворуч (або вгору, якщо сторона вертикальна).
+  let u = odyn(riz(b, a));
+  if (u[0] < -1e-9 || (Math.abs(u[0]) < 1e-9 && u[1] > 0)) u = [-u[0], -u[1]];
+  const nrm: P = [-u[1], u[0]];
+  const m: P = [a[0] + (b[0] - a[0]) * de, a[1] + (b[1] - a[1]) * de];
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const s = (i - (n - 1) / 2) * 6 + 3;
+    const v: P = [m[0] + u[0] * s, m[1] + u[1] * s];
+    d += `M ${f(v[0] - u[0] * 6 + nrm[0] * 5)} ${f(v[1] - u[1] * 6 + nrm[1] * 5)} L ${f(v[0])} ${f(v[1])} L ${f(v[0] - u[0] * 6 - nrm[0] * 5)} ${f(v[1] - u[1] * 6 - nrm[1] * 5)} `;
+  }
+  return `<path d="${d}" fill="none" stroke="var(--ill-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
 
 /** Площа зі знаком (y — донизу): знак показує напрям обходу. */
 const ploshchaZiZnakom = (t: P[]) => t.reduce((s, p, i) => s + cross(p, t[(i + 1) % t.length]), 0) / 2;
@@ -104,6 +142,44 @@ export function chotyrykutnyk(o: ChotyrykutnykOpts = {}) {
     tilo += vidrizok(t[i], t[j], { k: 2, shtrykh: o.shtrykh ?? true, tovshch: 2 });
   }
   if (o.diahonali?.length) opys.push(`діагоналі ${o.diahonali.map(([i, j]) => bukvy[i] + bukvy[j]).join(' і ')}`);
+  if (o.peretyn) {
+    const O = peretynDiahonalei(t);
+    const shtrykh = o.shtrykh ?? false;
+    tilo += vidrizok(t[0], t[2], { k: 2, shtrykh, tovshch: 2 }) + vidrizok(t[1], t[3], { k: 2, shtrykh, tovshch: 2 });
+    const [r1, r2] = o.ryskyDiahonalei ?? [0, 0];
+    tilo += rysky(t[0], O, r1, 2) + rysky(O, t[2], r1, 2) + rysky(t[1], O, r2, 2) + rysky(O, t[3], r2, 2);
+    const polovyny: [P, P][] = [[t[0], O], [O, t[2]], [t[1], O], [O, t[3]]];
+    const nazvy = [`${bukvy[0]}${o.peretyn}`, `${o.peretyn}${bukvy[2]}`, `${bukvy[1]}${o.peretyn}`, `${o.peretyn}${bukvy[3]}`];
+    (o.pidpysyDiahonalei ?? []).forEach((pidpys, i) => {
+      if (!pidpys) return;
+      const [a, b] = polovyny[i];
+      // Підпис збоку від половини діагоналі — у бік вершини, що лежить далі від неї.
+      const m: P = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      const u = odyn(riz(b, a));
+      let n: P = [-u[1], u[0]];
+      const vershyna = t[i < 2 ? 1 : 0];
+      if ((vershyna[0] - m[0]) * n[0] + (vershyna[1] - m[1]) * n[1] < 0) n = [-n[0], -n[1]];
+      tilo += napys([m[0] + n[0] * 12, m[1] + n[1] * 12], pidpys, { k: pidpys === '?' ? 4 : 2, rozmir: 13 });
+      if (pidpys !== '?') opys.push(`${nazvy[i]} = ${pidpys}`);
+    });
+    tilo += tochka(O);
+    tilo += napys([O[0], O[1] + 15], o.peretyn, { k: 0, rozmir: 15, kursyv: true });
+    opys.push(`діагоналі ${bukvy[0]}${bukvy[2]} і ${bukvy[1]}${bukvy[3]} перетинаються в точці ${o.peretyn}`);
+  }
+  (o.strilky ?? []).forEach((n, i) => {
+    if (n) tilo += strilky(t[i], t[(i + 1) % 4], n, (o.rysky ?? [])[i] ? 0.3 : 0.5);
+  });
+  (o.rysky ?? []).forEach((n, i) => {
+    if (n) tilo += rysky(t[i], t[(i + 1) % 4], n, 0);
+  });
+  if (o.vidrizok) {
+    const [v, st, ch, nazva] = o.vidrizok;
+    const [a, b] = [t[st], t[(st + 1) % 4]];
+    const K: P = [a[0] + (b[0] - a[0]) * ch, a[1] + (b[1] - a[1]) * ch];
+    tilo += vidrizok(t[v], K, { k: 3, tovshch: 2 }) + tochka(K);
+    tilo += litera(K, nazva, tsentr);
+    opys.push(`відрізок ${bukvy[v]}${nazva}`);
+  }
   if (o.rozbyttia) tilo += vidrizok(t[0], t[2], { k: 0, tovshch: 2 });
   const vidomi: string[] = [];
   (o.kuty ?? []).forEach((pidpys, i) => {
