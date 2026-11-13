@@ -1,0 +1,60 @@
+---
+// Термометри поруч: шкала — вертикальна числова пряма з нулем посередині. Вище нуля — додатні температури
+// (тепло), нижче — від'ємні (мороз). Стовпчик зафарбовано до показу; під термометром — запис зі знаком.
+//   <Termometr temperatury={[3, -2]} />
+//   <Termometr temperatury={[-7, -3]} pidpysy={['Уранці', 'Удень']} min={-10} max={5} />
+interface Props {
+  temperatury: number[];
+  pidpysy?: string[];
+  min?: number; // нижня межа шкали (ціле, від'ємне)
+  max?: number; // верхня межа шкали (ціле, додатне)
+}
+const { temperatury, pidpysy = [], min = -10, max = 10 } = Astro.props;
+
+const fmt = (t: number) => (t > 0 ? `+${t}` : t < 0 ? `−${-t}` : '0').replace('.', ',');
+const krok = Math.min(12, 240 / (max - min));
+const top = 24;
+const Y = (v: number) => top + (max - v) * krok;
+const niz = Y(min);
+const shyryna = 110;
+const W = temperatury.length * shyryna + 10;
+const H = niz + 32 + 46;
+const opys = temperatury.map((t, i) => `${pidpysy[i] ? pidpysy[i] + ': ' : ''}${fmt(t)} °C`).join('; ');
+const mitky = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Термометри: ${opys}`}>
+      {
+        temperatury.map((t, i) => {
+          const cx = 10 + i * shyryna + 62;
+          const kolir = t >= 0 ? 'var(--ill-4)' : 'var(--ill-1)';
+          return (
+            <g>
+              <rect x={cx - 7} y={top - 10} width="14" height={niz - top + 22} rx="7" fill="none" stroke="var(--ill-line)" stroke-width="2" />
+              <circle cx={cx} cy={niz + 22} r="13" fill={kolir} stroke="var(--ill-line)" stroke-width="2" />
+              <rect x={cx - 4} y={Y(t)} width="8" height={niz + 14 - Y(t)} fill={kolir} />
+              {mitky.map((v) => (
+                <line x1={cx - 9 - (v % 5 === 0 ? 8 : 4)} y1={Y(v)} x2={cx - 9} y2={Y(v)} stroke="var(--ill-line)" stroke-width={v === 0 ? 2.5 : 1.2} />
+              ))}
+              {mitky
+                .filter((v) => v % 5 === 0)
+                .map((v) => (
+                  <text x={cx - 21} y={Y(v) + 4} text-anchor="end" font-size="12" font-weight={v === 0 ? 800 : 400} fill={v === 0 ? 'var(--ill-ink)' : 'var(--ill-muted)'}>
+                    {v < 0 ? `−${-v}` : v}
+                  </text>
+                ))}
+              <line x1={cx + 8} y1={Y(t)} x2={cx + 16} y2={Y(t)} stroke={kolir} stroke-width="2.5" />
+              <text x={cx + 19} y={Y(t) + 4} font-size="13" font-weight="800" fill={kolir}>{fmt(t)}</text>
+              <text x={cx} y={niz + 56} text-anchor="middle" font-size="14" font-weight="800" fill={kolir}>{fmt(t)} °C</text>
+              {pidpysy[i] && (
+                <text x={cx} y={niz + 72} text-anchor="middle" font-size="12" fill="var(--ill-muted)">{pidpysy[i]}</text>
+              )}
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+</figure>
