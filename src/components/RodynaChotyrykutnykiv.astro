@@ -1,0 +1,79 @@
+---
+// «Родина» паралелограма: паралелограм → прямокутник (+ прямий кут) і ромб (+ рівні сусідні сторони) → квадрат
+// (і те, і те). Стрілка означає «є окремим випадком»: квадрат — і прямокутник, і ромб. Вибрану фігуру підсвічено.
+//   <RodynaChotyrykutnykiv vydilena="kvadrat" />
+interface Props {
+  vydilena?: 'paralelohram' | 'priamokutnyk' | 'romb' | 'kvadrat';
+}
+const { vydilena } = Astro.props;
+
+type P = [number, number];
+const f = (v: number) => v.toFixed(1);
+const W = 360;
+const H = 375;
+const vuzly: Record<string, { c: P; nazva: string; t: P[] }> = {
+  paralelohram: { c: [180, 48], nazva: 'паралелограм', t: [[-38, 17], [-18, -17], [38, -17], [18, 17]] },
+  priamokutnyk: { c: [80, 178], nazva: 'прямокутник', t: [[-34, 19], [-34, -19], [34, -19], [34, 19]] },
+  // Сторони ромба рівні: зсув 19,6 і висота 34 дають бічну сторону ≈ 39, як і основа.
+  romb: { c: [280, 178], nazva: 'ромб', t: [[-29.3, 17], [-9.7, -17], [29.3, -17], [9.7, 17]] },
+  kvadrat: { c: [180, 320], nazva: 'квадрат', t: [[-21, 21], [-21, -21], [21, -21], [21, 21]] },
+};
+
+const strilky: { vid: string; do_: string; pidpys: string[]; k: number; bik: number }[] = [
+  { vid: 'paralelohram', do_: 'priamokutnyk', pidpys: ['+ прямий', 'кут'], k: 2, bik: -1 },
+  { vid: 'paralelohram', do_: 'romb', pidpys: ['+ рівні', 'сусідні', 'сторони'], k: 4, bik: 1 },
+  { vid: 'priamokutnyk', do_: 'kvadrat', pidpys: ['+ рівні', 'сусідні', 'сторони'], k: 4, bik: -1 },
+  { vid: 'romb', do_: 'kvadrat', pidpys: ['+ прямий', 'кут'], k: 2, bik: 1 },
+];
+
+// Стрілка йде з-під назви фігури `vid` до верхнього краю фігури `do_`, тож не перетинає підписів.
+function strilka(vid: string, do_: string, k: number): [string, number, (y: number) => number] {
+  const [a, b] = [vuzly[vid], vuzly[do_]];
+  const sx = Math.sign(b.c[0] - a.c[0]);
+  const niz = Math.max(...a.t.map(([, y]) => y));
+  const verkh = Math.min(...b.t.map(([, y]) => y));
+  const p1: P = [a.c[0] + sx * 22, a.c[1] + niz + 26];
+  const p2: P = [b.c[0] - sx * 14, b.c[1] + verkh - 8];
+  const d = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+  const u: P = [(p2[0] - p1[0]) / d, (p2[1] - p1[1]) / d];
+  const n: P = [-u[1], u[0]];
+  const h1: P = [p2[0] - u[0] * 9 + n[0] * 5, p2[1] - u[1] * 9 + n[1] * 5];
+  const h2: P = [p2[0] - u[0] * 9 - n[0] * 5, p2[1] - u[1] * 9 - n[1] * 5];
+  const path = `<path d="M ${f(p1[0])} ${f(p1[1])} L ${f(p2[0])} ${f(p2[1])} M ${f(h1[0])} ${f(h1[1])} L ${f(p2[0])} ${f(p2[1])} L ${f(h2[0])} ${f(h2[1])}" fill="none" stroke="var(--ill-${k})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  // x стрілки на висоті y — щоб кожен рядок підпису «тулився» до стрілки, не перетинаючи її.
+  const xNa = (y: number) => p1[0] + ((y - p1[1]) * (p2[0] - p1[0])) / (p2[1] - p1[1]);
+  return [path, (p1[1] + p2[1]) / 2, xNa];
+}
+
+let tilo = '';
+for (const s of strilky) {
+  const [path, my, xNa] = strilka(s.vid, s.do_, s.k);
+  tilo += path;
+  const y0 = my - 6 - ((s.pidpys.length - 1) * 14) / 2;
+  const riadky = s.pidpys
+    .map((r, i) => {
+      const y = y0 + i * 14;
+      // Рядок займає по висоті приблизно від y − 11 до y + 3.
+      const [x1, x2] = [xNa(y - 11), xNa(y + 3)];
+      const x = s.bik < 0 ? Math.min(x1, x2) - 6 : Math.max(x1, x2) + 6;
+      return `<tspan x="${f(x)}" y="${f(y)}">${r}</tspan>`;
+    })
+    .join('');
+  tilo += `<text text-anchor="${s.bik < 0 ? 'end' : 'start'}" font-size="12" font-weight="700" fill="var(--ill-${s.k})">${riadky}</text>`;
+}
+for (const [kliuch, v] of Object.entries(vuzly)) {
+  const vybr = kliuch === vydilena;
+  const pts = v.t.map(([x, y]) => `${f(v.c[0] + x)},${f(v.c[1] + y)}`).join(' ');
+  tilo += `<polygon points="${pts}" fill="var(--ill-${vybr ? 3 : 1})" fill-opacity="${vybr ? 0.35 : 0.14}" stroke="var(--ill-${vybr ? 3 : 1})" stroke-width="2.5" stroke-linejoin="round"/>`;
+  const niz = Math.max(...v.t.map(([, y]) => y));
+  tilo += `<text x="${v.c[0]}" y="${f(v.c[1] + niz + 17)}" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-${vybr ? 3 : 'ink'})">${v.nazva}</text>`;
+}
+const opys =
+  'Родина паралелограма: прямокутник — паралелограм з прямим кутом; ромб — паралелограм з рівними сусідніми сторонами; квадрат — і прямокутник, і ромб.';
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} role="img" aria-label={opys} set:html={tilo} />
+  </div>
+</figure>
