@@ -1,0 +1,172 @@
+---
+title: Множення раціональних дробів. Піднесення раціонального дробу до степеня
+ikonka: ✖️
+description: "Як перемножити дроби зі змінними: розкласти на множники, скоротити і лише потім множити. Як піднести дріб до степеня і що робити зі знаком мінус."
+sidebar:
+  order: 5
+---
+
+import Pravylo from '../../../components/Pravylo.astro';
+import DobutokDrobiv from '../../../components/DobutokDrobiv.astro';
+import SkorochenniaVyrazu from '../../../components/SkorochenniaVyrazu.astro';
+import Zavdannia from '../../../components/Zavdannia.astro';
+import Trenazher from '../../../components/Trenazher.astro';
+
+<Pravylo nazva="Множення і степінь дробу">
+**Добуток дробів** — це дріб, чисельник якого дорівнює добутку чисельників, а знаменник — добутку знаменників.
+**Щоб піднести дріб до степеня**, підносимо до цього степеня і чисельник, і знаменник:
+
+$$
+\frac{a}{b} \cdot \frac{c}{d} = \frac{a \cdot c}{b \cdot d}, \qquad \left(\frac{a}{b}\right)^n = \frac{a^n}{b^n}.
+$$
+
+Спершу **розклади на множники й скороти**, а вже потім множ те, що залишилося.
+</Pravylo>
+
+:::note[Швидко нагадати]
+- $\frac{3x}{y} \cdot \frac{y^2}{6} = \frac{3x \cdot y^2}{y \cdot 6} = \frac{xy}{2}$ — скорочуємо $3$ і $y$ ще до множення.
+- Многочлен на дріб: $(x - 2) \cdot \frac{5}{x^2 - 4} = \frac{5(x - 2)}{(x - 2)(x + 2)} = \frac{5}{x + 2}$.
+- $\left(\frac{2a}{b^3}\right)^2 = \frac{4a^2}{b^6}$ — до степеня підносимо і число $2$.
+- Знак: $\left(-\frac{x}{y}\right)^2 = \frac{x^2}{y^2}$, а $\left(-\frac{x}{y}\right)^3 = -\frac{x^3}{y^3}$.
+
+Все пам'ятаєш — [одразу до задач](#перевір-себе).
+:::
+
+## Пригадай
+
+Числові дроби ми множили в [6 класі](/math/6-klas/mnozhennia-drobiv/). Перевір, чи пам'ятаєш:
+
+<Zavdannia vidpovid="1/6" pidkazka="Скороти навхрест: 4 і 8 — на 4, 3 і 9 — на 3.">
+  Обчисли $\frac{4}{9} \cdot \frac{3}{8}$. Запиши відповідь через риску, наприклад 2/5.
+
+  <span slot="rozviazok">$\frac{4 \cdot 3}{9 \cdot 8} = \frac{1 \cdot 1}{3 \cdot 2} = \frac{1}{6}$.</span>
+</Zavdannia>
+
+## Що це таке
+
+**Спершу — з життя.** Грядка має довжину $\frac{3}{4}$ м і ширину $\frac{2}{5}$ м. Її площа —
+$\frac{3}{4} \cdot \frac{2}{5}$ м². На малюнку квадрат $1 \times 1$ м поділено на $4 \cdot 5 = 20$ клітинок, а грядка
+займає $3 \cdot 2 = 6$ з них:
+
+<DobutokDrobiv a={[3, 4]} b={[2, 5]} />
+
+Тому чисельники множимо на чисельники (скільки клітинок узяли), а знаменники — на знаменники (на скільки клітинок
+поділили ціле). Зі змінними так само: грядка $\frac{a}{b}$ на $\frac{c}{d}$ має площу $\frac{ac}{bd}$.
+
+**Тепер — малюнок.** Перемножимо $\frac{x^2 - 4}{3x} \cdot \frac{6x^2}{x + 2}$. Записуємо все одним дробом, розкладаємо
+на множники й закреслюємо спільні — **до** множення:
+
+<SkorochenniaVyrazu pochatkovyi={['(x² − 4) · 6x²', '3x · (x + 2)']} chys={['(x − 2)', '(x + 2)', '3', '2', 'x', 'x']} znam={['3', 'x', '(x + 2)']} rezultat={['2x(x − 2)', '1']} yak="x² − 4 = (x − 2)(x + 2), 6x² = 3 · 2 · x · x, 3x = 3 · x" />
+
+Якби ми спершу перемножили, вийшов би громіздкий дріб $\frac{6x^4 - 24x^2}{3x^2 + 6x}$, і скорочувати його було б
+значно важче.
+
+**І лише тепер — правило** — воно в рамці вгорі.
+
+:::tip[Чому степінь діє на обидві частини]
+Степінь — це множення однакових множників: $\left(\frac{a}{b}\right)^3 = \frac{a}{b} \cdot \frac{a}{b} \cdot \frac{a}{b}
+= \frac{a \cdot a \cdot a}{b \cdot b \cdot b} = \frac{a^3}{b^3}$. А далі — знайомі
+[властивості степеня](/math/7-klas/vlastyvosti-stepenia/): $(2a)^2 = 4a^2$, $(b^3)^2 = b^6$.
+:::
+
+## Приклад
+
+**Спрости вираз $\frac{a^2 - 9}{4a} \cdot \frac{2a^2}{a + 3}$.**
+
+1. Розкладаємо на множники: $a^2 - 9 = (a - 3)(a + 3)$, $2a^2 = 2 \cdot a \cdot a$, $4a = 2 \cdot 2 \cdot a$.
+2. Записуємо одним дробом: $\frac{(a - 3)(a + 3) \cdot 2 \cdot a \cdot a}{2 \cdot 2 \cdot a \cdot (a + 3)}$.
+3. Скорочуємо на $(a + 3)$, на $2$ і на $a$: залишається $\frac{a(a - 3)}{2}$.
+4. **Перевірка:** візьмемо $a = 5$. Початковий вираз: $\frac{25 - 9}{20} \cdot \frac{50}{8} = \frac{16}{20} \cdot
+   \frac{50}{8} = \frac{800}{160} = 5$. Відповідь: $\frac{5 \cdot 2}{2} = 5$ ✓
+
+## Спробуй сам
+
+<Zavdannia vidpovid="10" pidkazka="x² − 1 = (x − 1)(x + 1). Скороти на x − 1 і на 5x.">
+  Спрости вираз $\frac{x^2 - 1}{5x} \cdot \frac{10x}{x - 1}$ і знайди його значення при $x = 4$.
+
+  <span slot="rozviazok">$\frac{(x - 1)(x + 1) \cdot 10x}{5x(x - 1)} = 2(x + 1)$. При $x = 4$: $2 \cdot 5 = 10$. Перевірка: $\frac{15}{20} \cdot \frac{40}{3} = \frac{600}{60} = 10$ ✓</span>
+</Zavdannia>
+
+:::caution[Не плутай]
+**Скорочуємо множники, а не доданки.** $\frac{x + 2}{3} \cdot \frac{6}{x + 2} = 2$ — тут $x + 2$ є множником. А в
+$\frac{x + 2}{3} \cdot \frac{6}{x}$ закреслити $x$ не можна: у $x + 2$ змінна $x$ — лише доданок.
+
+**До степеня — і число.** $\left(\frac{3x}{y}\right)^2 = \frac{9x^2}{y^2}$, а не $\frac{3x^2}{y^2}$. Перевір при
+$x = y = 1$: $3^2 = 9$.
+
+**Мінус і степінь.** Парний степінь «з'їдає» мінус: $\left(-\frac{2}{x}\right)^2 = \frac{4}{x^2}$. Непарний —
+залишає: $\left(-\frac{2}{x}\right)^3 = -\frac{8}{x^3}$.
+:::
+
+## Перевір себе
+
+Впиши відповідь. За кожну правильну відповідь — зірочка ⭐
+
+<Zavdannia vidpovid="4" pidkazka="Скороти b, а 2 і 8 — на 2.">
+  Яке число треба вписати в квадратик: $\frac{2a}{b} \cdot \frac{b}{8} = \frac{a}{\square}$?
+
+  <span slot="rozviazok">$\frac{2a \cdot b}{b \cdot 8} = \frac{2a}{8} = \frac{a}{4}$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="5" pidkazka="Спершу скороти: 3 і 6, x і x, y² і y³.">
+  Спрости вираз $\frac{3x}{y^2} \cdot \frac{y^3}{6x}$ і знайди його значення при $y = 10$.
+
+  <span slot="rozviazok">$\frac{3x \cdot y^3}{y^2 \cdot 6x} = \frac{y}{2}$. При $y = 10$: $10 : 2 = 5$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="9" pidkazka="До квадрата підносимо і 3, і a.">
+  Яке число треба вписати в квадратик: $\left(\frac{3a}{b^2}\right)^2 = \frac{\square a^2}{b^4}$?
+
+  <span slot="rozviazok">$\frac{(3a)^2}{(b^2)^2} = \frac{9a^2}{b^4}$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="-8" pidkazka="Спершу обчисли дріб у дужках: −6 : 3. Непарний степінь залишає мінус.">
+  Знайди значення виразу $\left(-\frac{6}{x}\right)^3$ при $x = 3$.
+
+  <span slot="rozviazok">$-\frac{6}{3} = -2$, $(-2)^3 = -8$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="2" pidkazka="x² − 9 = (x − 3)(x + 3).">
+  Спрости вираз $(x + 3) \cdot \frac{4}{x^2 - 9}$ і знайди його значення при $x = 5$.
+
+  <span slot="rozviazok">$\frac{4(x + 3)}{(x - 3)(x + 3)} = \frac{4}{x - 3}$. При $x = 5$: $\frac{4}{2} = 2$. Перевірка: $8 \cdot \frac{4}{16} = 2$ ✓</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="90" pidkazka="x² + 2x = x(x + 2), x² − 1 = (x − 1)(x + 1).">
+  Спрости вираз $\frac{x^2 + 2x}{x - 1} \cdot \frac{x^2 - 1}{x + 2}$ і знайди його значення при $x = 9$.
+
+  <span slot="rozviazok">$\frac{x(x + 2)(x - 1)(x + 1)}{(x - 1)(x + 2)} = x(x + 1)$. При $x = 9$: $9 \cdot 10 = 90$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="10" pidkazka="Площа прямокутника — добуток сторін. Скороти a і b.">
+  Сторони прямокутника — $\frac{a^2}{b}$ см і $\frac{b^2}{a}$ см. Знайди його площу (у см²) при $a = 2$, $b = 5$.
+
+  <span slot="rozviazok">$\frac{a^2}{b} \cdot \frac{b^2}{a} = \frac{a^2 b^2}{ab} = ab = 2 \cdot 5 = 10$ см².</span>
+</Zavdannia>
+
+### Змішане повторення
+
+<Zavdannia vidpovid="5" pidkazka="Спільний знаменник 6.">
+  Спрости вираз $\frac{a}{3} + \frac{a}{6}$ і знайди його значення при $a = 10$.
+
+  <span slot="rozviazok">[Різні знаменники](/math/8-klas/dodavannia-rizni-znamennyky/): $\frac{2a + a}{6} = \frac{3a}{6} = \frac{a}{2}$, при $a = 10$: $5$.</span>
+</Zavdannia>
+
+<Zavdannia vidpovid="110" pidkazka="Сусідні кути паралелограма разом 180°.">
+  Один з кутів паралелограма на $40^\circ$ більший за інший. Знайди більший кут (у градусах).
+
+  <span slot="rozviazok">[Паралелограм](/math/8-klas/paralelohram/): $x + x + 40^\circ = 180^\circ$, $x = 70^\circ$, більший кут $110^\circ$.</span>
+</Zavdannia>
+
+## Потренуйся
+
+Тренажер щоразу складає нові завдання, тож тренуватися можна скільки завгодно. Обери рівень і розв'яжи 10 завдань.
+
+<Trenazher />
+
+## Пов'язані теми
+
+- [Ділення раціональних дробів](/math/8-klas/dilennia-drobiv/)
+- [Основна властивість раціонального дробу. Скорочення дробів](/math/8-klas/osnovna-vlastyvist-drobu/)
+- [Множення дробів](/math/6-klas/mnozhennia-drobiv/)
+- [Властивості степеня](/math/7-klas/vlastyvosti-stepenia/)
