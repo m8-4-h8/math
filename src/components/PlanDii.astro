@@ -1,0 +1,63 @@
+---
+// План дій у раціональному виразі: над знаками дій — їхні номери (як у порядку дій для чисел), під виразом —
+// кожна дія окремим рядком того самого кольору, що й її номер, і відповідь. Знак з номером пишемо \dia{1}{-}.
+//   <PlanDii vyraz="\left(\frac{x}{x - 2} \dia{1}{-} 1\right) \dia{2}{\cdot} \frac{x^2 - 4}{6}"
+//     kroky={[['віднімання в дужках', '\frac{x}{x - 2} - 1 = \frac{2}{x - 2}'], ['множення', '…']]}
+//     vidpovid="\frac{x + 2}{3}" />
+import katex from 'katex';
+
+interface Props {
+  /** Вираз у TeX; знак дії з номером над ним — \dia{номер}{знак}. */
+  vyraz: string;
+  /** Дії по черзі: [назва, викладки в TeX]. */
+  kroky: [string, string][];
+  /** Відповідь у TeX. */
+  vidpovid?: string;
+}
+const { vyraz, kroky, vidpovid } = Astro.props;
+
+// Дії — помаранчевим, малиновим, синім; зелений — для відповіді.
+const KOLORY = ['c2', 'c4', 'c1'];
+const kolir = (n: number) => KOLORY[(n - 1) % KOLORY.length];
+const tex = (t: string, blok = false) =>
+  katex.renderToString(t, { displayMode: blok, throwOnError: false, strict: false, trust: (k) => k.command === '\\htmlClass' });
+const zNomeramy = vyraz.replace(/\\dia\{(\d+)\}\{([^}]*)\}/g, (_, n, z) => `\\mathbin{\\overset{\\htmlClass{${kolir(Number(n))}}{\\textbf{${n}}}}{${z}}}`);
+const opys = `План дій: ${kroky.map(([nazva], i) => `${i + 1}) ${nazva}`).join('; ')}.`;
+---
+
+<figure class="ill not-content plan-dii" aria-label={opys}>
+  <div class="ill-scroll pd-vyraz" set:html={tex(zNomeramy, true)} />
+  <ol class="ill-steps">
+    {
+      kroky.map(([nazva, t], i) => (
+        <li>
+          <b class={kolir(i + 1)}>Дія {i + 1}</b> — {nazva}:
+          <div class="ill-scroll pd-krok" set:html={tex(t, true)} />
+        </li>
+      ))
+    }
+    {
+      vidpovid && (
+        <li class="pd-vidp">
+          <b class="c3">Відповідь:</b> <span set:html={tex(`\\displaystyle ${vidpovid}`)} />
+        </li>
+      )
+    }
+  </ol>
+</figure>
+
+<style>
+  .plan-dii .pd-vyraz {
+    font-size: 1.25rem;
+  }
+  .plan-dii .pd-krok {
+    margin: 0.25rem 0 0.1rem;
+  }
+  .plan-dii .pd-krok :global(.katex-display),
+  .plan-dii .pd-vyraz :global(.katex-display) {
+    margin: 0.2rem 0;
+  }
+  .plan-dii .pd-vidp {
+    list-style: none;
+  }
+</style>

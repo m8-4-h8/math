@@ -3,9 +3,9 @@
 // Повертає SVG-рядок: його вставляють і компонент Chotyrykutnyk, і тренажери (поле `malunok`).
 // Невідоме підписуємо «?», тож малюнок не видає відповідь.
 // Файл не є генератором: генератори лежать у `<N>-klas/`.
-import { type P, kontur, litera, napys, pidpysStorony, rysky, svg, tochka, vidrizok } from './trykutnyky.ts';
+import { type P, duga, kontur, litera, napys, pidpysStorony, priamyi, rysky, svg, tochka, vidrizok } from './trykutnyky.ts';
 
-export type FormaChotyrykutnyka = 'dovilnyi' | 'neopuklyi' | 'opuklyi2' | 'paralelohram';
+export type FormaChotyrykutnyka = 'dovilnyi' | 'neopuklyi' | 'opuklyi2' | 'paralelohram' | 'priamokutnyk' | 'romb' | 'kvadrat';
 
 /** Одиничні координати (y — донизу), вершини A, B, C, D по колу. */
 const FORMY: Record<FormaChotyrykutnyka, P[]> = {
@@ -13,6 +13,10 @@ const FORMY: Record<FormaChotyrykutnyka, P[]> = {
   opuklyi2: [[0, 0.8], [0.45, 0], [1.3, 0.3], [0.95, 1.05]],
   neopuklyi: [[0, 1], [0.55, 0], [1.1, 1], [0.55, 0.62]],
   paralelohram: [[0, 0.8], [0.4, 0], [1.5, 0], [1.1, 0.8]],
+  priamokutnyk: [[0, 1], [0, 0], [1.6, 0], [1.6, 1]],
+  // Ромб «лежить», а не стоїть на вершині; гострий кут 60°, усі сторони рівні.
+  romb: [[0, 0.8], [0.8 / Math.tan(Math.PI / 3), 0], [0.8 / Math.tan(Math.PI / 3) + 0.8 / Math.sin(Math.PI / 3), 0], [0.8 / Math.sin(Math.PI / 3), 0.8]],
+  kvadrat: [[0, 1], [0, 0], [1, 0], [1, 1]],
 };
 
 export interface ChotyrykutnykOpts {
@@ -43,6 +47,12 @@ export interface ChotyrykutnykOpts {
   pidpysyDiahonalei?: (string | undefined)[];
   /** Відрізок з вершини до точки на протилежній стороні: [вершина, сторона, частка від її початку, назва точки]. */
   vidrizok?: [number, number, number, string];
+  /** Квадратики прямих кутів при вершинах (номери 0..3). */
+  priami?: number[];
+  /** Квадратик прямого кута в точці перетину діагоналей (потрібен `peretyn`). */
+  priamyiO?: boolean;
+  /** Діагональ ділить кут при вершині 0..3 на дві половини: скільки дуг у кожної (однаково — рівні половини). */
+  polovynyKutiv?: number[];
   W?: number;
   H?: number;
 }
@@ -163,7 +173,9 @@ export function chotyrykutnyk(o: ChotyrykutnykOpts = {}) {
       if (pidpys !== '?') opys.push(`${nazvy[i]} = ${pidpys}`);
     });
     tilo += tochka(O);
-    tilo += napys([O[0], O[1] + 15], o.peretyn, { k: 0, rozmir: 15, kursyv: true });
+    // Назва точки — між половинами OA і OD, щоб не лягла на діагональ.
+    const kudy = odyn([odyn(riz(t[0], O))[0] + odyn(riz(t[3], O))[0], odyn(riz(t[0], O))[1] + odyn(riz(t[3], O))[1]]);
+    tilo += napys([O[0] + kudy[0] * 15, O[1] + kudy[1] * 15 + 4], o.peretyn, { k: 0, rozmir: 15, kursyv: true });
     opys.push(`діагоналі ${bukvy[0]}${bukvy[2]} і ${bukvy[1]}${bukvy[3]} перетинаються в точці ${o.peretyn}`);
   }
   (o.strilky ?? []).forEach((n, i) => {
@@ -172,6 +184,22 @@ export function chotyrykutnyk(o: ChotyrykutnykOpts = {}) {
   (o.rysky ?? []).forEach((n, i) => {
     if (n) tilo += rysky(t[i], t[(i + 1) % 4], n, 0);
   });
+  (o.polovynyKutiv ?? []).forEach((n, i) => {
+    if (!n) return;
+    const [p, q, d] = [t[(i + 3) % 4], t[(i + 1) % 4], t[(i + 2) % 4]];
+    if (!o.peretyn) tilo += vidrizok(t[i], d, { k: 2, tovshch: 2 });
+    tilo += duga(t[i], p, d, { n, k: 3, r: 24 }) + duga(t[i], d, q, { n, k: 3, r: 24 });
+  });
+  if (o.polovynyKutiv?.some(Boolean)) {
+    opys.push(`діагональ ділить навпіл кути ${(o.polovynyKutiv ?? []).map((n, i) => (n ? bukvy[i] : '')).filter(Boolean).join(', ')}`);
+  }
+  for (const i of o.priami ?? []) tilo += priamyi(t[i], t[(i + 3) % 4], t[(i + 1) % 4], 2);
+  if (o.priami?.length) opys.push(`прямі кути при вершинах ${o.priami.map((i) => bukvy[i]).join(', ')}`);
+  if (o.priamyiO && o.peretyn) {
+    const O = peretynDiahonalei(t);
+    tilo += priamyi(O, t[2], t[3], 2);
+    opys.push('діагоналі перпендикулярні');
+  }
   if (o.vidrizok) {
     const [v, st, ch, nazva] = o.vidrizok;
     const [a, b] = [t[st], t[(st + 1) % 4]];
