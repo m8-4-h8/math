@@ -1,6 +1,6 @@
 // Додавання і віднімання дробів з різними знаменниками: спільний знаменник (НСК), додаткові множники,
-// скорочення відповіді; мішані числа (цілі окремо, дробові окремо; позичаємо одиницю).
-import { nsd, nsk, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+// скорочення відповіді; три дроби; задачі. Мішані числа — окрема тема mishani-chysla.
+import { nsd, nsk, tdrib, tvidpovidDrib, vidpovidDrib, rivnyiDrib, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 function neskorotnyi(r: Vypadok, b: number) {
   for (;;) {
@@ -48,42 +48,69 @@ function drobi(r: Vypadok, kratni: boolean): TrenZavdannia {
   }
 }
 
-const mishane = (t: number, o: number, d: number) => (o ? `${t}${tdrib(o, d)}` : `${t}`);
-
-function mishani(r: Vypadok): TrenZavdannia {
+function tryDroby(r: Vypadok): TrenZavdannia {
   for (;;) {
-    const [b, d] = r.rizni(2, 2, 8);
-    const [a, c] = [neskorotnyi(r, b), neskorotnyi(r, d)];
-    const [t1, t2] = [r.chyslo(2, 7), r.chyslo(1, 4)];
-    const plius = r.shans();
-    if (!plius && t1 <= t2) continue;
-    const s = nsk(b, d);
-    if (s > 30) continue;
-    const [x, y] = [(a * s) / b, (c * s) / d];
-    const vsoho = plius ? (t1 + t2) * s + x + y : (t1 - t2) * s + x - y;
-    const zn = plius ? '+' : '-';
-    const pozychaiemo = !plius && x < y;
+    const zn = r.rizni(3, 2, 12);
+    const s = nsk(nsk(zn[0], zn[1]), zn[2]);
+    if (s > 36) continue;
+    const ch = zn.map((b) => neskorotnyi(r, b));
+    const v = ch.map((a, i) => (a * s) / zn[i]);
+    const rez = v[0] + v[1] - v[2];
+    if (rez <= 0) continue;
     return {
-      pytannia: `Обчисли. Відповідь запиши мішаним числом, наприклад «${zrazok(ZRAZKY.mishane, vidpovidDrib(vsoho, s), rivnyiDrib(vsoho, s))}».`,
-      vyraz: `$${mishane(t1, a, b)} ${zn} ${mishane(t2, c, d)} =$`,
-      vidpovid: vidpovidDrib(vsoho, s).slice(-1),
-      pokaz: `$${tvidpovidDrib(vsoho, s)}$`,
-      perevirka: rivnyiDrib(vsoho, s),
-      pidkazka: pozychaiemo
-        ? `Від $${tdrib(x, s)}$ не відняти $${tdrib(y, s)}$ — позич одиницю: $${mishane(t1, x, s)} = ${t1 - 1}${tdrib(x + s, s)}$.`
-        : `Цілі ${plius ? 'додай' : 'відніми'} окремо, дробові — окремо, спершу звівши їх до знаменника ${s}.`,
-      rozviazok: `$${mishane(t1, a, b)} ${zn} ${mishane(t2, c, d)} = ${mishane(t1, x, s)} ${zn} ${mishane(t2, y, s)}${
-        pozychaiemo ? ` = ${t1 - 1}${tdrib(x + s, s)} - ${mishane(t2, y, s)}` : ''
-      } = ${tvidpovidDrib(vsoho, s)}$`,
+      pytannia: 'Обчисли. Відповідь скороти; якщо дріб неправильний, можна виділити цілу частину.',
+      vyraz: `$${tdrib(ch[0], zn[0])} + ${tdrib(ch[1], zn[1])} - ${tdrib(ch[2], zn[2])} =$`,
+      vidpovid: vidpovidDrib(rez, s),
+      pokaz: `$${tvidpovidDrib(rez, s)}$`,
+      perevirka: (vv) => {
+        const m = vv.replace(/\s+/g, ' ').trim().match(/(\d+)\/(\d+)$/);
+        return rivnyiDrib(rez, s)(vv) && (!m || nsd(Number(m[1]), Number(m[2])) === 1);
+      },
+      pidkazka: `Спільний знаменник усіх трьох дробів — ${s}.`,
+      rozviazok: `$${tdrib(v[0], s)} + ${tdrib(v[1], s)} - ${tdrib(v[2], s)} = ${tdrib(rez, s)}$${
+        nsd(rez, s) > 1 || rez > s ? ` $= ${tvidpovidDrib(rez, s)}$` : ''
+      }`,
+    };
+  }
+}
+
+const ZADACHI: [string, (a: string, c: string) => string, boolean][] = [
+  ['л', (a, c) => `У пляшці було ${a} л соку, Оля випила ${c} л. Скільки літрів соку лишилось?`, false],
+  ['кг', (a, c) => `Марко купив ${a} кг яблук і ${c} кг груш. Скільки кілограмів фруктів він купив?`, true],
+  ['км', (a, c) => `Туристи пройшли ${a} км до обіду і ${c} км після обіду. Скільки кілометрів вони пройшли?`, true],
+  ['м', (a, c) => `Від стрічки завдовжки ${a} м відрізали ${c} м. Скільки метрів стрічки лишилось?`, false],
+];
+
+function zadacha(r: Vypadok): TrenZavdannia {
+  for (;;) {
+    const [b, d] = r.rizni(2, 2, 12);
+    const [a, c] = [neskorotnyi(r, b), neskorotnyi(r, d)];
+    const s = nsk(b, d);
+    if (s > 36) continue;
+    const [odynytsi, tekst, plius] = r.vybir(ZADACHI);
+    const [x, y] = [(a * s) / b, (c * s) / d];
+    if (!plius && x <= y) continue;
+    const rez = plius ? x + y : x - y;
+    const zn = plius ? '+' : '-';
+    return {
+      pytannia: tekst(`$${tdrib(a, b)}$`, `$${tdrib(c, d)}$`),
+      vidpovid: vidpovidDrib(rez, s),
+      pokaz: `$${tvidpovidDrib(rez, s)}$`,
+      perevirka: rivnyiDrib(rez, s),
+      odynytsi,
+      pidkazka: `Спільний знаменник — ${s}.`,
+      rozviazok: `$${tdrib(a, b)} ${zn} ${tdrib(c, d)} = ${tdrib(x, s)} ${zn} ${tdrib(y, s)} = ${tdrib(rez, s)}$${
+        nsd(rez, s) > 1 || rez > s ? ` $= ${tvidpovidDrib(rez, s)}$` : ''
+      } (${odynytsi})`,
     };
   }
 }
 
 export default {
-  rivni: ['один знаменник ділиться на інший', 'будь-які знаменники', 'мішані числа'],
+  rivni: ['один знаменник ділиться на інший', 'будь-які знаменники', 'три дроби і задачі'],
   zavdannia(r, riven) {
     if (riven === 1) return drobi(r, true);
     if (riven === 2) return drobi(r, false);
-    return r.shans(0.7) ? mishani(r) : drobi(r, false);
+    return r.vybir([tryDroby, zadacha, (v: Vypadok) => drobi(v, false)])(r);
   },
 } satisfies Henerator;

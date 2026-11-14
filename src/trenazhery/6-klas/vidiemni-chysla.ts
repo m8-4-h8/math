@@ -1,88 +1,115 @@
-// Від'ємні числа: протилежні числа, модуль (відстань до нуля), порівняння (з двох від'ємних більше те,
-// що ближче до нуля), рух координатною прямою, упорядкування, цілі числа між двома числами.
-import { ch, des, mnozh, tdes, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+// Додатні та від'ємні числа. Число 0 (Істер § 26): записати величину числом зі знаком (тепло/мороз, вище/нижче
+// рівня моря, прибуток/борг, поверх над/під землею); протилежні зміни — протилежні знаки; додатне, від'ємне
+// чи нуль; температура після зміни (рахуємо поділки до нуля і далі).
+import { ch, des, mnozh, zVelykoi, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 const tz = (n: number) => (n < 0 ? `-${-n}` : `${n}`);
+const hrad = (n: number) => `${n} ${mnozh(n, 'градус', 'градуси', 'градусів')}`;
 
-function protylezhne(r: Vypadok): TrenZavdannia {
-  const n = r.krim(-30, 30, [0]);
-  if (r.shans()) {
+const KONTEKSTY: { plus: (n: number) => string; minus: (n: number) => string; od: string; max: number }[] = [
+  { plus: (n) => `${hrad(n)} тепла`, minus: (n) => `${hrad(n)} морозу`, od: '°C', max: 30 },
+  { plus: (n) => `вершина на ${ch(n)} м вище рівня моря`, minus: (n) => `западина на ${ch(n)} м нижче рівня моря`, od: 'м', max: 3000 },
+  { plus: (n) => `прибуток ${ch(n)} грн`, minus: (n) => `борг ${ch(n)} грн`, od: 'грн', max: 900 },
+  { plus: (n) => `${n}-й поверх над землею`, minus: (n) => `${n}-й поверх під землею (підвал)`, od: '', max: 4 },
+  { plus: (n) => `рівень води піднявся на ${n} см`, minus: (n) => `рівень води опустився на ${n} см`, od: 'см', max: 90 },
+];
+
+function zapysaty(r: Vypadok): TrenZavdannia {
+  const k = r.vybir(KONTEKSTY);
+  const n = r.chyslo(1, k.max);
+  const plus = r.shans(0.4);
+  return {
+    pytannia: `Запиши числом зі знаком: ${plus ? k.plus(n) : k.minus(n)}.`,
+    vidpovid: plus ? [n, `+${n}`] : ch(-n),
+    odynytsi: k.od || undefined,
+    pidkazka: 'Вище нуля, тепло, «маю» — плюс; нижче нуля, мороз, «винен» — мінус.',
+    rozviazok: plus ? `Знак «+»: +${ch(n)} (плюс можна не писати).` : `Протилежний бік від нуля — знак «−»: ${ch(-n)}.`,
+  };
+}
+
+/** Протилежна зміна: одну записали зі знаком — запиши іншу. */
+const PARY: [(n: number) => string, (n: number) => string][] = [
+  [(n) => `потепління на ${n}°`, (n) => `похолодання на ${n}°`],
+  [(n) => `прибуток ${n} грн`, (n) => `витрату ${n} грн`],
+  [(n) => `рух праворуч на ${n} см`, (n) => `рух ліворуч на ${n} см`],
+  [(n) => `підйом повітряної кулі на ${n} м`, (n) => `спуск кулі на ${n} м`],
+];
+
+function protylezhna(r: Vypadok): TrenZavdannia {
+  const [a, b] = r.rizni(2, 2, 60);
+  const [plus, minus] = r.vybir(PARY);
+  const navpaky = r.shans(); // дано від'ємну зміну, питаємо додатну
+  const dano = navpaky ? `${minus(a)} записали числом ${ch(-a)}` : `${plus(a)} записали числом +${a}`;
+  const shukane = navpaky ? plus(b) : minus(b);
+  return {
+    pytannia: `${zVelykoi(dano)}. Як записати ${shukane}?`,
+    vidpovid: navpaky ? [b, `+${b}`] : ch(-b),
+    pidkazka: 'Протилежний напрямок — протилежний знак.',
+    rozviazok: `Протилежний напрямок, тому знак «${navpaky ? '+' : '−'}»: ${navpaky ? `+${b}` : ch(-b)}.`,
+  };
+}
+
+function vyd(r: Vypadok): TrenZavdannia {
+  const typ = r.chyslo(0, 5);
+  const n = typ === 0 ? 0 : r.chyslo(1, 99);
+  const vidiemne = typ % 2 === 1;
+  const desiatkove = typ >= 4;
+  const zapys = desiatkove ? (vidiemne ? `-${des(n, 1).replace(',', '{,}')}` : `+${des(n, 1).replace(',', '{,}')}`) : n === 0 ? '0' : vidiemne ? `-${n}` : r.shans() ? `+${n}` : `${n}`;
+  const vidp = n === 0 ? 'нуль' : vidiemne ? 'від’ємне' : 'додатне';
+  return {
+    pytannia: `Яке це число: додатне, від’ємне чи нуль?`,
+    vyraz: `$${zapys}$`,
+    vidpovid: vidp,
+    varianty: ['додатне', 'від’ємне', 'нуль'],
+    pidkazka: 'Зі знаком «−» — від’ємне; більше за нуль — додатне; нуль — ні те, ні те.',
+    rozviazok: n === 0 ? 'Нуль — ні додатний, ні від’ємний.' : vidiemne ? 'Перед числом знак «−», тож воно від’ємне.' : 'Число більше за нуль — додатне.',
+  };
+}
+
+function skilkyVidiemnykh(r: Vypadok): TrenZavdannia {
+  for (;;) {
+    const chysla = r.rizni(6, -20, 20);
+    const vid = chysla.filter((n) => n < 0).length;
+    if (vid === 0 || vid === 6) continue;
+    const pytaty = r.vybir(['від’ємних', 'додатних', 'невід’ємних'] as const);
+    const vidp = pytaty === 'від’ємних' ? vid : pytaty === 'додатних' ? chysla.filter((n) => n > 0).length : chysla.filter((n) => n >= 0).length;
     return {
-      pytannia: `Яке число протилежне до $${tz(n)}$?`,
-      vidpovid: ch(-n),
-      pidkazka: 'Протилежне — те саме число з іншим знаком.',
-      rozviazok: `Протилежне до ${ch(n)} — ${ch(-n)}.`,
+      pytannia: `Скільки ${pytaty} чисел серед: ${chysla.map((n) => `$${tz(n)}$`).join('; ')}?`,
+      vidpovid: vidp,
+      pidkazka: pytaty === 'невід’ємних' ? 'Невід’ємні — це додатні і нуль.' : pytaty === 'додатних' ? 'Нуль — не додатне число.' : 'Від’ємні — зі знаком «−».',
+      rozviazok: `${pytaty[0].toUpperCase()}${pytaty.slice(1)}: ${chysla.filter((n) => (pytaty === 'від’ємних' ? n < 0 : pytaty === 'додатних' ? n > 0 : n >= 0)).map(ch).join(', ')} — їх ${vidp}.`,
     };
   }
-  return {
-    pytannia: `Знайди $|${tz(n)}|$.`,
-    vidpovid: Math.abs(n),
-    pidkazka: 'Модуль — відстань до нуля, вона не буває від’ємною.',
-    rozviazok: `|${ch(n)}| = ${Math.abs(n)}`,
-  };
 }
 
-function porivniaty(r: Vypadok, dvaVidiemni: boolean, desiatkovi: boolean): TrenZavdannia {
-  const m = desiatkovi ? 10 : 1;
-  const max = desiatkovi ? 99 : 20;
-  let [a, b] = dvaVidiemni ? [-r.chyslo(1, max), -r.chyslo(1, max)] : [-r.chyslo(1, max), r.chyslo(0, max)];
-  if (!dvaVidiemni && r.shans()) [a, b] = [b, a];
-  if (a === b) return porivniaty(r, dvaVidiemni, desiatkovi);
-  const znak = a > b ? '>' : '<';
-  const z = (n: number) => (desiatkovi ? tdes(n, 1) : tz(n));
-  return {
-    pytannia: 'Порівняй.',
-    vyraz: `$${z(a)}$ □ $${z(b)}$`,
-    vidpovid: znak,
-    varianty: ['>', '<', '='],
-    pidkazka: dvaVidiemni ? 'З двох від’ємних більше те, що ближче до нуля (з меншим модулем).' : 'Будь-яке від’ємне число менше за нуль і за додатне.',
-    rozviazok: dvaVidiemni
-      ? `|${desiatkovi ? des(a, 1) : ch(a)}| ${Math.abs(a) < Math.abs(b) ? '<' : '>'} |${desiatkovi ? des(b, 1) : ch(b)}|, тож ${desiatkovi ? des(a, 1) : ch(a)} ${znak} ${desiatkovi ? des(b, 1) : ch(b)}.`
-      : `${desiatkovi ? des(a, 1) : ch(a)} ${znak} ${desiatkovi ? des(b, 1) : ch(b)}: від’ємне менше.`,
-  };
-}
-
-function rukh(r: Vypadok): TrenZavdannia {
-  const a = r.chyslo(-9, 9);
-  const k = r.chyslo(2, 12);
-  const pravo = r.shans();
-  const b = pravo ? a + k : a - k;
-  return {
-    pytannia: `На координатній прямій точка $A(${tz(a)})$. Точка $B$ лежить на ${k} ${mnozh(k, 'одиницю', 'одиниці', 'одиниць')} ${pravo ? 'правіше' : 'лівіше'}. Яка координата точки $B$?`,
-    vidpovid: ch(b),
-    pidkazka: pravo ? 'Праворуч — додаємо.' : 'Ліворуч — віднімаємо.',
-    rozviazok: `${ch(a)} ${pravo ? '+' : '−'} ${k} = ${ch(b)}`,
-  };
-}
-
-function vporiadkuvaty(r: Vypadok): TrenZavdannia {
-  const chysla = r.rizni(4, -15, 15);
-  if (!chysla.some((n) => n < 0) || chysla.filter((n) => n < 0).length < 2) return vporiadkuvaty(r);
-  const poriadok = [...chysla].sort((x, y) => x - y);
-  return {
-    pytannia: `Запиши числа ${chysla.map((n) => `$${tz(n)}$`).join(', ')} у порядку зростання (через кому).`,
-    vidpovid: poriadok.map(ch).join(', '),
-    pidkazka: 'Спершу від’ємні: з них менше те, що далі від нуля.',
-    rozviazok: poriadok.map(ch).join(' < '),
-  };
-}
-
-function mizh(r: Vypadok): TrenZavdannia {
-  const a = -r.chyslo(1, 12);
-  const b = r.chyslo(1, 12);
-  return {
-    pytannia: `Скільки цілих чисел лежить між $${tz(a)}$ і $${b}$ (самі ці числа не рахуємо)?`,
-    vidpovid: b - a - 1,
-    pidkazka: `Від’ємних між ними: ${-a - 1}, ще нуль і додатні до ${b}.`,
-    rozviazok: `Від’ємних — ${-a - 1}, нуль — 1, додатних — ${b - 1}: ${-a - 1} + 1 + ${b - 1} = ${b - a - 1}.`,
-  };
+/** Зміна температури через нуль: рахуємо поділки до нуля і далі. */
+function temperatura(r: Vypadok): TrenZavdannia {
+  for (;;) {
+    const t = r.chyslo(-12, 12);
+    const k = r.chyslo(2, 15);
+    const tepl = r.shans();
+    const nova = tepl ? t + k : t - k;
+    if (nova === 0 || Math.abs(nova) > 20 || Math.sign(nova) === Math.sign(t)) continue; // цікаво лише через нуль
+    const doNulia = Math.abs(t);
+    const zt = (n: number) => (n > 0 ? `+${n}` : ch(n));
+    return {
+      pytannia: `Термометр показував ${zt(t)} °C. ${tepl ? 'Потепліло' : 'Похолоднішало'} на ${hrad(k)}. Яку температуру він показує тепер?`,
+      vidpovid: nova > 0 ? [nova, `+${nova}`] : ch(nova),
+      odynytsi: '°C',
+      pidkazka: `${t === 0 ? 'Від нуля' : `Від ${zt(t)} до нуля — ${doNulia} ${mnozh(doNulia, 'поділка', 'поділки', 'поділок')}, решта —`} ${tepl ? 'вище' : 'нижче'} нуля.`,
+      rozviazok:
+        t === 0
+          ? `Від нуля на ${k} ${tepl ? 'вгору' : 'вниз'}: ${zt(nova)} °C.`
+          : `До нуля — ${doNulia} ${mnozh(doNulia, 'поділка', 'поділки', 'поділок')}, ще ${k} − ${doNulia} = ${k - doNulia} ${tepl ? 'вище' : 'нижче'} нуля: ${zt(nova)} °C.`,
+    };
+  }
 }
 
 export default {
-  rivni: ['протилежні числа і модуль', 'порівняння і рух прямою', 'упорядкування і цілі між числами'],
+  rivni: ['запиши числом зі знаком', 'додатне, від’ємне чи нуль; протилежні зміни', 'температура через нуль'],
   zavdannia(r, riven) {
-    if (riven === 1) return r.shans(0.6) ? protylezhne(r) : porivniaty(r, false, false);
-    if (riven === 2) return r.vybir([(rr: Vypadok) => porivniaty(rr, true, false), rukh, rukh, protylezhne])(r);
-    return r.vybir([vporiadkuvaty, mizh, (rr: Vypadok) => porivniaty(rr, true, true)])(r);
+    if (riven === 1) return r.vybir([zapysaty, zapysaty, vyd])(r);
+    if (riven === 2) return r.vybir([protylezhna, vyd, skilkyVidiemnykh, zapysaty])(r);
+    return r.vybir([temperatura, temperatura, skilkyVidiemnykh, protylezhna])(r);
   },
 } satisfies Henerator;

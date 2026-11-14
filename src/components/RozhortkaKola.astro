@@ -1,0 +1,83 @@
+---
+// Довжина кола «розгорнута»: колесо діаметром d котиться по прямій і за один оберт проходить відрізок
+// завдовжки C. На відрізку вміщується три діаметри і ще трохи (≈ 0,14 d), тому C ≈ 3,14 · d.
+// Червона точка — та сама точка колеса: на початку і після повного оберту вона знову внизу.
+//   <RozhortkaKola />                     — у буквах: d, C ≈ 3,14 · d
+//   <RozhortkaKola d={50} odynytsi="см" /> — з числами: 3 · 50 = 150 і ще ≈ 7 см, C ≈ 157 см
+interface Props {
+  d?: number; // діаметр колеса (лише для підписів; на малюнку масштаб сталий)
+  odynytsi?: string;
+}
+const { d, odynytsi = 'см' } = Astro.props;
+
+const fmt = (x: number) => String(Math.round(x * 100) / 100).replace('.', ',');
+const D = 76; // діаметр на малюнку, px
+const R = D / 2;
+const C = Math.PI * D;
+const pad = 14;
+const x0 = pad + R; // точка дотику на початку
+const y0 = 120; // пряма
+const W = x0 + C + R + pad;
+const H = y0 + 58;
+const pidpysD = d === undefined ? 'd' : `${fmt(d)}`;
+const label =
+  d === undefined
+    ? 'Колесо діаметром d за один оберт проходить відрізок: три діаметри і ще приблизно 0,14 d. Довжина кола C ≈ 3,14 · d'
+    : `Колесо діаметром ${fmt(d)} ${odynytsi} за один оберт проходить приблизно ${fmt(3.14 * d)} ${odynytsi}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}>
+      <!-- колесо на початку -->
+      <circle cx={x0} cy={y0 - R} r={R} fill="var(--ill-1)" fill-opacity="0.15" stroke="var(--ill-1)" stroke-width="3" />
+      <line x1={x0 - R} y1={y0 - R} x2={x0 + R} y2={y0 - R} stroke="var(--ill-2)" stroke-width="2.5" />
+      <text x={x0} y={y0 - R - 7} text-anchor="middle" font-size="14" font-weight="800" fill="var(--ill-2)">{pidpysD}</text>
+      <circle cx={x0} cy={y0 - R} r="3" fill="var(--ill-ink)" />
+      <!-- колесо після одного оберту -->
+      <circle cx={x0 + C} cy={y0 - R} r={R} fill="none" stroke="var(--ill-1)" stroke-width="2" stroke-dasharray="6 5" />
+      <path
+        d={`M ${x0 + R * 0.9} ${y0 - R - R * 0.95} Q ${x0 + C / 2} ${y0 - 2 * R - 8} ${x0 + C - R * 0.9} ${y0 - R - R * 0.95}`}
+        fill="none"
+        stroke="var(--ill-muted)"
+        stroke-width="1.5"
+        marker-end="url(#rozhortka-strilka)"
+      />
+      <text x={x0 + C / 2} y={y0 - 2 * R - 18} text-anchor="middle" font-size="13" fill="var(--ill-muted)">один оберт</text>
+      <defs>
+        <marker id="rozhortka-strilka" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ill-muted)" />
+        </marker>
+      </defs>
+      <!-- пряма і відрізок завдовжки C -->
+      <line x1={pad} y1={y0} x2={W - pad} y2={y0} stroke="var(--ill-line)" stroke-width="1.5" />
+      {
+        [0, 1, 2].map((i) => (
+          <g>
+            <line x1={x0 + i * D + 2} y1={y0} x2={x0 + (i + 1) * D - 2} y2={y0} stroke="var(--ill-2)" stroke-width="5" stroke-linecap="round" />
+            <text x={x0 + i * D + R} y={y0 + 20} text-anchor="middle" font-size="14" font-weight="800" fill="var(--ill-2)">{pidpysD}</text>
+          </g>
+        ))
+      }
+      <line x1={x0 + 3 * D + 1} y1={y0} x2={x0 + C} y2={y0} stroke="var(--ill-4)" stroke-width="5" />
+      <text x={x0 + 3 * D + 2} y={y0 + 20} text-anchor="start" font-size="12" font-weight="800" fill="var(--ill-4)">
+        ≈ {d === undefined ? '0,14 d' : fmt(0.14 * d)}
+      </text>
+      {[0, 1, 2, 3].map((i) => <line x1={x0 + i * D} y1={y0 - 5} x2={x0 + i * D} y2={y0 + 5} stroke="var(--ill-ink)" stroke-width="1.5" />)}
+      <line x1={x0 + C} y1={y0 - 5} x2={x0 + C} y2={y0 + 5} stroke="var(--ill-ink)" stroke-width="1.5" />
+      <circle cx={x0} cy={y0} r="4.5" fill="var(--ill-4)" />
+      <circle cx={x0 + C} cy={y0} r="4.5" fill="var(--ill-4)" />
+      <path d={`M ${x0} ${y0 + 30} v 6 h ${C} v -6`} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+      <text x={x0 + C / 2} y={y0 + 52} text-anchor="middle" font-size="14" font-weight="800" fill="var(--ill-ink)">
+        C ≈ 3,14 · {pidpysD}{d === undefined ? '' : ` = ${fmt(3.14 * d)} ${odynytsi}`}
+      </text>
+    </svg>
+  </div>
+  <figcaption class="ill-caption">
+    {
+      d === undefined
+        ? 'За один оберт колесо проходить довжину свого кола: три діаметри і ще трохи.'
+        : `За один оберт колесо проходить ${fmt(3.14 * d)} ${odynytsi}: три діаметри по ${fmt(d)} ${odynytsi} і ще ≈ ${fmt(0.14 * d)} ${odynytsi}.`
+    }
+  </figcaption>
+</figure>

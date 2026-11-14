@@ -1,0 +1,112 @@
+---
+// Сума кількох доданків зі знаками: протилежні доданки закреслено (разом 0), решту згруповано — окремо
+// додатні, окремо від'ємні. Показує переставну й сполучну властивості додавання.
+//   <ZnakoviDodanky dodanky={[50, -20, 30, -50, -10]} />
+interface Props {
+  dodanky: number[];
+}
+const { dodanky } = Astro.props;
+
+const fmt = (v: number) => (v < 0 ? `−${String(-v).replace('.', ',')}` : String(v).replace('.', ','));
+const okr = (x: number) => Math.round(x * 1000) / 1000;
+// Шукаємо пари протилежних доданків.
+const vzhe = new Set<number>();
+const pary: [number, number][] = [];
+dodanky.forEach((v, i) => {
+  if (vzhe.has(i)) return;
+  const j = dodanky.findIndex((u, k) => k > i && !vzhe.has(k) && u === -v);
+  if (j >= 0) {
+    vzhe.add(i);
+    vzhe.add(j);
+    pary.push([i, j]);
+  }
+});
+const reshta = dodanky.filter((_, i) => !vzhe.has(i));
+const dod = reshta.filter((v) => v > 0);
+const vid = reshta.filter((v) => v < 0);
+const sDod = okr(dod.reduce((a, b) => a + b, 0));
+const sVid = okr(vid.reduce((a, b) => a + b, 0));
+const suma = okr(sDod + sVid);
+const zapys = (spysok: number[]) => spysok.map((v, i) => (i === 0 ? fmt(v) : v < 0 ? `+ (${fmt(v)})` : `+ ${v}`.replace('.', ','))).join(' ');
+---
+
+<figure class="ill not-content znakovi">
+  <div class="riadok" aria-label={`Сума: ${zapys(dodanky)}`}>
+    {
+      dodanky.map((v, i) => (
+        <span class={`chip ${v > 0 ? 'plus' : 'minus'} ${vzhe.has(i) ? 'para' : ''}`}>{fmt(v)}</span>
+      ))
+    }
+  </div>
+  <ol class="ill-steps">
+    {
+      pary.length > 0 && (
+        <li>
+          Протилежні доданки разом дають нуль:{' '}
+          {pary.map(([i, j], k) => (
+            <>
+              {k > 0 && '; '}
+              <b class="num">
+                {fmt(dodanky[i])} + {dodanky[j] < 0 ? `(${fmt(dodanky[j])})` : fmt(dodanky[j])} = 0
+              </b>
+            </>
+          ))}
+          .
+        </li>
+      )
+    }
+    {
+      dod.length > 0 && (
+        <li>
+          Додатні: <b class="num c3">{dod.length > 1 ? `${zapys(dod)} = ${fmt(sDod)}` : fmt(sDod)}</b>.
+        </li>
+      )
+    }
+    {
+      vid.length > 0 && (
+        <li>
+          Від'ємні: <b class="num c4">{vid.length > 1 ? `${zapys(vid)} = ${fmt(sVid)}` : fmt(sVid)}</b>.
+        </li>
+      )
+    }
+    <li>
+      Разом:{' '}
+      <b class="num">
+        {dod.length && vid.length ? `${fmt(sDod)} + (${fmt(sVid)}) = ${fmt(suma)}` : fmt(suma)}
+      </b>
+      .
+    </li>
+  </ol>
+</figure>
+
+<style>
+  .znakovi .riadok {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+  .znakovi .chip {
+    display: inline-block;
+    min-width: 3rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    border: 2px solid;
+    font-weight: 800;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .znakovi .plus {
+    color: var(--ill-3);
+    border-color: var(--ill-3);
+  }
+  .znakovi .minus {
+    color: var(--ill-4);
+    border-color: var(--ill-4);
+  }
+  .znakovi .para {
+    text-decoration: line-through;
+    opacity: 0.55;
+    border-style: dashed;
+  }
+</style>

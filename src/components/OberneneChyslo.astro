@@ -1,0 +1,92 @@
+---
+// Взаємно обернені числа: скільки шматків по n/d уміщується в одному цілому? Рівно d/n шматка,
+// тому n/d · d/n = 1. Зверху — ціле з d клітинок, під ним — шматки по n клітинок; останній шматок,
+// якщо не вміщується повністю, зафарбований лише частково (пунктир — те, що вийшло б за ціле).
+//   <OberneneChyslo n={3} d={4} />   — 3/4: один шматок і ще 1/3 шматка, тобто 4/3
+interface Props {
+  n: number; // чисельник шматка
+  d: number; // знаменник шматка: ціле поділене на d клітинок
+}
+const { n, d } = Astro.props;
+
+const povnykh = Math.floor(d / n);
+const zalyshok = d % n;
+const shmatkiv = povnykh + (zalyshok ? 1 : 0);
+const klitynok = Math.max(d, shmatkiv * n);
+const pad = 10;
+const cw = Math.max(26, Math.min(56, 440 / klitynok));
+const bh = 34;
+const W = klitynok * cw + 2 * pad;
+const y1 = 30; // ціле
+const y2 = y1 + bh + 18; // шматки
+const H = y2 + bh + 30;
+const kolir = (i: number) => `var(--ill-${(i % 2) + 1})`;
+const shmatok = (k: number) => (k % 10 === 1 && k % 100 !== 11 ? 'шматок' : k % 10 >= 2 && k % 10 <= 4 && (k % 100 < 10 || k % 100 >= 20) ? 'шматки' : 'шматків');
+const label = `Ціле з ${d} клітинок, шматок — ${n} клітинки. У цілому вміщується ${d}/${n} шматка, тому ${n}/${d} · ${d}/${n} = 1`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}>
+      <path d={`M ${pad} ${y1 - 6} v -8 h ${d * cw} v 8`} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+      <text x={pad + (d * cw) / 2} y="12" text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">1 — ціле</text>
+      {
+        Array.from({ length: d }, (_, i) => (
+          <rect x={pad + i * cw} y={y1} width={cw} height={bh} fill="transparent" stroke="var(--ill-line)" stroke-width="1.5" />
+        ))
+      }
+      <line x1={pad + d * cw} y1={y1 - 4} x2={pad + d * cw} y2={y2 + bh + 4} stroke="var(--ill-4)" stroke-width="1.5" stroke-dasharray="4 3" />
+      {
+        Array.from({ length: shmatkiv }, (_, k) => {
+          const chastkovyi = k === povnykh;
+          const x0 = pad + k * n * cw;
+          return (
+            <g>
+              {Array.from({ length: n }, (_, j) => {
+                const vseredyni = k * n + j < d;
+                return (
+                  <rect
+                    x={x0 + j * cw}
+                    y={y2}
+                    width={cw}
+                    height={bh}
+                    fill={vseredyni ? (chastkovyi ? 'var(--ill-3)' : kolir(k)) : 'transparent'}
+                    fill-opacity="0.35"
+                    stroke={vseredyni ? 'var(--ill-line)' : 'var(--ill-3)'}
+                    stroke-width="1.5"
+                    stroke-dasharray={vseredyni ? undefined : '4 3'}
+                  />
+                );
+              })}
+              <rect x={x0} y={y2} width={n * cw} height={bh} fill="none" stroke={chastkovyi ? "var(--ill-3)" : kolir(k)} stroke-width="3" stroke-dasharray={chastkovyi ? "7 4" : undefined} rx="3" />
+              <text x={x0 + (n * cw) / 2} y={y2 + bh + 20} text-anchor="middle" font-size="13" font-weight="700" fill="var(--ill-ink)">
+                {chastkovyi ? `${zalyshok}/${n}` : k + 1}
+              </text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>
+      Шматок — це <b class="num">{n}/{d}</b> цілого: {n} {n === 1 ? 'клітинка' : n < 5 ? 'клітинки' : 'клітинок'} із {d}.
+    </li>
+    <li>
+      {
+        zalyshok === 0 ? (
+          <>У цілому вміщується рівно <b class="num">{povnykh}</b> {shmatok(povnykh)}.</>
+        ) : (
+          <>
+            У цілому вміщується {povnykh > 0 ? <><b class="num">{povnykh}</b> {shmatok(povnykh)} і ще </> : 'лише '}
+            <b class="num c3">{zalyshok}/{n}</b> шматка — разом <b class="num">{d}/{n}</b> шматка.
+          </>
+        )
+      }
+    </li>
+  </ol>
+  <figcaption class="ill-caption">
+    <span class="frac" aria-hidden="true" data-pagefind-ignore><span>{n}</span><span>{d}</span></span><span class="sr-only">{n}/{d}</span> ·{' '}
+    <span class="frac c1" aria-hidden="true" data-pagefind-ignore><span>{d}</span><span>{n}</span></span><span class="sr-only">{d}/{n}</span> = 1
+  </figcaption>
+</figure>

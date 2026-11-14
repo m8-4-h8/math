@@ -1,10 +1,12 @@
 ---
 // Заголовок теми + кнопка «назад до класу» над ним, щоб із будь-якої теми
 // можна було одним дотиком повернутися до списку тем свого класу.
+// Під заголовком — де тема в підручниках (поле `paragraf`): «📖 Істер § 4 · Мерзляк п. 9».
 import Default from '@astrojs/starlight/components/PageTitle.astro';
 import { znachokKlasu } from '../../klasy.mjs';
 
-const { id } = Astro.locals.starlightRoute;
+const { id, entry } = Astro.locals.starlightRoute;
+const { paragraf } = entry.data;
 const nomer = /^(\d+)-klas\//.test(id) ? parseInt(id, 10) : null;
 const baza = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
@@ -17,6 +19,13 @@ const baza = import.meta.env.BASE_URL.replace(/\/$/, '');
   )
 }
 <Default />
+{
+  paragraf && (
+    <p class="paragraf">
+      <span aria-hidden="true">📖</span> {paragraf}
+    </p>
+  )
+}
 
 <style>
   .nazad-do-klasu {
@@ -30,6 +39,12 @@ const baza = import.meta.env.BASE_URL.replace(/\/$/, '');
     color: var(--sl-color-text-accent);
     font-weight: 800;
     text-decoration: none;
+  }
+  .paragraf {
+    margin: 0.35rem 0 0;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+    font-weight: 700;
   }
   .nazad-do-klasu:hover {
     background: color-mix(in srgb, var(--sl-color-accent) 22%, transparent);

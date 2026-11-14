@@ -1,6 +1,6 @@
-// Відношення: частка двох чисел (у скільки разів одне більше за інше); скорочення відношення;
-// величини — в однакових одиницях; поділ числа у даному відношенні (спершу кількість частин).
-import { des, mnozh, nsd, skilky, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
+// Відношення (Істер § 15): частка двох чисел (у скільки разів одне більше за інше); скорочення відношення;
+// величини — в однакових одиницях; дробові й десяткові члени замінюємо натуральними.
+import { des, neskorotnyiChyselnyk, nsd, nsk, tdrib, ZRAZKY, zrazok, type Henerator, type Vypadok, type TrenZavdannia } from '../dopomoha.ts';
 
 function chastka(r: Vypadok): TrenZavdannia {
   const b = r.chyslo(2, 12);
@@ -63,40 +63,32 @@ function desiatkove(r: Vypadok): TrenZavdannia {
   };
 }
 
-const PODIL = [
-  { umova: (s: number, p: number, q: number) => `Мотузку завдовжки ${s} м розрізали на дві частини у відношенні ${p} : ${q}.`, bilsha: 'Яка довжина більшої частини (у м)?', mensha: 'Яка довжина меншої частини (у м)?', od: 'м' },
-  {
-    umova: (s: number, p: number, q: number) => `${skilky(s, 'цукерку', 'цукерки', 'цукерок')} поділили між Олею і Тарасом у відношенні ${p} : ${q}.`,
-    bilsha: 'Скільки цукерок отримав той, кому дісталося більше?',
-    mensha: 'Скільки цукерок отримав той, кому дісталося менше?',
-  },
-  { umova: (s: number, p: number, q: number) => `Для фарби змішали білу і синю у відношенні ${p} : ${q}, усього ${s} л.`, bilsha: 'Скільки літрів тієї фарби, якої більше?', mensha: 'Скільки літрів тієї фарби, якої менше?', od: 'л' },
-];
-
-function podil(r: Vypadok): TrenZavdannia {
+/** Відношення дробових чисел → відношення натуральних: a/b : c/d, множимо на спільний знаменник. */
+function dribni(r: Vypadok): TrenZavdannia {
   for (;;) {
-    const [p, q] = r.rizni(2, 1, 9);
-    if (nsd(p, q) !== 1) continue;
-    const chastyna = r.chyslo(2, 8);
-    const s = (p + q) * chastyna;
-    const pd = r.vybir(PODIL);
-    const bilsha = r.shans();
-    const v = (bilsha ? Math.max(p, q) : Math.min(p, q)) * chastyna;
+    const [b, d] = r.rizni(2, 2, 10);
+    const [a, c] = [neskorotnyiChyselnyk(r, b), neskorotnyiChyselnyk(r, d)];
+    const n = nsk(b, d);
+    if (n > 30) continue;
+    const [x, y] = [(a * n) / b, (c * n) / d];
+    const g = nsd(x, y);
+    const [p, q] = [x / g, y / g];
+    if (p === q) continue;
     return {
-      pytannia: `${pd.umova(s, p, q)} ${bilsha ? pd.bilsha : pd.mensha}`,
-      vidpovid: v,
-      odynytsi: pd.od,
-      pidkazka: `Усього ${p} + ${q} = ${p + q} ${mnozh(p + q, 'частина', 'частини', 'частин')}. Скільки припадає на одну?`,
-      rozviazok: `${p} + ${q} = ${p + q} (частин); ${s} : ${p + q} = ${chastyna} — одна частина; ${chastyna} · ${bilsha ? Math.max(p, q) : Math.min(p, q)} = ${v}.`,
+      pytannia: `Заміни відношення дробових чисел відношенням натуральних чисел. Запиши через двокрапку, наприклад «${zrazok(ZRAZKY.vidnoshennia, `${p}:${q}`)}».`,
+      vyraz: `$${tdrib(a, b)} : ${tdrib(c, d)}$`,
+      vidpovid: `${p}:${q}`,
+      pidkazka: `Помнож обидва члени на спільний знаменник ${n}.`,
+      rozviazok: `${a}/${b} · ${n} = ${x}, ${c}/${d} · ${n} = ${y}${g > 1 ? `; ${x} : ${g} = ${p}, ${y} : ${g} = ${q}` : ''}. Відповідь: ${p}:${q}.`,
     };
   }
 }
 
 export default {
-  rivni: ['відношення як частка', 'скорочуємо, різні одиниці', 'ділимо у відношенні'],
+  rivni: ['відношення як частка', 'скорочуємо, різні одиниці', 'дробові й десяткові члени'],
   zavdannia(r, riven) {
     if (riven === 1) return r.shans() ? chastka(r) : skorotyty(r);
     if (riven === 2) return r.vybir([skorotyty, odynytsi, desiatkove])(r);
-    return r.vybir([podil, podil, odynytsi, skorotyty])(r);
+    return r.vybir([dribni, dribni, desiatkove, odynytsi])(r);
   },
 } satisfies Henerator;

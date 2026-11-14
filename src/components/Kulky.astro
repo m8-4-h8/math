@@ -1,0 +1,87 @@
+---
+// Ймовірність на кульках: у коробці кульки кількох кольорів; сприятливі (потрібного кольору) обведено.
+// Під малюнком — кроки: усіх кульок, сприятливих, P = m / n.
+//   <Kulky kulky={[{ kolir: 1, nazva: 'сині', kilkist: 3 }, { kolir: 3, nazva: 'зелені', kilkist: 5 }]} shukaty={1} />
+interface Hrupa {
+  kolir: 1 | 2 | 3 | 4; // var(--ill-N)
+  nazva: string; // «сині» — у множині
+  kilkist: number;
+}
+interface Props {
+  kulky: Hrupa[];
+  /** Колір кульок, які «сприятливі»; без нього — лише малюнок. */
+  shukaty?: number;
+}
+const { kulky, shukaty } = Astro.props;
+
+const vsi = kulky.flatMap((h) => Array.from({ length: h.kilkist }, () => h.kolir));
+const n = vsi.length;
+const vRiadku = Math.min(10, n);
+const r = 13;
+const krok = 2 * r + 8;
+const riadkiv = Math.ceil(n / vRiadku);
+const W = vRiadku * krok + 24;
+const H = riadkiv * krok + 24;
+const m = shukaty ? kulky.filter((h) => h.kolir === shukaty).reduce((s, h) => s + h.kilkist, 0) : 0;
+const nazvaShukanykh = kulky.find((h) => h.kolir === shukaty)?.nazva ?? '';
+const nsd = (a: number, b: number): number => (b === 0 ? a : nsd(b, a % b));
+const g = nsd(m, n) || 1;
+const opys = `У коробці ${n} кульок: ${kulky.map((h) => `${h.kilkist} ${h.nazva}`).join(', ')}`;
+---
+
+<figure class="ill not-content kulky">
+  <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={opys} style={`max-width:${W}px`}>
+    <rect x="4" y="4" width={W - 8} height={H - 8} rx="10" class="korobka" />
+    {
+      vsi.map((k, i) => {
+        const cx = 12 + krok / 2 + (i % vRiadku) * krok;
+        const cy = 12 + krok / 2 + Math.floor(i / vRiadku) * krok;
+        return (
+          <g>
+            <circle cx={cx} cy={cy} r={r} fill={`var(--ill-${k})`} />
+            {shukaty === k && <circle cx={cx} cy={cy} r={r + 3} class="obvid" />}
+          </g>
+        );
+      })
+    }
+  </svg>
+  {
+    shukaty && (
+      <ol class="ill-steps">
+        <li>
+          Усіх кульок — усіх рівноможливих наслідків: <b class="num">n = {kulky.map((h) => h.kilkist).join(' + ')} = {n}</b>.
+        </li>
+        <li>
+          Сприятливих (кульки {nazvaShukanykh}): <b class="num">m = {m}</b>.
+        </li>
+        <li>
+          Ймовірність:{' '}
+          <b class="num">
+            P = {m}/{n}
+            {g > 1 && m > 0 ? ` = ${m / g}/${n / g}` : ''}
+          </b>
+          .
+        </li>
+      </ol>
+    )
+  }
+</figure>
+
+<style>
+  .kulky svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  .kulky .korobka {
+    fill: none;
+    stroke: var(--ill-line);
+    stroke-width: 2;
+  }
+  .kulky .obvid {
+    fill: none;
+    stroke: var(--ill-ink);
+    stroke-width: 2.5;
+  }
+</style>

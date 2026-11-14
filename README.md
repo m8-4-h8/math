@@ -35,6 +35,14 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   ---
   ```
   До меню, пошуку й карток на головній вона потрапить сама. `ikonka` — емодзі для картки на головній.
+  Для класу, впорядкованого за підручником, додай ще:
+  ```
+  rozdil: 1. Звичайні дроби                  # розділ: теми групуються в меню й на головній
+  paragraf: "Істер § 4 · Мерзляк п. 9"       # параграфи підручників — під заголовком теми
+  sidebar:
+    order: 4                                 # порядок у розділі (номер параграфа; 4.5 — між § 4 і § 5)
+  ```
+  Якщо хоч одна тема класу має `rozdil`, меню класу складається з розділів (див. `meniuKlasu` у `src/klasy.mjs`).
 - **Новий клас:** створи папку (наприклад `6-klas`) і поклади туди першу тему. Клас сам з'явиться в меню
   та на головній (значок і колір класу підбираються автоматично, див. `src/klasy.mjs`).
 - **Формули:** `$a^2 + b^2 = c^2$` у тексті, `$$ ... $$` окремим блоком.
@@ -76,14 +84,27 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `VidDesiatkyNazad` | цифра частки від десятки назад: дільник · 10 мінус зайві дільники | `<VidDesiatkyNazad dilene={344} dilnyk={43} />` |
   | `Zvedennia` | зведення до одиниці табличкою (одна або дві величини) | `<Zvedennia nazvy={['Корови', 'Дні']} vidomo={[5, 4]} rezultat={100} shukaty={[3, 6]} odynytsia="Сіно, кг" />` |
   | `Kolo` | коло або круг з центром, радіусом і діаметром; `formuly` — ще довжина кола і площа (π ≈ 3,14) | `<Kolo radius={3} pokazaty="obydva" />` |
+  | `RozhortkaKola` | колесо котиться по прямій: за один оберт — довжина кола, три діаметри і ще ≈ 0,14 d, тож C ≈ 3,14 · d | `<RozhortkaKola />`, `<RozhortkaKola d={50} odynytsi="см" />` |
   | `SumaRiznytsia` | два числа за сумою і різницею: смужки + кроки | `<SumaRiznytsia suma={30} riznytsia={6} imena={['Оля', 'Марко']} />` |
   | `Skorochennia` | скорочення дробу: ланцюжок і одним кроком через НСД | `<Skorochennia chys={24} znam={36} />` |
-  | `SpilnyiZnamennyk` | два дроби до спільного знаменника, порівняння, `+` або `−` | `<SpilnyiZnamennyk a={[3, 4]} b={[5, 6]} dia="+" />` |
+  | `SpilnyiZnamennyk` | два дроби до спільного знаменника, порівняння, `+` або `−`; `dia="zvesty"` — лише зведення | `<SpilnyiZnamennyk a={[3, 4]} b={[5, 6]} dia="+" />` |
+  | `KratniZnamennyka` | найменший спільний знаменник перебором кратних найбільшого знаменника (✓ / ✗) | `<KratniZnamennyka znamennyky={[6, 8]} />` |
+  | `VidsotkovaSmuzhka` | відсотки на подвійній смужці: ціле = 100 %, частина, через 1 % або дробом | `<VidsotkovaSmuzhka vidsotky={30} tsile={80} shukaty="chastyna" />` |
+  | `PeriodychnyiDrib` | ділення кутом з остачами: остача повторилась — почався період | `<PeriodychnyiDrib chys={5} znam={12} />` |
+  | `OberneneChyslo` | взаємно обернені числа: скільки шматків по n/d уміщується в цілому | `<OberneneChyslo n={3} d={4} />` |
+  | `VybirZapysu` | дія зі звичайним і десятковим дробом: коли рахувати десятковими, а коли звичайними (приклади — у слотах `tak` і `ni`) | `<VybirZapysu><span slot="tak">…</span><span slot="ni">…</span></VybirZapysu>` |
   | `DobutokDrobiv` | множення дробів на квадраті: стовпчики × рядки | `<DobutokDrobiv a={[3, 4]} b={[2, 3]} />` |
   | `Proportsiia` | пряма чи обернена пропорційність: табличка зі стрілками і пропорція | `<Proportsiia nazvy={['Робітники', 'Дні']} a={[3, 8]} x0={6} typ="obernena" />` |
   | `KruhovaDiahrama` | кругова діаграма з відсотками і градусами (1% = 3,6°) | `<KruhovaDiahrama dani={[['Футбол', 40], ['Плавання', 25], ['Танці', 35]]} />` |
   | `KoordynatnaPriama` | координатна пряма з від'ємними числами, точки, модуль, стрибок-додавання (`strybok`) | `<KoordynatnaPriama min={-6} max={6} tochky={[{ nazva: 'A', x: -4 }]} modul />` |
   | `KoordynatnaPloshchyna` | координатна площина: осі x і y, чверті, точки з пунктиром від осей, прямі через точки (`priami`), точки-опори без позначки (`skhovaty`) | `<KoordynatnaPloshchyna rozmir={5} tochky={[{ nazva: 'A', x: 3, y: 2 }]} />` |
+  | `Termometr` | вертикальні термометри: додатна температура одним кольором, від'ємна — іншим | `<Termometr temperatury={[5, -3]} pidpysy={['день', 'ніч']} />` |
+  | `ZnakoviDodanky` | сума доданків зі знаками: протилежні закреслено, окремо додатні й від'ємні, разом | `<ZnakoviDodanky dodanky={[50, -20, 30, -50, -10]} />` |
+  | `ZruchniMnozhnyky` | добуток кількох множників: знак за кількістю мінусів, зручні пари одним кольором | `<ZruchniMnozhnyky mnozhnyky={[-25, 7, -4]} pary={[[0, 2]]} />` |
+  | `ModelZadachi` | модель текстової задачі смужками: шматки «x», додаткові одиниці (+3) чи заштриховані (−3), дужка «разом» і рівняння | `<ModelZadachi riadky={[{ nazva: 'I', x: 2 }, { nazva: 'II', x: 1, dodatok: 3 }]} razom={35} rivniannia="2x + (x + 3) = 35" />` |
+  | `HrafikZalezhnosti` | графік залежності (температура, відстань від часу) на сітці; пунктир `chytaty` показує, як читати графік. Той самий малюнок — `hrafik()` у `src/trenazhery/malunky.ts` для тренажерів | `<HrafikZalezhnosti tochky={[[0, -3], [2, -4], [4, 1]]} krokX={2} krokY={1} osX="t, год" osY="T, °C" chytaty={{ x: 2 }} />` |
+  | `RozhortkaParalelepipeda` | розгортка паралелепіпеда (куба) хрестом, протилежні грані одним кольором, площа поверхні по парах граней | `<RozhortkaParalelepipeda a={4} b={2} c={3} />` |
+  | `Kulky` | ймовірність на кульках: коробка з кульками кількох кольорів, сприятливі обведено, P = m/n | `<Kulky kulky={[{ kolir: 1, nazva: 'сині', kilkist: 3 }, { kolir: 3, nazva: 'зелені', kilkist: 5 }]} shukaty={1} />` |
   | `RozkryttiaDuzhok` | розкриття дужок: множник «дістає» до кожного доданка, змінені знаки виділено | `<RozkryttiaDuzhok mnozhnyk={-1} dodanky={[{ k: 1, b: 'a' }, { k: -5 }]} />` |
   | `PerenosDodankiv` | рівняння ax + b = cx + d: перенесення доданків зі зміною знака і розв'язок | `<PerenosDodankiv a={5} b={3} c={2} d={12} />` |
   | `PeretynPriamykh` | перпендикулярні, паралельні й просто прямі, що перетинаються, на клітинках | `<PeretynPriamykh vydy={['perpendykuliarni', 'paralelni']} />` |
@@ -134,7 +155,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
 | `KoordynatnyiPromin` | координатний промінь з точками, ціна поділки будь-яка; звичайні дроби — `znamennyk={4}` і `drib: '3/4'` у точці | `<KoordynatnyiPromin krok={5} dovzhyna={10} tochky={[{ nazva: 'A', x: 15 }]} />` |
 | `Diahrama` | стовпчаста або лінійна діаграма | `<Diahrama dani={[['Пн', 12], ['Вт', 18]]} vyd="liniia" />` |
 | `RozpodilnyiZakon` | розподільний закон прямокутником з клітинок | `<RozpodilnyiZakon a={4} b={5} c={3} />` |
-| `PoriadokDii` | номери дій над знаками і обчислення по кроках | `<PoriadokDii vyraz="48 : (2 + 6) · 3 − 5" />` |
+| `PoriadokDii` | номери дій над знаками і обчислення по кроках; працює і з від'ємними числами | `<PoriadokDii vyraz="(−3,6 + 1,2) : (−0,8)" />` |
 | `Techiia` | швидкість за течією і проти течії | `<Techiia vlasna={12} techiia={2} />` |
 | `Liniyi` | відрізок, промінь, пряма; відрізок з лінійкою | `<Liniyi vydy={['vidrizok']} dovzhyna={5} />` |
 | `Transportyr` | транспортир, прикладений до кута; `bez_hradusiv` — без підписаної величини (для задач) | `<Transportyr hradusy={65} nazva="AOB" />` |

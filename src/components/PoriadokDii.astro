@@ -2,6 +2,7 @@
 // Порядок дій у виразі: над кожним знаком — номер дії, під виразом — дії по черзі й ланцюжок спрощень.
 // Спершу дужки, потім степінь, потім множення й ділення, потім додавання й віднімання (зліва направо).
 //   <PoriadokDii vyraz="48 : (2 + 6) · 3 − 5" />
+// Від'ємні числа — з мінусом перед числом: «(−3,6 + 1,2) : (−0,8)».
 interface Props {
   vyraz: string; // знаки: + − · : ^ і дужки (можна й - * /)
 }
@@ -15,6 +16,7 @@ const VAGA: Record<string, number> = { '+': 1, '−': 1, '·': 2, ':': 2, '^': 3
 const leksemy = (vyraz.match(/\d+(?:[.,]\d+)?|[-−+*·×:/^()]/g) ?? []).map((t) => ZNAK[t] ?? t);
 let i = 0;
 let hlybyna = 0;
+const unarni = new Set<number>(); // мінуси, що належать числу, а не дії
 function vyraz_(minVaga: number): Vuzol {
   let l = atom();
   while (i < leksemy.length && VAGA[leksemy[i]] >= minVaga) {
@@ -27,6 +29,11 @@ function vyraz_(minVaga: number): Vuzol {
 }
 function atom(): Vuzol {
   const t = leksemy[i++];
+  if (t === '−') {
+    unarni.add(i - 1);
+    const a = atom();
+    return { chyslo: 'chyslo' in a ? -a.chyslo : NaN };
+  }
   if (t === '(') {
     hlybyna++;
     const v = vyraz_(1);
@@ -38,13 +45,14 @@ function atom(): Vuzol {
 }
 let derevo = vyraz_(1);
 
-const fmt = (x: number) => String(+x.toFixed(6)).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const fmt = (x: number) => (x < 0 ? '−' : '') + String(+Math.abs(x).toFixed(6)).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+const fmtP = (x: number) => (x < 0 ? `(${fmt(x)})` : fmt(x));
 function rakhuvaty(z: string, a: number, b: number) {
   return z === '+' ? a + b : z === '−' ? a - b : z === '·' ? a * b : z === ':' ? a / b : a ** b;
 }
-function zapys(v: Vuzol): string {
-  if ('chyslo' in v) return fmt(v.chyslo);
-  const s = `${zapys(v.l)} ${v.znak} ${zapys(v.p)}`;
+function zapys(v: Vuzol, pravyi = false): string {
+  if ('chyslo' in v) return v.chyslo < 0 && (pravyi || v.duzhky) ? fmtP(v.chyslo) : fmt(v.chyslo);
+  const s = `${zapys(v.l)} ${v.znak} ${zapys(v.p, true)}`;
   return v.duzhky ? `(${s})` : s;
 }
 
@@ -65,7 +73,7 @@ for (let krok = 1; !('chyslo' in derevo) && krok < 30; krok++) {
   const { v, bat, bik } = kandydaty[0];
   const rez = rakhuvaty(v.znak, v.l.chyslo, v.p.chyslo);
   nomery[v.poz] = krok;
-  dii.push(`${fmt(v.l.chyslo)} ${v.znak} ${fmt(v.p.chyslo)} = ${fmt(rez)}`);
+  dii.push(`${fmt(v.l.chyslo)} ${v.znak} ${fmtP(v.p.chyslo)} = ${fmt(rez)}`);
   const novyi = { chyslo: rez };
   if (bat) bat[bik!] = novyi;
   else derevo = novyi;
@@ -77,7 +85,9 @@ for (let krok = 1; !('chyslo' in derevo) && krok < 30; krok++) {
   <div class="poriadok" aria-label={`Порядок дій у виразі ${vyraz}`}>
     {
       leksemy.map((t, k) =>
-        nomery[k] ? (
+        unarni.has(k - 1) ? null : unarni.has(k) ? (
+          <span class="lex">−{fmt(Number(leksemy[k + 1].replace(',', '.')))}</span>
+        ) : nomery[k] ? (
           <span class="znak">
             <span class="nomer">{nomery[k]}</span>
             <span>{t}</span>
@@ -104,6 +114,13 @@ for (let krok = 1; !('chyslo' in derevo) && krok < 30; krok++) {
     font-size: 1.35rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+  /* На телефоні довгий вираз з від'ємними числами має влазити в один рядок. */
+  @media (max-width: 30rem) {
+    .poriadok {
+      gap: 0.25em;
+      font-size: 1.1rem;
+    }
   }
   .znak {
     display: inline-flex;

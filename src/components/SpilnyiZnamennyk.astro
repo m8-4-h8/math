@@ -1,13 +1,14 @@
 ---
 // Два дроби — до спільного знаменника (НСК знаменників), з додатковими множниками над дробами.
-// dia: 'porivniaty' — порівняти, '+' — додати, '−' — відняти (результат скорочуємо і виділяємо цілу частину).
+// dia: 'porivniaty' — порівняти, '+' — додати, '−' — відняти (результат скорочуємо і виділяємо цілу частину),
+// 'zvesty' — лише звести до спільного знаменника.
 //   <SpilnyiZnamennyk a={[3, 4]} b={[5, 6]} dia="+" />
 import { nsd, nsk } from './chysla';
 
 interface Props {
   a: [number, number]; // [чисельник, знаменник]
   b: [number, number];
-  dia?: 'porivniaty' | '+' | '−';
+  dia?: 'porivniaty' | '+' | '−' | 'zvesty';
 }
 const { a, b, dia = 'porivniaty' } = Astro.props;
 
@@ -20,7 +21,8 @@ const c1 = n1 * m1;
 const c2 = n2 * m2;
 const znak = c1 > c2 ? '>' : c1 < c2 ? '<' : '=';
 const rez = dia === '+' ? c1 + c2 : dia === '−' ? c1 - c2 : 0;
-const g = dia === 'porivniaty' ? 1 : nsd(Math.abs(rez), k) || 1;
+const tilkyZvesty = dia === 'porivniaty' || dia === 'zvesty';
+const g = tilkyZvesty ? 1 : nsd(Math.abs(rez), k) || 1;
 const rn = rez / g;
 const rd = k / g;
 const tsila = Math.floor(rn / rd);
@@ -33,17 +35,17 @@ const zalyshok = rn % rd;
       <sup class="c2">{m1}</sup>
       <span class="frac"><span>{n1}</span><span>{d1}</span></span>
     </span>
-    <span class="znak">{dia === 'porivniaty' ? 'і' : dia}</span>
+    <span class="znak">{tilkyZvesty ? 'і' : dia}</span>
     <span class="mn">
       <sup class="c4">{m2}</sup>
       <span class="frac"><span>{n2}</span><span>{d2}</span></span>
     </span>
     <span class="znak">→</span>
     <span class="frac c1"><span>{c1}</span><span>{k}</span></span>
-    <span class="znak">{dia === 'porivniaty' ? znak : dia}</span>
+    <span class="znak">{dia === 'porivniaty' ? znak : dia === 'zvesty' ? 'і' : dia}</span>
     <span class="frac c1"><span>{c2}</span><span>{k}</span></span>
     {
-      dia !== 'porivniaty' && (
+      !tilkyZvesty && (
         <>
           <span class="znak">=</span>
           <span class="frac"><span>{rez}</span><span>{k}</span></span>
@@ -75,7 +77,7 @@ const zalyshok = rn % rd;
       Множимо на них чисельник і знаменник: {n1} · {m1} = {c1}, {n2} · {m2} = {c2}.
     </li>
     {
-      dia === 'porivniaty' ? (
+      dia === 'zvesty' ? null : dia === 'porivniaty' ? (
         <li>
           Знаменники однакові — порівнюємо чисельники: {c1} {znak} {c2}, тому{' '}
           <b>
