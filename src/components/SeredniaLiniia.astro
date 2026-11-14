@@ -1,0 +1,19 @@
+---
+// Середня лінія трикутника: середини сторін, лінія іншим кольором, рисочки на половинах сторін, стрілочки
+// паралельності, підписи довжин і «?». Три середні лінії — чотири рівні трикутники. Малюнок той самий, що в
+// тренажері (src/trenazhery/serednia.ts).
+//   <SeredniaLiniia pidpysyStorin={{ AC: '12 см' }} pidpysyLinii={{ AC: '?' }} />
+//   <SeredniaLiniia linii={['AC', 'AB', 'BC']} />
+import { seredniaLiniia, type SeredniaOpts } from '../trenazhery/serednia.ts';
+
+interface Props extends SeredniaOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = seredniaLiniia(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
