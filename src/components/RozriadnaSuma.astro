@@ -4,7 +4,9 @@
 // Якщо в розряді вийшло 10 і більше — це вже наступний розряд (підказка під таблицею).
 //   <RozriadnaSuma a={346} b={252} />
 //   <RozriadnaSuma a={34} b={25} />   — двоцифрові: рядка сотень немає
-//   <RozriadnaSuma a={785} b={432} dia="−" />   — без «позичання» (кожна цифра a не менша за цифру b)
+//   <RozriadnaSuma a={785} b={432} dia="−" />
+//   <RozriadnaSuma a={65} b={26} dia="−" />   — одиниць не вистачає: зменшуване стає сумою зручних
+//                                               доданків (65 = 50 + 15), підпис пояснює розмін
 interface Props {
   a: number;
   b: number;
@@ -15,10 +17,25 @@ const plus = dia === '+';
 const rozklad = (n: number) => [Math.floor(n / 100) * 100, (Math.floor(n / 10) % 10) * 10, n % 10];
 const ra = rozklad(a);
 const rb = rozklad(b);
+// Віднімання, коли в розряді «не вистачає»: розмінюємо одиницю старшого розряду, і зменшуване
+// стає сумою зручних доданків: 65 = 50 + 15, 302 = 200 + 90 + 12.
+let rozmin = false;
+if (!plus) {
+  for (let i = 2; i > 0; i--) {
+    if (ra[i] < rb[i]) {
+      const odynytsia = i === 2 ? 10 : 100;
+      ra[i] += odynytsia;
+      ra[i - 1] -= odynytsia;
+      rozmin = true;
+    }
+  }
+}
 const rez = ra.map((x, i) => (plus ? x + rb[i] : x - rb[i]));
-if (rez.some((x) => x < 0)) throw new Error(`RozriadnaSuma: ${a} − ${b} потребує позичання — візьми інший приклад`);
+if (rez.some((x) => x < 0)) throw new Error(`RozriadnaSuma: ${a} − ${b} — від'ємник більший за зменшуване`);
 const vidpovid = plus ? a + b : a - b;
 const NAZVY = ['сотні', 'десятки', 'одиниці'];
+// Рядок сотень — лише для трицифрових чисел; рядок одиниць ховаємо, якщо обидва числа круглі (350 + 480).
+const pokazaty = (i: number) => (i === 0 ? ra[0] > 0 || rb[0] > 0 : i === 1 || ra[2] > 0 || rb[2] > 0);
 const KOLORY = ['var(--ill-1)', 'var(--ill-2)', 'var(--ill-3)'];
 const perekhid = plus && rez.some((x, i) => i > 0 && x >= [1000, 100, 10][i]);
 const dodanky = rez.filter((x) => x > 0);
@@ -28,7 +45,7 @@ const dodanky = rez.filter((x) => x > 0);
   <table aria-label={`${a} ${dia} ${b} = ${vidpovid}`}>
     <tbody>
       {
-        NAZVY.map((nazva, i) => (i > 0 || ra[0] > 0 || rb[0] > 0) && (
+        NAZVY.map((nazva, i) => pokazaty(i) && (
           <tr>
             <th style={`color:${KOLORY[i]}`}>{nazva}</th>
             <td>{ra[i]}</td>
@@ -50,6 +67,12 @@ const dodanky = rez.filter((x) => x > 0);
     {perekhid && (
       <>
         <br />у розряді вийшло 10 або більше — частина переходить у старший розряд
+      </>
+    )}
+    {rozmin && (
+      <>
+        <br />
+        {a} = {ra.filter((x) => x > 0).join(' + ')} — зменшуване записали сумою зручних доданків
       </>
     )}
   </p>

@@ -20,6 +20,8 @@ export default defineConfig({
     '/6-klas/priama-i-obernena-proportsiinist': '/math/6-klas/priama-proportsiinist/',
     '/6-klas/perpendykuliarni-i-paralelni-priami': '/math/6-klas/perpendykuliarni-priami/',
     '/6-klas/dovzhyna-kola-i-ploshcha-kruha': '/math/6-klas/dovzhyna-kola/',
+    // 1–4 класи за розділами підручників Скворцової: числа до 100 вивчають у 1 класі.
+    '/2-klas/dvotsyfrovi-chysla': '/math/1-klas/dvotsyfrovi-chysla/',
   },
   markdown: {
     // Формули: $...$ у рядку та $$...$$ окремим блоком. rehypePoshukFormul — щоб формули в пошуку

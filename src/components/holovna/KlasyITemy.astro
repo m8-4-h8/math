@@ -1,7 +1,8 @@
 ---
 // Картки класів на головній сторінці. Класи й теми беремо прямо з src/content/docs,
 // тож нова тема чи новий клас з'являються тут самі. Значок теми — поле `ikonka` на початку файлу.
-// Якщо теми класу мають поле `rozdil`, над першою темою кожного розділу стоїть його назва.
+// Якщо теми класу мають поле `rozdil`, над першою темою кожного розділу стоїть його назва,
+// а сторінки без розділу (шпаргалка наприкінці класу) — під заголовком «Доповнення».
 import { getCollection } from 'astro:content';
 import { znachokKlasu } from '../../klasy.mjs';
 
@@ -17,6 +18,10 @@ for (const s of storinky) {
 const sortuvaty = (a: (typeof storinky)[number], b: (typeof storinky)[number]) =>
   (a.data.sidebar.order ?? Infinity) - (b.data.sidebar.order ?? Infinity) || a.data.title.localeCompare(b.data.title, 'uk');
 
+// У класі з розділами сторінки без розділу (шпаргалка в кінці) ідуть під заголовком «Доповнення».
+const rozdilTemy = (t: (typeof storinky)[number], usi: typeof storinky) =>
+  t.data.rozdil ?? (usi.some((x) => x.data.rozdil) ? 'Доповнення' : undefined);
+
 const spysok = [...klasy.entries()]
   .sort(([a], [b]) => a - b)
   .map(([nomer, temy]) => ({
@@ -24,7 +29,7 @@ const spysok = [...klasy.entries()]
     znachok: znachokKlasu(nomer),
     kolir: ((nomer - 1) % 6) + 1,
     temy: temy.sort(sortuvaty).map((t, i, usi) => ({
-      rozdil: t.data.rozdil !== usi[i - 1]?.data.rozdil ? t.data.rozdil : undefined,
+      rozdil: rozdilTemy(t, usi) !== (i ? rozdilTemy(usi[i - 1], usi) : undefined) ? rozdilTemy(t, usi) : undefined,
       nazva: t.data.title,
       ikonka: t.data.ikonka || '📘',
       shliakh: `${baza}/${t.id}/`,
