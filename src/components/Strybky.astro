@@ -1,0 +1,154 @@
+---
+// Додавання і віднімання «стрибками» на порожньому числовому промені: перше число стоїть на місці,
+// а друге додаємо або віднімаємо частинами. Стрибок у головному напрямку — дуга над променем,
+// стрибок назад (поправка в прийомі округлення) — дуга під променем.
+//   <Strybky vid={74} kroky={[20, 3]} />        — 74 + 23 = 74 + 20 + 3
+//   <Strybky vid={73} kroky={[-40, -6]} />      — 73 − 46 = 73 − 40 − 6
+//   <Strybky vid={47} kroky={[3, 5]} />         — 47 + 8 через кругле число 50
+//   <Strybky vid={76} kroky={[10, -3]} />       — 76 + 7 = 76 + 10 − 3 (округлення)
+//   <Strybky vid={52} kroky={[30, 6]} bez_vidpovidi />  — останнє число сховане («?»), для завдань
+interface Props {
+  vid: number; // з якого числа починаємо
+  kroky: number[]; // стрибки зі знаком
+  bez_vidpovidi?: boolean;
+}
+const { vid, kroky, bez_vidpovidi = false } = Astro.props;
+if (!kroky.length || kroky.some((k) => k === 0)) throw new Error('Strybky: потрібен хоча б один ненульовий стрибок');
+
+// Точки, у які потрапляємо після кожного стрибка.
+const tochky = [vid];
+for (const k of kroky) tochky.push(tochky[tochky.length - 1] + k);
+const vidpovid = tochky[tochky.length - 1];
+const holovnyi = Math.sign(kroky[0]);
+
+// Розміщення: пропорційно значенням, але сусідні числа не ближче, ніж на ширину вузла з запасом.
+const tsyfr = Math.max(...tochky.map((t) => String(t).length));
+const vuzolW = 16 + 10 * tsyfr;
+const vuzolH = 28;
+const minKrok = vuzolW + 30;
+const pad = 14;
+const unikalni = [...new Set(tochky)].sort((a, b) => a - b);
+const rozmakh = unikalni[unikalni.length - 1] - unikalni[0];
+const dostupno = 372 - 2 * pad - vuzolW; // вузький малюнок: на телефоні не зменшується
+let promizhky = unikalni.slice(1).map((v, i) => Math.max(minKrok, ((v - unikalni[i]) / rozmakh) * dostupno));
+const zaive = promizhky.reduce((s, p) => s + p, 0) - dostupno;
+const stysk = promizhky.reduce((s, p) => s + (p - minKrok), 0);
+if (zaive > 0 && stysk > zaive) promizhky = promizhky.map((p) => p - ((p - minKrok) * zaive) / stysk);
+const xs = new Map<number, number>();
+let x = pad + vuzolW / 2;
+unikalni.forEach((v, i) => {
+  xs.set(v, x);
+  x += promizhky[i] ?? 0;
+});
+const W = Math.round(x + vuzolW / 2 + pad);
+
+interface Duha {
+  d: string;
+  strilka: string;
+  pidpys: string;
+  px: number;
+  py: number;
+  kolir: string;
+}
+const visota = (w: number) => Math.max(20, Math.min(40, w * 0.3));
+// Висота малюнка — за найвищою дугою над променем і найглибшою під ним (плюс місце на підпис).
+const vysoty = kroky.map((k, i) => ({
+  vhoru: Math.sign(k) === holovnyi,
+  h: visota(Math.abs(xs.get(tochky[i + 1])! - xs.get(tochky[i])!) - 14),
+}));
+const nad = Math.max(0, ...vysoty.filter((v) => v.vhoru).map((v) => v.h + 24));
+const pid = Math.max(0, ...vysoty.filter((v) => !v.vhoru).map((v) => v.h + 24));
+const yL = Math.round(vuzolH / 2 + 6 + nad);
+const H = Math.round(yL + vuzolH / 2 + 6 + pid);
+
+const duhy: Duha[] = kroky.map((k, i) => {
+  const xa = xs.get(tochky[i])!;
+  const xb = xs.get(tochky[i + 1])!;
+  const napriam = Math.sign(xb - xa);
+  const vhoru = Math.sign(k) === holovnyi;
+  const bik = vhoru ? -1 : 1; // −1 — над променем, 1 — під ним
+  const y0 = yL + bik * (vuzolH / 2 + 2);
+  const x1 = xa + napriam * 7;
+  const x2 = xb - napriam * 7;
+  const h = visota(Math.abs(x2 - x1));
+  const cx = (x1 + x2) / 2;
+  const cy = y0 + bik * 2 * h;
+  // Стрілка в кінці дуги: дотична до кривої в кінцевій точці — від контрольної точки до кінця.
+  const dx = x2 - cx;
+  const dy = y0 - cy;
+  const dl = Math.hypot(dx, dy);
+  const ux = dx / dl;
+  const uy = dy / dl;
+  const bx = x2 - ux * 9;
+  const by = y0 - uy * 9;
+  return {
+    d: `M ${x1.toFixed(1)} ${y0} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${x2.toFixed(1)} ${y0}`,
+    strilka: `M ${x2.toFixed(1)} ${y0} L ${(bx - uy * 4.5).toFixed(1)} ${(by + ux * 4.5).toFixed(1)} L ${(bx + uy * 4.5).toFixed(1)} ${(by - ux * 4.5).toFixed(1)} Z`,
+    pidpys: `${k > 0 ? '+' : '−'}${Math.abs(k)}`,
+    px: cx,
+    py: y0 + bik * h + (vhoru ? -7 : 17),
+    kolir: `var(--ill-${(i % 3) + 1})`,
+  };
+});
+
+const znak = (k: number) => (k > 0 ? '+' : '−');
+const suma = kroky.reduce((s, k) => s + k, 0);
+const pochatok = `${vid} ${znak(suma)} ${Math.abs(suma)}`;
+const lantsiuh = `${vid} ${kroky.map((k) => `${znak(k)} ${Math.abs(k)}`).join(' ')}`;
+const zapys = kroky.length > 1 ? `${pochatok} = ${lantsiuh}` : pochatok;
+const opys = bez_vidpovidi ? `${zapys} — стрибки на числовому промені` : `${zapys} = ${vidpovid}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <line x1={4} y1={yL} x2={W - 4} y2={yL} stroke="var(--ill-line)" stroke-width="2" stroke-linecap="round" />
+      {
+        duhy.map((u) => (
+          <g>
+            <path d={u.d} fill="none" stroke={u.kolir} stroke-width="2.5" stroke-linecap="round" />
+            <path d={u.strilka} fill={u.kolir} stroke={u.kolir} stroke-width="1" stroke-linejoin="round" />
+            <text x={u.px} y={u.py} text-anchor="middle" font-size="15" font-weight="700" fill={u.kolir}>
+              {u.pidpys}
+            </text>
+          </g>
+        ))
+      }
+      {
+        unikalni.map((v) => {
+          const ostannia = v === vidpovid;
+          const persha = v === vid;
+          return (
+            <g>
+              <rect
+                x={xs.get(v)! - vuzolW / 2}
+                y={yL - vuzolH / 2}
+                width={vuzolW}
+                height={vuzolH}
+                rx="9"
+                fill="var(--ill-paper)"
+                stroke={ostannia ? 'var(--ill-4)' : persha ? 'var(--ill-ink)' : 'var(--ill-line)'}
+                stroke-width={ostannia || persha ? 2.5 : 1.5}
+                stroke-dasharray={ostannia && bez_vidpovidi ? '5 4' : undefined}
+              />
+              <text
+                x={xs.get(v)}
+                y={yL}
+                text-anchor="middle"
+                dominant-baseline="central"
+                font-size="15"
+                font-weight="700"
+                fill={ostannia ? 'var(--ill-4)' : 'var(--ill-ink)'}
+              >
+                {ostannia && bez_vidpovidi ? '?' : v}
+              </text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  <p class="ill-caption">
+    <b class="num">{zapys}{!bez_vidpovidi && <> = {vidpovid}</>}</b>
+  </p>
+</figure>
