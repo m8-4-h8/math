@@ -42,7 +42,9 @@ const porivniaty = (a: Q, b: Q) => {
   return r > 0n ? 1 : r < 0n ? -1 : 0;
 };
 function stepin(a: Q, b: Q): Q {
-  if (b[1] !== 1n || b[0] < 0n || b[0] > 40n) throw new Error('степінь');
+  if (b[1] !== 1n || b[0] < -40n || b[0] > 40n) throw new Error('степінь');
+  // Від'ємний показник (8 клас): a⁻ⁿ = 1 / aⁿ, для a = 0 — не має змісту.
+  if (b[0] < 0n) return dil(q(1n), stepin(a, q(-b[0])));
   let r = q(1n);
   for (let i = 0n; i < b[0]; i++) r = mn(r, a);
   return r;
@@ -152,6 +154,7 @@ function rivnostiVTeksti(tekst: string): { perevireno: number; pomylky: string[]
     .replace(/(\d+)\\(?:d|t)?frac\{(\d+)\}\{(\d+)\}/g, '($1 + $2/$3)') // мішане число 3\frac{4}{5}
     .replace(/\\(?:d|t)?frac\{(\d+)\}\{(\d+)\}/g, '($1/$2)')
     .replace(/\\cdot|\\times/g, '·')
+    .replace(/\^\{(-?\d+)\}/g, '^($1)') // степінь у формулі: «2^{-3}» → «2^(-3)»
     .replace(/\{,\}/g, ',')
     .replace(/(\d)(?:\\ |\u00a0|\u202f)(?=\d{3}(?!\d))/g, '$1')
     .replace(/(^\s*|;\s+|(?<!ост)\.\s+)\d\)\s/g, '$1') // нумерація кроків «1) … ; 2) …», але не «(ост. 1)» і не «(20 − 0)»

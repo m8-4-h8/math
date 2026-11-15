@@ -1,0 +1,81 @@
+---
+// «Драбина» степенів числа a: від a^verkh до a^nyz. Крок праворуч — показник на 1 менший, а значення ділимо на a.
+// Так видно, чому a⁰ = 1 і a⁻ⁿ = 1/aⁿ. Додатні показники — одним кольором, нуль — іншим, від'ємні — третім.
+// `shliakh` — стрілка над драбиною від одного показника до іншого з підписом (наприклад, множення на 2⁵ —
+// п'ять кроків ліворуч: показник −3 + 5 = 2).
+//   <DrabynaStepeniv osnova={2} />
+//   <DrabynaStepeniv osnova={10} verkh={3} nyz={-3} />
+//   <DrabynaStepeniv osnova={2} shliakh={[-3, 2]} pidpysShliakhu="· 2⁵" />
+interface Props {
+  osnova: number;
+  verkh?: number;
+  nyz?: number;
+  shliakh?: [number, number];
+  pidpysShliakhu?: string;
+}
+const { osnova: a, verkh = 3, nyz = -3, shliakh, pidpysShliakhu = '' } = Astro.props;
+if (!Number.isInteger(a) || a < 2) throw new Error('DrabynaStepeniv: основа — ціле число від 2');
+if (verkh <= nyz) throw new Error('DrabynaStepeniv: verkh має бути більшим за nyz');
+if (shliakh && shliakh.some((k) => k > verkh || k < nyz)) throw new Error('DrabynaStepeniv: shliakh поза драбиною');
+
+const SUP: Record<string, string> = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+const st = (k: number) => String(k).split('').map((c) => SUP[c]).join('');
+// Чотирицифрові числа пишемо разом (1000), більші — з пробілом між класами (10 000), як на всьому сайті.
+const ch = (v: number) => (String(v).length <= 4 ? String(v) : String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' '));
+const f = (v: number) => v.toFixed(1);
+
+const pokaznyky: number[] = [];
+for (let k = verkh; k >= nyz; k--) pokaznyky.push(k);
+const KR = 74;
+const W = pokaznyky.length * KR + 16;
+const dy = shliakh ? 44 : 0;
+const H = 156 + dy;
+const x = (i: number) => 8 + KR * i + KR / 2;
+const xK = (k: number) => x(verkh - k);
+const kolir = (k: number) => `var(--ill-${k > 0 ? 1 : k === 0 ? 3 : 4})`;
+
+let tilo = '';
+pokaznyky.forEach((k, i) => {
+  const c = kolir(k);
+  const vydil = shliakh?.includes(k);
+  tilo += `<rect x="${f(x(i) - KR / 2 + 4)}" y="${6 + dy}" width="${KR - 8}" height="96" rx="10" fill="${c}" fill-opacity="${vydil ? 0.3 : 0.12}" stroke="${c}" stroke-width="${vydil ? 3 : 1.5}"/>`;
+  tilo += `<text x="${f(x(i))}" y="${32 + dy}" text-anchor="middle" font-size="20" font-weight="700" fill="${c}">${a}${st(k)}</text>`;
+  if (k >= 0) {
+    tilo += `<text x="${f(x(i))}" y="${76 + dy}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--ill-ink)">${ch(a ** k)}</text>`;
+  } else {
+    const znam = ch(a ** -k);
+    const shyr = Math.max(16, znam.length * 10 + 6);
+    tilo += `<text x="${f(x(i))}" y="${64 + dy}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--ill-ink)">1</text>`;
+    tilo += `<line x1="${f(x(i) - shyr / 2)}" y1="${71 + dy}" x2="${f(x(i) + shyr / 2)}" y2="${71 + dy}" stroke="var(--ill-ink)" stroke-width="1.8"/>`;
+    tilo += `<text x="${f(x(i))}" y="${90 + dy}" text-anchor="middle" font-size="16" font-weight="700" fill="var(--ill-ink)">${znam}</text>`;
+  }
+  if (i < pokaznyky.length - 1) {
+    const [x1, x2] = [x(i) + 14, x(i + 1) - 14];
+    const m = (x1 + x2) / 2;
+    tilo += `<path d="M ${f(x1)} ${108 + dy} Q ${f(m)} ${132 + dy} ${f(x2)} ${108 + dy}" fill="none" stroke="var(--ill-2)" stroke-width="2" stroke-linecap="round"/>`;
+    tilo += `<path d="M ${f(x2 - 9)} ${112 + dy} L ${f(x2)} ${108 + dy} L ${f(x2 - 3)} ${117 + dy}" fill="none" stroke="var(--ill-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    tilo += `<text x="${f(m)}" y="${146 + dy}" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ill-2)">: ${a}</text>`;
+  }
+});
+
+let opysShliakhu = '';
+if (shliakh) {
+  const [vid, do_] = shliakh;
+  const [x1, x2] = [xK(vid), xK(do_)];
+  const m = (x1 + x2) / 2;
+  const nap = Math.sign(x2 - x1);
+  // Дуга з вершиною на висоті 32, підпис — над нею.
+  tilo += `<path d="M ${f(x1)} ${dy + 2} Q ${f(m)} ${62 - dy} ${f(x2)} ${dy + 2}" fill="none" stroke="var(--ill-3)" stroke-width="2.5" stroke-linecap="round"/>`;
+  tilo += `<path d="M ${f(x2 - nap * 10)} ${dy - 3} L ${f(x2)} ${dy + 2} L ${f(x2 - nap * 3)} ${dy - 9}" fill="none" stroke="var(--ill-3)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  tilo += `<text x="${f(m)}" y="20" text-anchor="middle" font-size="16" font-weight="700" fill="var(--ill-3)">${pidpysShliakhu}</text>`;
+  opysShliakhu = ` Стрілка від ${a}${st(vid)} до ${a}${st(do_)}${pidpysShliakhu ? `: ${pidpysShliakhu}` : ''}.`;
+}
+const znachennia = pokaznyky.map((k) => `${a}${st(k)} = ${k >= 0 ? ch(a ** k) : `1/${ch(a ** -k)}`}`).join(', ');
+const opys = `Степені числа ${a}: ${znachennia}. Кожен крок праворуч — показник на 1 менший, а значення ділиться на ${a}.${opysShliakhu}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} role="img" aria-label={opys} set:html={tilo} />
+  </div>
+</figure>

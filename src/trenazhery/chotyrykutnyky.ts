@@ -3,9 +3,19 @@
 // Повертає SVG-рядок: його вставляють і компонент Chotyrykutnyk, і тренажери (поле `malunok`).
 // Невідоме підписуємо «?», тож малюнок не видає відповідь.
 // Файл не є генератором: генератори лежать у `<N>-klas/`.
-import { type P, duga, kontur, litera, napys, pidpysStorony, priamyi, rysky, svg, tochka, vidrizok } from './trykutnyky.ts';
+import { type P, duga, kontur, litera, napys, pidpysStorony, priamyi, rysky, seredyna, svg, tochka, vidrizok } from './trykutnyky.ts';
 
-export type FormaChotyrykutnyka = 'dovilnyi' | 'neopuklyi' | 'opuklyi2' | 'paralelohram' | 'priamokutnyk' | 'romb' | 'kvadrat';
+export type FormaChotyrykutnyka =
+  | 'dovilnyi'
+  | 'neopuklyi'
+  | 'opuklyi2'
+  | 'paralelohram'
+  | 'priamokutnyk'
+  | 'romb'
+  | 'kvadrat'
+  | 'trapetsiia'
+  | 'rivnobichna'
+  | 'priamokutna';
 
 /** Одиничні координати (y — донизу), вершини A, B, C, D по колу. */
 const FORMY: Record<FormaChotyrykutnyka, P[]> = {
@@ -17,6 +27,10 @@ const FORMY: Record<FormaChotyrykutnyka, P[]> = {
   // Ромб «лежить», а не стоїть на вершині; гострий кут 60°, усі сторони рівні.
   romb: [[0, 0.8], [0.8 / Math.tan(Math.PI / 3), 0], [0.8 / Math.tan(Math.PI / 3) + 0.8 / Math.sin(Math.PI / 3), 0], [0.8 / Math.sin(Math.PI / 3), 0.8]],
   kvadrat: [[0, 1], [0, 0], [1, 0], [1, 1]],
+  // Трапеції: основи AD (нижня, більша) і BC (верхня).
+  trapetsiia: [[0, 1], [0.32, 0], [1.08, 0], [1.6, 1]],
+  rivnobichna: [[0, 1], [0.45, 0], [1.15, 0], [1.6, 1]],
+  priamokutna: [[0, 1], [0, 0], [0.95, 0], [1.6, 1]],
 };
 
 export interface ChotyrykutnykOpts {
@@ -45,14 +59,28 @@ export interface ChotyrykutnykOpts {
   ryskyDiahonalei?: [number, number];
   /** Підписи половин діагоналей: [AO, OC, BO, OD] ('?' — шукане). */
   pidpysyDiahonalei?: (string | undefined)[];
-  /** Відрізок з вершини до точки на протилежній стороні: [вершина, сторона, частка від її початку, назва точки]. */
-  vidrizok?: [number, number, number, string];
+  /**
+   * Відрізок з вершини до точки на протилежній стороні: [вершина, сторона, частка від її початку, назва точки,
+   * висота?]. Якщо п'ятий елемент true — біля основи відрізка ставимо квадратик прямого кута (висота).
+   */
+  vidrizok?: [number, number, number, string] | [number, number, number, string, boolean];
   /** Квадратики прямих кутів при вершинах (номери 0..3). */
   priami?: number[];
   /** Квадратик прямого кута в точці перетину діагоналей (потрібен `peretyn`). */
   priamyiO?: boolean;
   /** Діагональ ділить кут при вершині 0..3 на дві половини: скільки дуг у кожної (однаково — рівні половини). */
   polovynyKutiv?: number[];
+  /**
+   * Середня лінія трапеції: назви середин бічних сторін AB і CD, наприклад ['M', 'N']. Половини AB позначено
+   * однією рисочкою, половини CD — двома.
+   */
+  serednia?: [string, string];
+  /** Підпис середньої лінії ('?' — шукана). */
+  pidpysSerednoi?: string;
+  /** Діагональ AC перетинає середню лінію в точці з цією назвою. */
+  diahonalSerednoi?: string;
+  /** Підписи частин середньої лінії, на які її ділить діагональ: [від M до точки, від точки до N]. */
+  pidpysyChastyn?: (string | undefined)[];
   W?: number;
   H?: number;
 }
@@ -179,7 +207,7 @@ export function chotyrykutnyk(o: ChotyrykutnykOpts = {}) {
     opys.push(`діагоналі ${bukvy[0]}${bukvy[2]} і ${bukvy[1]}${bukvy[3]} перетинаються в точці ${o.peretyn}`);
   }
   (o.strilky ?? []).forEach((n, i) => {
-    if (n) tilo += strilky(t[i], t[(i + 1) % 4], n, (o.rysky ?? [])[i] ? 0.3 : 0.5);
+    if (n) tilo += strilky(t[i], t[(i + 1) % 4], n, (o.rysky ?? [])[i] || (o.storony ?? [])[i] ? 0.3 : 0.5);
   });
   (o.rysky ?? []).forEach((n, i) => {
     if (n) tilo += rysky(t[i], t[(i + 1) % 4], n, 0);
@@ -201,15 +229,60 @@ export function chotyrykutnyk(o: ChotyrykutnykOpts = {}) {
     opys.push('діагоналі перпендикулярні');
   }
   if (o.vidrizok) {
-    const [v, st, ch, nazva] = o.vidrizok;
+    const [v, st, ch, nazva, vysota] = o.vidrizok;
     const [a, b] = [t[st], t[(st + 1) % 4]];
     const K: P = [a[0] + (b[0] - a[0]) * ch, a[1] + (b[1] - a[1]) * ch];
     tilo += vidrizok(t[v], K, { k: 3, tovshch: 2 }) + tochka(K);
+    if (vysota) tilo += priamyi(K, t[v], b, 3);
     tilo += litera(K, nazva, tsentr);
-    opys.push(`відрізок ${bukvy[v]}${nazva}`);
+    opys.push(vysota ? `висота ${bukvy[v]}${nazva}` : `відрізок ${bukvy[v]}${nazva}`);
   }
   if (o.rozbyttia) tilo += vidrizok(t[0], t[2], { k: 0, tovshch: 2 });
   const vidomi: string[] = [];
+  if (o.serednia) {
+    const [nM, nN] = o.serednia;
+    const M = seredyna(t[0], t[1]);
+    const N = seredyna(t[2], t[3]);
+    tilo += rysky(t[0], M, 1, 0) + rysky(M, t[1], 1, 0) + rysky(t[2], N, 2, 0) + rysky(N, t[3], 2, 0);
+    let K: P | null = null;
+    if (o.diahonalSerednoi) {
+      tilo += vidrizok(t[0], t[2], { k: 2, shtrykh: true, tovshch: 2 });
+      // Перетин AC з MN: M + (N − M) · s.
+      const [r, q] = [riz(N, M), riz(t[2], t[0])];
+      const s = cross(riz(t[0], M), q) / cross(r, q);
+      K = [M[0] + r[0] * s, M[1] + r[1] * s];
+    }
+    tilo += vidrizok(M, N, { k: 3, tovshch: 3 }) + tochka(M) + tochka(N);
+    tilo += litera(M, nM, tsentr) + litera(N, nN, tsentr);
+    opys.push(`середня лінія ${nM}${nN}`);
+    if (o.pidpysSerednoi) {
+      const m = seredyna(M, N);
+      tilo += napys([m[0], m[1] - 11], o.pidpysSerednoi, { k: o.pidpysSerednoi === '?' ? 4 : 3 });
+      if (o.pidpysSerednoi !== '?') vidomi.push(`${nM}${nN} = ${o.pidpysSerednoi}`);
+    }
+    if (K && o.diahonalSerednoi) {
+      const k = o.diahonalSerednoi;
+      tilo += tochka(K);
+      // Назва точки — з боку від діагоналі, де лежить N (праворуч і нижче).
+      const u = odyn(riz(t[2], t[0]));
+      let n: P = [-u[1], u[0]];
+      if ((N[0] - K[0]) * n[0] + (N[1] - K[1]) * n[1] < 0) n = [-n[0], -n[1]];
+      tilo += napys([K[0] + n[0] * 15, K[1] + n[1] * 15], k, { k: 0, rozmir: 15, kursyv: true });
+      // Частину MK підписуємо над лінією, KN — під нею: діагональ іде з лівого нижнього кута в правий верхній.
+      const [p1, p2] = o.pidpysyChastyn ?? [];
+      if (p1) {
+        const m = seredyna(M, K);
+        tilo += napys([m[0], m[1] - 11], p1, { k: p1 === '?' ? 4 : 3, rozmir: 13 });
+        if (p1 !== '?') vidomi.push(`${nM}${k} = ${p1}`);
+      }
+      if (p2) {
+        const m = seredyna(K, N);
+        tilo += napys([m[0] + 4, m[1] + 12], p2, { k: p2 === '?' ? 4 : 3, rozmir: 13 });
+        if (p2 !== '?') vidomi.push(`${k}${nN} = ${p2}`);
+      }
+      opys.push(`діагональ ${bukvy[0]}${bukvy[2]} перетинає її в точці ${k}`);
+    }
+  }
   (o.kuty ?? []).forEach((pidpys, i) => {
     if (!pidpys) return;
     tilo += dugaKuta(t, i, (i + 3) % 4, (i + 1) % 4, { kolir: pidpys === '?' ? 4 : 2, r: 22, pidpys, vel: vnutrishniiKut(t, i) > 180 });

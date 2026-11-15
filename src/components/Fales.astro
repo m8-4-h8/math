@@ -1,0 +1,20 @@
+---
+// Теорема Фалеса: кут, рівні відрізки на одній стороні (одна рисочка), паралельні прямі (одним кольором) і рівні
+// відрізки на другій стороні (дві рисочки); підписи відрізків, «?» — шукане. Варіант `zoshyt` — лінії зошита й
+// навскісний відрізок. Малюнок той самий, що в тренажері (src/trenazhery/fales.ts).
+//   <Fales n={3} vidO />
+//   <Fales n={4} pidpysyA={['2 см']} pidpysyB={['3 см', '?']} />
+//   <Fales zoshyt n={5} />
+import { fales, type FalesOpts } from '../trenazhery/fales.ts';
+
+interface Props extends FalesOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = fales(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
