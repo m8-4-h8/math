@@ -64,6 +64,8 @@ export interface KoloOpts {
   proektsii?: Record<string, [string, string, string]>;
   /** Промені: з a через b і далі на `dali` радіусів. */
   promeni?: { a: string; b: string; dali?: number }[];
+  /** Дуги кола від точки a до точки b проти годинникової стрілки — товстою лінією, з підписом назовні ('?' — шукана). */
+  dugy?: { a: string; b: string; k?: number; pidpys?: string; /** Де на дузі підпис: 0 — біля a, 1 — біля b (типово 0.5). */ t?: number }[];
   W?: number;
   H?: number;
 }
@@ -149,7 +151,21 @@ export function kolo(o: KoloOpts = {}) {
   if (bahato) tilo += kontur(bahato.map((l) => M[l]), 1);
   if (!o.bezKola) tilo += `<circle cx="${f(C[0])}" cy="${f(C[1])}" r="${f(s)}" fill="${kk}" fill-opacity="${o.kruh ? 0.18 : bahato ? 0 : 0.06}" stroke="${kk}" stroke-width="2.5"/>`;
   for (const [p, q] of [...liniiDotychnykh, ...liniiPriamykh]) tilo += vidrizok(m(p), m(q), { tovshch: 2 });
+  const opysDuh: string[] = [];
+  for (const d of o.dugy ?? []) {
+    const [ga, gb] = [Math.atan2(pt[d.a][1], pt[d.a][0]), Math.atan2(pt[d.b][1], pt[d.b][0])];
+    const span = (((gb - ga) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const kd = `var(--ill-${d.k ?? 3})`;
+    // У SVG вісь y донизу, тож «проти годинникової» на екрані — sweep 0.
+    tilo += `<path d="M ${f(M[d.a][0])} ${f(M[d.a][1])} A ${f(s)} ${f(s)} 0 ${span > Math.PI ? 1 : 0} 0 ${f(M[d.b][0])} ${f(M[d.b][1])}" fill="none" stroke="${kd}" stroke-width="5" stroke-linecap="round" opacity="0.85"/>`;
+    if (d.pidpys) {
+      const g = ga + span * (d.t ?? 0.5);
+      tilo += napys([C[0] + Math.cos(g) * (s + 17), C[1] - Math.sin(g) * (s + 15)], d.pidpys, { k: d.pidpys === '?' ? 4 : (d.k ?? 3) });
+    }
+    opysDuh.push(`виділено дугу ${d.a}${d.b}${d.pidpys && d.pidpys !== '?' ? ` = ${d.pidpys}` : ''}`);
+  }
   const opys: string[] = o.bezKola ? [] : [O ? `Коло з центром ${O}` : 'Коло'];
+  opys.push(...opysDuh);
   if (o.mnohokutnyk) opys.push(`${o.mnohokutnyk.length === 3 ? 'трикутник' : 'многокутник'} ${o.mnohokutnyk.join('')}${o.bezKola ? '' : ', вершини на колі'}`);
   if (op) opys.push(`трикутник ${op.vershyny.join('')} описано навколо кола, точки дотику ${op.dotyku.join(', ')}`);
   const vidomi: string[] = [];

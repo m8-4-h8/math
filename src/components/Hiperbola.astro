@@ -1,0 +1,18 @@
+---
+// Графік оберненої пропорційності y = k/x — гіпербола: сітка від −m до m, дві вітки (k > 0 — I і III чверті,
+// k < 0 — II і IV), точки з пунктиром до осей. Той самий малюнок — у тренажерах (src/trenazhery/hiperbola.ts).
+//   <Hiperbola k={6} formula="y = 6/x" />
+//   <Hiperbola k={-4} tochky={[{ x: 2, y: -2, pidpys: 'A(2; −2)', punktyr: true }]} />
+import { hiperbola, type HiperbolaOpts } from '../trenazhery/hiperbola.ts';
+
+interface Props extends HiperbolaOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = hiperbola(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
