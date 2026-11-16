@@ -1,0 +1,153 @@
+---
+// Схема аналізу складеної задачі: міркуємо від запитання до чисел.
+// Угорі — запитання задачі. Під ним — два числа, які треба знати, щоб відповісти.
+// Одне з них відоме, іншого бракує (рожевий пунктир) — під ним ще два числа, з яких його знаходимо.
+// Під малюнком — план: спершу те, чого бракує, потім відповідь на запитання, і запис одним виразом.
+//   <SkhemaAnalizu pytannia="Скільки залишилося?" dia="−" vidome={{ tekst: 'Скільки було?', chyslo: 12 }}
+//     promizhne={{ tekst: "Скільки всього з'їли?", dia: '+', chastyny: [{ tekst: "З'їв Данило", chyslo: 3 }, { tekst: "З'їла Соломія", chyslo: 2 }] }} />
+interface Dane {
+  tekst: string;
+  chyslo: number;
+}
+interface Props {
+  pytannia: string;
+  dia: '+' | '−'; // дія, якою відповідаємо на запитання
+  vidome: Dane; // число, яке вже є в умові
+  promizhne: { tekst: string; dia: '+' | '−'; chastyny: [Dane, Dane] }; // чого бракує і з чого це знайти
+  promizhnePershe?: boolean; // те, чого бракує, стоїть у дії першим: (6 + 10) − 9
+  odynytsi?: string; // «пир.», «грн»
+  bez_vidpovidi?: boolean; // не показувати план і відповідь (для «Спробуй сам»)
+}
+const { pytannia, dia, vidome, promizhne, promizhnePershe = false, odynytsi, bez_vidpovidi = false } = Astro.props;
+
+const rakh = (a: number, d: string, b: number) => (d === '+' ? a + b : a - b);
+const [c1, c2] = promizhne.chastyny;
+const p = rakh(c1.chyslo, promizhne.dia, c2.chyslo);
+const vidpovid = promizhnePershe ? rakh(p, dia, vidome.chyslo) : rakh(vidome.chyslo, dia, p);
+if (p < 0 || vidpovid < 0) throw new Error(`SkhemaAnalizu: від'ємний результат (${p}, ${vidpovid})`);
+const od = odynytsi ? ` (${odynytsi})` : '';
+const vnutr = `${c1.chyslo} ${promizhne.dia} ${c2.chyslo}`;
+const vyraz = promizhnePershe ? `(${vnutr}) ${dia} ${vidome.chyslo}` : `${vidome.chyslo} ${dia} (${vnutr})`;
+const druhaDia = promizhnePershe ? `${p} ${dia} ${vidome.chyslo}` : `${vidome.chyslo} ${dia} ${p}`;
+
+// Розміри: дві колонки по 170, між ними 16; природна ширина 372 — без зменшення на телефоні.
+const W = 372;
+const bw = 170;
+const bh = 54;
+const x1 = 8;
+const x2 = W - 8 - bw;
+const yK = 8; // запитання
+const y2 = yK + bh + 44; // два числа для відповіді
+const y3 = y2 + bh + 44; // з чого знайти те, чого бракує
+const H = y3 + bh + 8;
+const xK = (W - 200) / 2;
+
+// Довгий підпис ділимо на два рядки по словах.
+const riadky = (t: string, maks = 21): string[] => {
+  if (t.length <= maks) return [t];
+  const slova = t.split(' ');
+  let krashche = 1;
+  for (let i = 1; i < slova.length; i++) {
+    const l = slova.slice(0, i).join(' ').length;
+    if (Math.abs(l - t.length / 2) < Math.abs(slova.slice(0, krashche).join(' ').length - t.length / 2)) krashche = i;
+  }
+  return [slova.slice(0, krashche).join(' '), slova.slice(krashche).join(' ')];
+};
+
+type Kor = { x: number; y: number; w: number; tekst: string; znach: string; nevidome: boolean; kolir?: number };
+const xVid = promizhnePershe ? x2 : x1;
+const xProm = promizhnePershe ? x1 : x2;
+const korobky: Kor[] = [
+  { x: xK, y: yK, w: 200, tekst: pytannia, znach: '?', nevidome: true },
+  { x: xVid, y: y2, w: bw, tekst: vidome.tekst, znach: String(vidome.chyslo), nevidome: false, kolir: 1 },
+  { x: xProm, y: y2, w: bw, tekst: promizhne.tekst, znach: '?', nevidome: true },
+  { x: x1, y: y3, w: bw, tekst: c1.tekst, znach: String(c1.chyslo), nevidome: false, kolir: 2 },
+  { x: x2, y: y3, w: bw, tekst: c2.tekst, znach: String(c2.chyslo), nevidome: false, kolir: 3 },
+];
+const seredyna = (k: Kor) => k.x + k.w / 2;
+// Вилка від батьківської рамки до двох нижніх; посередині — знак дії.
+const vylka = (bat: Kor, l: Kor, pr: Kor, znak: string) => {
+  const xb = seredyna(bat);
+  const yb = bat.y + bh;
+  const ym = yb + 22;
+  return { d: `M ${xb} ${yb} V ${ym} M ${seredyna(l)} ${l.y} V ${ym} H ${seredyna(pr)} V ${pr.y}`, x: xb, y: ym, znak };
+};
+const vylky = [vylka(korobky[0], korobky[1].x < korobky[2].x ? korobky[1] : korobky[2], korobky[1].x < korobky[2].x ? korobky[2] : korobky[1], dia), vylka(korobky[2], korobky[3], korobky[4], promizhne.dia)];
+const opys = `${pytannia} Спершу: ${promizhne.tekst} ${vnutr}. Потім: ${druhaDia}.`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      {
+        vylky.map((v) => (
+          <g>
+            <path d={v.d} fill="none" stroke="var(--ill-line)" stroke-width="1.5" />
+            <circle cx={v.x} cy={v.y} r="11" fill="var(--ill-paper)" stroke="var(--ill-line)" stroke-width="1.5" />
+            <text x={v.x} y={v.y} text-anchor="middle" dominant-baseline="central" font-size="16" font-weight="700" fill="var(--ill-ink)">
+              {v.znak}
+            </text>
+          </g>
+        ))
+      }
+      {
+        korobky.map((k) => {
+          const r = riadky(k.tekst, k.w > 180 ? 26 : 21);
+          const yT = k.y + 17;
+          return (
+            <g>
+              <rect
+                x={k.x}
+                y={k.y}
+                width={k.w}
+                height={bh}
+                rx="8"
+                fill={k.nevidome ? 'var(--ill-paper)' : `var(--ill-${k.kolir})`}
+                fill-opacity={k.nevidome ? 1 : 0.25}
+                stroke={k.nevidome ? 'var(--ill-4)' : 'var(--ill-line)'}
+                stroke-dasharray={k.nevidome ? '5 4' : undefined}
+                stroke-width={k.nevidome ? 2 : 1.5}
+              />
+              {r.map((t, i) => (
+                <text x={k.x + 10} y={yT + i * 14} font-size="12" fill="var(--ill-ink)">
+                  {t}
+                </text>
+              ))}
+              <text
+                x={k.x + k.w - 12}
+                y={k.y + bh - 9}
+                text-anchor="end"
+                font-size="17"
+                font-weight="700"
+                fill={k.nevidome ? 'var(--ill-4)' : 'var(--ill-ink)'}
+              >
+                {k.znach}
+              </text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  {
+    !bez_vidpovidi && (
+      <ol class="ill-steps">
+        <li>
+          {promizhne.tekst} <b class="num">{vnutr} = {p}</b>
+          {od}
+        </li>
+        <li>
+          {pytannia} <b class="num c4">{druhaDia} = {vidpovid}</b>
+          {od}
+        </li>
+      </ol>
+    )
+  }
+  {
+    !bez_vidpovidi && (
+      <figcaption class="ill-caption">
+        Одним виразом: {vyraz} = <span class="c4">{vidpovid}</span>
+      </figcaption>
+    )
+  }
+</figure>
