@@ -1,0 +1,164 @@
+---
+// Різницеве порівняння для 1 класу: два ряди кружечків, з'єднані в пари.
+//   <Pary a={8} b={5} imena={['рибки', 'гачки']} shcho={['рибок', 'гачків']} />
+//     — «на скільки більше?»: хто лишився без пари, на стільки й більше; 8 − 5 = 3.
+//   <Pary a={5} na={2} imena={['Сергій', 'Яна']} />   — «на 2 більше»: стільки ж і ще 2; 5 + 2 = 7.
+//   <Pary a={5} na={-2} imena={['Сергій', 'Яна']} />  — «на 2 менше»: стільки ж, але без 2; 5 − 2 = 3.
+interface Props {
+  a: number; // перший ряд
+  b?: number; // другий ряд — порівнюємо два відомі числа
+  na?: number; // другий ряд на стільки більший (від'ємне — менший), ніж перший
+  imena?: [string, string]; // підписи рядів
+  shcho?: [string, string]; // назви в родовому множини для речення: «рибок на 3 більше, ніж гачків»
+  bez_vidpovidi?: boolean; // не показувати рівність і висновок
+}
+const { a, b, na, imena = ['', ''], shcho, bez_vidpovidi = false } = Astro.props;
+if ((b === undefined) === (na === undefined)) throw new Error('Pary: задай або b, або na');
+const porivniannia = b !== undefined;
+const druhyi = porivniannia ? b! : a + na!;
+if (a < 1 || druhyi < 0 || Math.max(a, druhyi) > 10) throw new Error(`Pary: числа ${a} і ${druhyi} — лише від 1 до 10`);
+
+const riznytsia = Math.abs(a - druhyi);
+const par = Math.min(a, druhyi);
+const bilshyiPershyi = a > druhyi;
+
+const krok = 28;
+const rad = 10.5;
+const xPidpys = 8;
+const x0 = imena[0] || imena[1] ? 92 : 20;
+const W = x0 + 10 * krok + 2;
+const y1 = 40;
+const y2 = 88;
+const H = 128;
+const cx = (i: number) => x0 + i * krok + rad;
+
+// Другий ряд у режимі «на … менше» малюємо повним: зайві кружечки закреслено.
+const menshe = !porivniannia && na! < 0;
+const riad2 = menshe ? a : druhyi;
+// Дужка над (або під) кружечками без пари.
+const vid = cx(par) - rad - 2;
+const do_ = cx(Math.max(a, druhyi) - 1) + rad + 2;
+const duzhkaZverkhu = porivniannia ? bilshyiPershyi : false;
+const yD = duzhkaZverkhu ? y1 - rad - 5 : y2 + rad + 5;
+const napriam = duzhkaZverkhu ? -1 : 1;
+const pidpysDuzhky = porivniannia ? `на ${riznytsia}` : menshe ? `без ${riznytsia}` : `і ще ${riznytsia}`;
+
+const rivnist = porivniannia ? `${Math.max(a, druhyi)} − ${par} = ${riznytsia}` : `${a} ${menshe ? '−' : '+'} ${riznytsia} = ${druhyi}`;
+const [bilshi, menshi] = shcho ? (bilshyiPershyi ? shcho : [shcho[1], shcho[0]]) : ['', ''];
+const opys = porivniannia ? `${a} і ${druhyi}: різниця ${riznytsia}` : `${a}, а в другому ряду на ${riznytsia} ${menshe ? 'менше' : 'більше'}: ${druhyi}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      {
+        imena.map((im, i) => (
+          <text x={xPidpys} y={i === 0 ? y1 : y2} dominant-baseline="central" font-size="13" font-weight="700" fill={`var(--ill-${i + 1})`}>
+            {im}
+          </text>
+        ))
+      }
+      {Array.from({ length: par }, (_, i) => <line x1={cx(i)} y1={y1 + rad} x2={cx(i)} y2={y2 - rad} stroke="var(--ill-line)" stroke-width="1.5" />)}
+      {
+        Array.from({ length: a }, (_, i) => {
+          const zaiva = porivniannia && i >= par;
+          return (
+            <circle
+              cx={cx(i)}
+              cy={y1}
+              r={rad}
+              fill="var(--ill-1)"
+              fill-opacity={zaiva ? 0.85 : 0.45}
+              stroke={zaiva ? 'var(--ill-4)' : 'var(--ill-1)'}
+              stroke-width={zaiva ? 2.5 : 1.5}
+            />
+          );
+        })
+      }
+      {
+        Array.from({ length: riad2 }, (_, i) => {
+          const zaiva = i >= par;
+          return (
+            <g>
+              <circle
+                cx={cx(i)}
+                cy={y2}
+                r={rad}
+                fill={menshe && zaiva ? 'none' : 'var(--ill-2)'}
+                fill-opacity={zaiva ? 0.85 : 0.45}
+                stroke={zaiva ? 'var(--ill-4)' : 'var(--ill-2)'}
+                stroke-dasharray={menshe && zaiva ? '4 3' : undefined}
+                stroke-width={zaiva ? 2.5 : 1.5}
+              />
+              {menshe && zaiva && (
+                <path
+                  d={`M ${cx(i) - 6} ${y2 - 6} l 12 12 M ${cx(i) + 6} ${y2 - 6} l -12 12`}
+                  stroke="var(--ill-4)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              )}
+            </g>
+          );
+        })
+      }
+      {
+        riznytsia > 0 && (
+          <g>
+            <path d={`M ${vid} ${yD} v ${napriam * 6} H ${do_} v ${-napriam * 6}`} fill="none" stroke="var(--ill-4)" stroke-width="1.5" />
+            <text
+              x={(vid + do_) / 2}
+              y={yD + napriam * 17}
+              text-anchor="middle"
+              dominant-baseline="central"
+              font-size="13"
+              font-weight="700"
+              fill="var(--ill-4)"
+            >
+              {pidpysDuzhky}
+            </text>
+          </g>
+        )
+      }
+    </svg>
+  </div>
+  {
+    !bez_vidpovidi && porivniannia && (
+      <ol class="ill-steps">
+        <li>
+          Пар вийшло <b class="num">{par}</b>. Без пари — <b class="num c4">{riznytsia}</b>.
+        </li>
+        <li>
+          {shcho ? (
+            <span>
+              Отже, {bilshi} на <b class="c4">{riznytsia}</b> більше, ніж {menshi}. А {menshi} на <b class="c4">{riznytsia}</b> менше,
+              ніж {bilshi}.
+            </span>
+          ) : (
+            <span>
+              Отже, одне число на <b class="c4">{riznytsia}</b> більше, а інше — на <b class="c4">{riznytsia}</b> менше.
+            </span>
+          )}
+        </li>
+      </ol>
+    )
+  }
+  {
+    !bez_vidpovidi && !porivniannia && (
+      <ol class="ill-steps">
+        <li>
+          {menshe ? (
+            <span>
+              «На {riznytsia} менше» — це <b>стільки ж, але без</b> <b class="c4">{riznytsia}</b>. Віднімаємо.
+            </span>
+          ) : (
+            <span>
+              «На {riznytsia} більше» — це <b>стільки ж і ще</b> <b class="c4">{riznytsia}</b>. Додаємо.
+            </span>
+          )}
+        </li>
+      </ol>
+    )
+  }
+  {!bez_vidpovidi && <figcaption class="ill-caption">{rivnist}</figcaption>}
+</figure>
