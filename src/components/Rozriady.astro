@@ -128,6 +128,20 @@ const ROZRIADY = ['III', 'II', 'I'];
     color: var(--ill-muted);
     font-weight: 400;
   }
+  /* На телефоні 4–5 класів (12–15 колонок) мають влізти без прокрутки. */
+  @media (max-width: 30rem) {
+    .rozriady th,
+    .rozriady td {
+      padding: 0.25rem 0.1rem;
+    }
+    .rozriady thead th,
+    .rozriady .muted td {
+      font-size: var(--sl-text-2xs);
+    }
+    .rozriady .tsyfra {
+      font-size: 1.1rem;
+    }
+  }
   .rozriady-chytannia {
     margin-top: 0.75rem;
     color: var(--ill-muted);
