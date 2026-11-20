@@ -1,0 +1,19 @@
+---
+// Одночасний рух двох тіл у різних напрямках (4 клас): назустріч одне одному або з одного місця в протилежних
+// напрямках. Шлях кожного — відрізок свого кольору з рисками через кожну одиницю часу, унизу — уся відстань.
+// Невідоме — «?». Той самий малюнок — у тренажерах (src/trenazhery/rukhDvokh.ts).
+//   <RukhDvokhTil v1={16} v2={15} t={3} napriamok="nazustrich" shukaty="s" />
+//   <RukhDvokhTil v1={4} v2={5} t={3} napriamok="protylezhno" />
+import { rukhDvokh, type RukhDvokhOpts } from '../trenazhery/rukhDvokh.ts';
+
+interface Props extends RukhDvokhOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = rukhDvokh(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

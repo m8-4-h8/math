@@ -83,6 +83,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Trykutnyk` | вид трикутника | `<Trykutnyk vyd="rivnobedrenyi" />` |
   | `Rukh` | задача на рух назустріч / навздогін | `<Rukh vidstan={40} v1={15} v2={5} napriamok="nazustrich" />` |
   | `Doroha` | рух як лінія: шматочок на кожну годину, «?» — s, v або t | `<Doroha v={60} t={4} shukaty="s" />` |
+  | `RukhDvokhTil` | одночасний рух двох тіл (4 клас): назустріч (`nazustrich`) або з одного місця в протилежні боки (`protylezhno`); шлях кожного — відрізок свого кольору з рисками через кожну одиницю часу, унизу — уся відстань; «?» — s, v1, v2 або t (тоді без рисок); той самий малюнок у тренажерах (`src/trenazhery/rukhDvokh.ts`) | `<RukhDvokhTil v1={16} v2={15} t={3} napriamok="nazustrich" shukaty="s" />` |
   | `Koshyky` | робота як кошики (одна година — кошик), можна вдвох | `<Koshyky za_hodynu={7} druhyi={5} hodyn={4} shcho="деталей" shukaty="chas" />` |
   | `Porivniannia` | дві смужки: «на … більше/менше» або «у … разів» | `<Porivniannia a={7} na={4} imena={['Петро', 'Марійка']} />` |
   | `Chastyny` | задача на частини однаковими клітинками | `<Chastyny chastyny={[1, 3]} imena={['Брат', 'Сестра']} razom={24} />` |
