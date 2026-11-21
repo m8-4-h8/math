@@ -1,0 +1,68 @@
+---
+// Вираз зі змінною як «машина»: ліворуч — значення змінної, яке заходить, посередині — вираз, праворуч — його
+// значення, що виходить. Одна стрічка — одна підстановка.
+//   <MashynaVyrazu vyraz="9 + a" vkhody={[3, 4, 5]} />
+//   <MashynaVyrazu vyraz="15 − b" vkhody={[7, 8]} bez_vidpovidi />   — праворуч знаки питання
+interface Props {
+  vyraz: string; // число, знак (+, −, ·) і буква або дві однакові букви: «9 + a», «15 − b», «n + n»
+  vkhody: number[];
+  bez_vidpovidi?: boolean;
+}
+const { vyraz, vkhody, bez_vidpovidi = false } = Astro.props;
+
+const m = vyraz.replace(/−/g, '-').match(/^\s*(\d+|\p{L})\s*([+\-·])\s*(\d+|\p{L})\s*$/u);
+if (!m) throw new Error(`MashynaVyrazu: не розібрати «${vyraz}»`);
+const [, liva, dia, prava] = m;
+const bukva = /\p{L}/u.test(liva) ? liva : prava;
+const chyslo = (s: string, x: number) => (/\p{L}/u.test(s) ? x : Number(s));
+const f = (x: number) => {
+  const a = chyslo(liva, x);
+  const b = chyslo(prava, x);
+  return dia === '+' ? a + b : dia === '·' ? a * b : a - b;
+};
+const znak = dia === '-' ? '−' : dia;
+const pidstanovka = (x: number) => `${chyslo(liva, x)} ${znak} ${chyslo(prava, x)}`;
+for (const x of vkhody) if (f(x) < 0) throw new Error(`MashynaVyrazu: ${vyraz} при ${bukva} = ${x} від'ємне`);
+
+const riadH = 34;
+const top = 30;
+const W = 340;
+const H = top + vkhody.length * riadH + 6;
+const xVkhid = 6;
+const vW = 64;
+const xMash = 104;
+const mW = 132;
+const xVykhid = W - 6 - vW;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`Вираз ${vyraz}: замість ${bukva} підставляємо ${vkhody.join(', ')}`}>
+      <text x={xVkhid} y="16" text-anchor="start" font-size="12" fill="var(--ill-muted)">значення {bukva}</text>
+      <text x={xMash + mW / 2} y="16" text-anchor="middle" font-size="14" font-weight="800" fill="var(--ill-1)">{vyraz}</text>
+      <text x={xVykhid + vW} y="16" text-anchor="end" font-size="12" fill="var(--ill-muted)">значення виразу</text>
+      <rect x={xMash} y={top - 4} width={mW} height={vkhody.length * riadH} rx="10" fill="var(--ill-1)" fill-opacity="0.1" stroke="var(--ill-1)" stroke-width="1.6" />
+      {
+        vkhody.map((x, i) => {
+          const y = top + i * riadH;
+          const c = y + (riadH - 8) / 2;
+          return (
+            <g>
+              <rect x={xVkhid} y={y} width={vW} height={riadH - 8} rx="6" fill="var(--ill-2)" fill-opacity="0.2" stroke="var(--ill-2)" stroke-width="1.3" />
+              <text x={xVkhid + vW / 2} y={c} text-anchor="middle" dominant-baseline="central" font-size="14" fill="var(--ill-ink)">
+                <tspan font-style="italic">{bukva}</tspan> = {x}
+              </text>
+              <line x1={xVkhid + vW + 4} y1={c} x2={xMash - 6} y2={c} stroke="var(--ill-muted)" stroke-width="1.4" />
+              <path d={`M ${xMash - 6} ${c} l -6 -4 v 8 z`} fill="var(--ill-muted)" />
+              <text x={xMash + mW / 2} y={c} text-anchor="middle" dominant-baseline="central" font-size="14" fill="var(--ill-ink)">{pidstanovka(x)}</text>
+              <line x1={xMash + mW + 4} y1={c} x2={xVykhid - 6} y2={c} stroke="var(--ill-muted)" stroke-width="1.4" />
+              <path d={`M ${xVykhid - 6} ${c} l -6 -4 v 8 z`} fill="var(--ill-muted)" />
+              <rect x={xVykhid} y={y} width={vW} height={riadH - 8} rx="6" fill="var(--ill-3)" fill-opacity="0.2" stroke="var(--ill-3)" stroke-width="1.3" />
+              <text x={xVykhid + vW / 2} y={c} text-anchor="middle" dominant-baseline="central" font-size="15" font-weight="800" fill="var(--ill-ink)">{bez_vidpovidi ? '?' : f(x)}</text>
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+</figure>
