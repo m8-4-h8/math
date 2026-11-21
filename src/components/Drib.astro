@@ -8,8 +8,9 @@ interface Props {
   kolir?: 1 | 2 | 3 | 4;
   pidpys?: string; // текст під малюнком
   ramka?: boolean; // false — без власної рамки (коли кілька дробів в одному ряду)
+  zavdannia?: boolean; // true — малюнок до задачі «яку частину зафарбовано»: без запису дробу поруч і в aria-label
 }
-const { n, d, vyhliad = 'kruh', kolir = 1, pidpys, ramka = true } = Astro.props;
+const { n, d, vyhliad = 'kruh', kolir = 1, pidpys, ramka = true, zavdannia = false } = Astro.props;
 
 const color = `var(--ill-${kolir})`;
 const wholes = Math.max(1, Math.ceil(n / d));
@@ -28,7 +29,7 @@ function sector(i: number) {
 
 const barW = 320;
 const barH = 48;
-const label = `Дріб ${n}/${d}`;
+const label = zavdannia ? 'Ціле, поділене на рівні частини; кілька частин зафарбовано' : `Дріб ${n}/${d}`;
 ---
 
 <figure class={ramka ? 'ill not-content drib' : 'not-content drib'}>
@@ -69,11 +70,17 @@ const label = `Дріб ${n}/${d}`;
         ),
       )
     }
-    <span class="frac" style={`color: ${color}`} aria-hidden="true" data-pagefind-ignore>
-      <span>{n}</span>
-      <span>{d}</span>
-    </span>
-    <span class="sr-only">{n}/{d}</span>
+    {
+      !zavdannia && (
+        <>
+          <span class="frac" style={`color: ${color}`} aria-hidden="true" data-pagefind-ignore>
+            <span>{n}</span>
+            <span>{d}</span>
+          </span>
+          <span class="sr-only">{n}/{d}</span>
+        </>
+      )
+    }
   </div>
   {pidpys && <figcaption class="drib-caption">{pidpys}</figcaption>}
 </figure>

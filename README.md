@@ -65,7 +65,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `DilenniaKutom` | ділення кутом з поясненням | `<DilenniaKutom dividend={1234} divisor={6} />` |
   | `Tsukerky` | ділення цукерок порівну між дітьми | `<Tsukerky tsukerky={13} liudy={4} />` |
   | `Hrupy` | множення як однакові групи | `<Hrupy hrupy={4} po={3} />` |
-  | `Drib` | дріб кругом або смужкою | `<Drib n={3} d={4} vyhliad="smuzhka" />` |
+  | `Drib` | дріб кругом або смужкою; `zavdannia` — до задачі «яку частину зафарбовано»: без запису дробу | `<Drib n={3} d={4} vyhliad="smuzhka" />` |
   | `Ryad` | кілька малюнків поруч з підписом | `<Ryad pidpys="..."> ... </Ryad>` |
   | `DrabynaDii` | додавання → множення → степінь | `<DrabynaDii osnova={3} raz={4} />` |
   | `Stepin` | як росте степінь (кружечки) | `<Stepin osnova={2} pokaznyk={5} />` |
@@ -83,6 +83,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Trykutnyk` | вид трикутника | `<Trykutnyk vyd="rivnobedrenyi" />` |
   | `Rukh` | задача на рух назустріч / навздогін | `<Rukh vidstan={40} v1={15} v2={5} napriamok="nazustrich" />` |
   | `Doroha` | рух як лінія: шматочок на кожну годину, «?» — s, v або t | `<Doroha v={60} t={4} shukaty="s" />` |
+  | `RukhDvokhTil` | одночасний рух двох тіл (4 клас): назустріч (`nazustrich`) або з одного місця в протилежні боки (`protylezhno`); шлях кожного — відрізок свого кольору з рисками через кожну одиницю часу, унизу — уся відстань; «?» — s, v1, v2 або t (тоді без рисок); той самий малюнок у тренажерах (`src/trenazhery/rukhDvokh.ts`) | `<RukhDvokhTil v1={16} v2={15} t={3} napriamok="nazustrich" shukaty="s" />` |
   | `Koshyky` | робота як кошики (одна година — кошик), можна вдвох | `<Koshyky za_hodynu={7} druhyi={5} hodyn={4} shcho="деталей" shukaty="chas" />` |
   | `Porivniannia` | дві смужки: «на … більше/менше» або «у … разів» | `<Porivniannia a={7} na={4} imena={['Петро', 'Марійка']} />` |
   | `Chastyny` | задача на частини однаковими клітинками | `<Chastyny chastyny={[1, 3]} imena={['Брат', 'Сестра']} razom={24} />` |
