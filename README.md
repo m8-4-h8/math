@@ -65,7 +65,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `DilenniaKutom` | ділення кутом з поясненням | `<DilenniaKutom dividend={1234} divisor={6} />` |
   | `Tsukerky` | ділення цукерок порівну між дітьми | `<Tsukerky tsukerky={13} liudy={4} />` |
   | `Hrupy` | множення як однакові групи | `<Hrupy hrupy={4} po={3} />` |
-  | `Drib` | дріб кругом або смужкою | `<Drib n={3} d={4} vyhliad="smuzhka" />` |
+  | `Drib` | дріб кругом або смужкою; `zavdannia` — до задачі «яку частину зафарбовано»: без запису дробу | `<Drib n={3} d={4} vyhliad="smuzhka" />` |
   | `Ryad` | кілька малюнків поруч з підписом | `<Ryad pidpys="..."> ... </Ryad>` |
   | `DrabynaDii` | додавання → множення → степінь | `<DrabynaDii osnova={3} raz={4} />` |
   | `Stepin` | як росте степінь (кружечки) | `<Stepin osnova={2} pokaznyk={5} />` |
