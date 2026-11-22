@@ -22,6 +22,8 @@ export default defineConfig({
     '/6-klas/dovzhyna-kola-i-ploshcha-kruha': '/math/6-klas/dovzhyna-kola/',
     // 1–4 класи за розділами підручників Скворцової: числа до 100 вивчають у 1 класі.
     '/2-klas/dvotsyfrovi-chysla': '/math/1-klas/dvotsyfrovi-chysla/',
+    // Коло і круг уперше вивчають у 2 класі (с. 81–82), у 4 класі — лише повторення.
+    '/4-klas/kolo-i-kruh': '/math/2-klas/kolo-i-kruh/',
   },
   markdown: {
     // Формули: $...$ у рядку та $$...$$ окремим блоком. rehypePoshukFormul — щоб формули в пошуку
