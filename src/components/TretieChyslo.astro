@@ -1,0 +1,144 @@
+---
+// Задачі на знаходження третього числа — смужками, кожне число в окремому рядку з назвою.
+// `vyd="suma"`: третє — стільки, скільки перше і друге разом. Третя смужка складена з двох шматків тих самих
+// кольорів, що перша і друга. Друге число можна дати через «на … більше / менше» (`na`) — тоді задача складена.
+// `vyd="dodanok"`: відомо, скільки всього, і два доданки; третій — те, що лишилось від «усього» (смужки сходинками).
+// Під малюнком — план розв'язання (без нього, якщо `bez_vidpovidi`).
+//   <TretieChyslo vyd="suma" a={5} b={2} nazvy={['Зошити', 'Ручки', 'Олівці']} odynytsi="шт." />
+//   <TretieChyslo vyd="suma" a={9} na={5} nazvy={['І печера', 'ІІ печера', 'ІІІ печера']} odynytsi="к." />
+//   <TretieChyslo vyd="dodanok" vsoho={100} a={20} b={60} nazvy={['Усього', 'Блокнот', 'Пенал', 'Ручка']} odynytsi="грн" />
+interface Props {
+  vyd: 'suma' | 'dodanok';
+  a: number; // перше число
+  b?: number; // друге число, якщо воно дане прямо
+  na?: number; // друге — на стільки більше (від'ємне — менше) за перше
+  vsoho?: number; // скільки всього (для vyd="dodanok")
+  nazvy?: string[]; // назви рядків: suma — 3, dodanok — 4 (перша — «усього»)
+  odynytsi?: string;
+  bez_vidpovidi?: boolean;
+}
+const { vyd, a, na, vsoho = 0, odynytsi, bez_vidpovidi = false } = Astro.props;
+const b = Astro.props.b ?? a + (na ?? 0);
+const suma = vyd === 'suma';
+const nazvy = Astro.props.nazvy ?? (suma ? ['Перше', 'Друге', 'Третє'] : ['Усього', 'Перше', 'Друге', 'Третє']);
+const c = suma ? a + b : vsoho - a - b;
+if (b <= 0 || c <= 0) throw new Error(`TretieChyslo: недодатне число (${a}, ${b}, ${c})`);
+const od = odynytsi ? ` (${odynytsi})` : '';
+
+const W = 340;
+const x0 = 92;
+const xMax = W - 34;
+const dovzh = suma ? a + b : vsoho;
+const u = (xMax - x0) / dovzh;
+const bh = 24;
+const krok = 38;
+const top = 10;
+const ryadky = suma ? 3 : 4;
+const H = top + ryadky * krok + 2;
+const y = (i: number) => top + i * krok;
+const X = (v: number) => x0 + v * u;
+const textProps = { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': '14', 'font-weight': '700', fill: 'var(--ill-ink)' };
+// Число всередині смужки, а якщо смужка вузька — праворуч від неї.
+const misce = (x1: number, x2: number) => (x2 - x1 >= 26 ? { x: (x1 + x2) / 2, anchor: 'middle' } : { x: x2 + 5, anchor: 'start' });
+const opys = suma
+  ? `${nazvy[0]}: ${a}; ${nazvy[1]}: ${na !== undefined ? (na > 0 ? `на ${na} більше` : `на ${-na} менше`) : b}; ${nazvy[2]}: ? — стільки, скільки разом перше і друге`
+  : `${nazvy[0]}: ${vsoho}; ${nazvy[1]}: ${a}; ${nazvy[2]}: ${b}; ${nazvy[3]}: ?`;
+const viraz = suma
+  ? na !== undefined
+    ? `${a} + (${a} ${na > 0 ? '+' : '−'} ${Math.abs(na)})`
+    : `${a} + ${b}`
+  : `${vsoho} − (${a} + ${b})`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      {nazvy.map((n, i) => (
+        <text x={x0 - 8} y={y(i) + bh / 2} text-anchor="end" dominant-baseline="central" font-size="13" fill="var(--ill-ink)">{n}</text>
+      ))}
+      {
+        suma ? (
+          <>
+            {/* Перше */}
+            <rect x={x0} y={y(0)} width={a * u} height={bh} rx="5" fill="var(--ill-1)" fill-opacity="0.35" stroke="var(--ill-1)" stroke-width="1.5" />
+            <text x={misce(x0, X(a)).x} y={y(0) + bh / 2} {...{ ...textProps, 'text-anchor': misce(x0, X(a)).anchor }}>{a}</text>
+            {/* Друге */}
+            <rect x={x0} y={y(1)} width={b * u} height={bh} rx="5" fill="var(--ill-2)" fill-opacity="0.35" stroke="var(--ill-2)" stroke-width="1.5" />
+            {na === undefined && <text x={misce(x0, X(b)).x} y={y(1) + bh / 2} {...{ ...textProps, 'text-anchor': misce(x0, X(b)).anchor }}>{b}</text>}
+            {na !== undefined && na > 0 && (
+              <>
+                <line x1={X(a)} y1={y(0) + bh} x2={X(a)} y2={y(1) + bh} stroke="var(--ill-muted)" stroke-width="1" stroke-dasharray="4 3" />
+                <rect x={X(a)} y={y(1)} width={na * u} height={bh} rx="5" fill="var(--ill-3)" fill-opacity="0.45" stroke="var(--ill-3)" stroke-width="1.5" />
+                <text x={(x0 + X(a)) / 2} y={y(1) + bh / 2} {...{ ...textProps, fill: 'var(--ill-muted)' }}>{a}</text>
+                <text x={(X(a) + X(b)) / 2} y={y(1) + bh / 2} {...{ ...textProps, 'font-size': '13' }}>+{na}</text>
+                <text x={X(b) + 6} y={y(1) + bh / 2} {...{ ...textProps, 'text-anchor': 'start', fill: 'var(--ill-4)' }}>?</text>
+              </>
+            )}
+            {na !== undefined && na < 0 && (
+              <>
+                <line x1={X(a)} y1={y(0) + bh} x2={X(a)} y2={y(1) + bh} stroke="var(--ill-muted)" stroke-width="1" stroke-dasharray="4 3" />
+                <rect x={X(b)} y={y(1)} width={-na * u} height={bh} rx="5" fill="none" stroke="var(--ill-4)" stroke-width="1.5" stroke-dasharray="5 4" />
+                <text x={(X(b) + X(a)) / 2} y={y(1) + bh / 2} {...{ ...textProps, fill: 'var(--ill-4)' }}>−{-na}</text>
+                <text x={X(b) / 2 + x0 / 2} y={y(1) + bh / 2} {...{ ...textProps, fill: 'var(--ill-4)' }}>?</text>
+              </>
+            )}
+            {/* Третє = перше + друге */}
+            <line x1={X(a)} y1={y(0) + bh} x2={X(a)} y2={y(2)} stroke="var(--ill-muted)" stroke-width="1" stroke-dasharray="4 3" />
+            <rect x={x0} y={y(2)} width={a * u} height={bh} fill="var(--ill-1)" fill-opacity="0.18" stroke="none" />
+            <rect x={X(a)} y={y(2)} width={b * u} height={bh} fill="var(--ill-2)" fill-opacity="0.18" stroke="none" />
+            <line x1={X(a)} y1={y(2)} x2={X(a)} y2={y(2) + bh} stroke="var(--ill-4)" stroke-width="1.2" stroke-dasharray="3 3" />
+            <rect x={x0} y={y(2)} width={(a + b) * u} height={bh} rx="5" fill="none" stroke="var(--ill-4)" stroke-width="2" stroke-dasharray="6 4" />
+            <text x={X(a + b) + 6} y={y(2) + bh / 2} {...{ ...textProps, 'text-anchor': 'start', fill: 'var(--ill-4)' }}>?</text>
+          </>
+        ) : (
+          <>
+            {/* Усього */}
+            <rect x={x0} y={y(0)} width={vsoho * u} height={bh} rx="5" fill="var(--ill-3)" fill-opacity="0.3" stroke="var(--ill-3)" stroke-width="1.5" />
+            <text x={X(vsoho / 2)} y={y(0) + bh / 2} {...textProps}>{vsoho}</text>
+            {/* Сходинки: перше, друге, третє */}
+            {[X(a), X(a + b)].map((x) => (
+              <line x1={x} y1={y(0) + bh} x2={x} y2={y(3) + bh} stroke="var(--ill-muted)" stroke-width="1" stroke-dasharray="4 3" />
+            ))}
+            <rect x={x0} y={y(1)} width={a * u} height={bh} rx="5" fill="var(--ill-1)" fill-opacity="0.35" stroke="var(--ill-1)" stroke-width="1.5" />
+            <text x={misce(x0, X(a)).x} y={y(1) + bh / 2} {...{ ...textProps, 'text-anchor': misce(x0, X(a)).anchor }}>{a}</text>
+            <rect x={X(a)} y={y(2)} width={b * u} height={bh} rx="5" fill="var(--ill-2)" fill-opacity="0.35" stroke="var(--ill-2)" stroke-width="1.5" />
+            <text x={misce(X(a), X(a + b)).x} y={y(2) + bh / 2} {...{ ...textProps, 'text-anchor': misce(X(a), X(a + b)).anchor }}>{b}</text>
+            <rect x={X(a + b)} y={y(3)} width={c * u} height={bh} rx="5" fill="var(--ill-4)" fill-opacity="0.12" stroke="var(--ill-4)" stroke-width="2" stroke-dasharray="6 4" />
+            <text x={misce(X(a + b), X(vsoho)).x} y={y(3) + bh / 2} {...{ ...textProps, 'text-anchor': misce(X(a + b), X(vsoho)).anchor, fill: 'var(--ill-4)' }}>?</text>
+          </>
+        )
+      }
+    </svg>
+  </div>
+  {
+    !bez_vidpovidi && (
+      <ol class="ill-steps">
+        {suma && na !== undefined && (
+          <li>
+            Друге: {a} {na > 0 ? '+' : '−'} {Math.abs(na)} = {b}{od}
+          </li>
+        )}
+        {suma && (
+          <li>
+            Перше і друге разом: {a} + {b} = {c}{od} — стільки ж і третє.
+          </li>
+        )}
+        {!suma && (
+          <>
+            <li>
+              Перше і друге разом: {a} + {b} = {a + b}{od}
+            </li>
+            <li>
+              Третє — решта: {vsoho} − {a + b} = {c}{od}
+            </li>
+          </>
+        )}
+        {(!suma || na !== undefined) && (
+          <li>
+            Одним виразом: {viraz} = {c}
+          </li>
+        )}
+      </ol>
+    )
+  }
+</figure>
