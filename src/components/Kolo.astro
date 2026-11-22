@@ -4,6 +4,14 @@
 //   <Kolo radius={2} pokazaty="diametr" kruh />
 //   <Kolo radius={5} kruh formuly />  — ще й довжина кола та площа круга
 // Кілька кіл поруч: <Ryad> з <Kolo ... ramka={false} /> всередині.
+// Для 2 класу: `dodavanniam` — діаметр як два радіуси (d = 3 + 3 = 6), `tochky` — точки на колі, усередині
+// круга чи поза ним (назви точок у підписі для читача з екрана не видають, де вони лежать):
+//   <Kolo radius={3} kruh dodavanniam tochky={[{ nazva: 'A', de: 'na' }, { nazva: 'M', de: 'vseredyni' }]} />
+interface Tochka {
+  nazva: string;
+  de: 'na' | 'vseredyni' | 'zovni'; // на колі, усередині круга, поза кругом
+  kut?: number; // напрямок від центра в градусах (0 — праворуч, 90 — угору)
+}
 interface Props {
   radius: number; // радіус у сантиметрах (на малюнку масштаб сталий)
   pokazaty?: 'radius' | 'diametr' | 'obydva' | 'nichoho';
@@ -11,8 +19,10 @@ interface Props {
   odynytsia?: string;
   ramka?: boolean; // false — без рамки, для кількох кіл у <Ryad>
   formuly?: boolean; // показати довжину кола і площу круга (π ≈ 3,14)
+  dodavanniam?: boolean; // діаметр як сума двох радіусів: d = 3 + 3 = 6 (2 клас, ще без множення)
+  tochky?: Tochka[];
 }
-const { radius, pokazaty = 'obydva', kruh = false, odynytsia = 'см', ramka = true, formuly = false } = Astro.props;
+const { radius, pokazaty = 'obydva', kruh = false, odynytsia = 'см', ramka = true, formuly = false, dodavanniam = false, tochky = [] } = Astro.props;
 
 const fmt = (x: number) => (Number.isInteger(x) ? String(x) : String(x).replace('.', ','));
 // Довжина кола і площа круга з π ≈ 3,14, округлені до сотих.
@@ -32,7 +42,18 @@ const ry = cy + R * Math.sin(kut);
 const zR = pokazaty === 'radius' || pokazaty === 'obydva';
 const zD = pokazaty === 'diametr' || pokazaty === 'obydva';
 const nazva = kruh ? 'Круг' : 'Коло';
-const opys = `${nazva} з центром O, радіус ${fmt(radius)} ${odynytsia}, діаметр ${fmt(diametr)} ${odynytsia}`;
+const rozmiry = pokazaty === 'nichoho' ? '' : `, радіус ${fmt(radius)} ${odynytsia}, діаметр ${fmt(diametr)} ${odynytsia}`;
+const opys = `${nazva} з центром O${rozmiry}${tochky.length ? `; точки ${tochky.map((t) => t.nazva).join(', ')}` : ''}`;
+// Точки: на колі — на відстані R від центра, усередині — 0,5 R, поза кругом — 1,17 R.
+const tochkyXY = tochky.map((t, i) => {
+  const k = ((t.kut ?? 35 + i * 100) * Math.PI) / 180;
+  const d = t.de === 'na' ? R : t.de === 'vseredyni' ? R * 0.5 : R * 1.17;
+  const [x, y] = [cx + d * Math.cos(k), cy - d * Math.sin(k)];
+  const vid = t.de === 'vseredyni' ? 12 : 13;
+  const [lx, ly] = t.de === 'vseredyni' ? [x + vid, y - 6] : [x + vid * Math.cos(k), y - vid * Math.sin(k)];
+  return { ...t, x, y, lx: Math.min(W - 6, Math.max(6, lx)), ly: Math.min(H - 4, Math.max(10, ly)) };
+});
+const zapysD = dodavanniam ? `${fmt(radius)} + ${fmt(radius)}` : `${fmt(radius)} · 2`;
 ---
 
 <figure class={ramka ? 'ill not-content kolo' : 'not-content kolo'}>
@@ -79,12 +100,22 @@ const opys = `${nazva} з центром O, радіус ${fmt(radius)} ${odynyt
       }
       <circle cx={cx} cy={cy} r="3.5" fill="var(--ill-ink)" />
       <text x={cx + 6} y={cy + 18} font-size="13" font-weight="700" fill="var(--ill-ink)">O</text>
+      {
+        tochkyXY.map((t) => (
+          <g>
+            <circle cx={t.x.toFixed(1)} cy={t.y.toFixed(1)} r="3.5" fill="var(--ill-4)" />
+            <text x={t.lx.toFixed(1)} y={t.ly.toFixed(1)} text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="700" font-style="italic" fill="var(--ill-4)">
+              {t.nazva}
+            </text>
+          </g>
+        ))
+      }
     </svg>
   </div>
   <figcaption class="ill-caption">
     <b>{nazva}</b>: центр <b>O</b>
     {zR && <span> · <span class="c3">радіус r = {fmt(radius)} {odynytsia}</span></span>}
-    {zD && <span> · <span class="c2">діаметр d = {fmt(radius)} · 2 = {fmt(diametr)} {odynytsia}</span></span>}
+    {zD && <span> · <span class="c2">діаметр d = {zapysD} = {fmt(diametr)} {odynytsia}</span></span>}
     {
       formuly && (
         <>

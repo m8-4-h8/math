@@ -72,7 +72,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `Pravylo` | головне правило теми в рамці | `<Pravylo nazva="...">Текст</Pravylo>` |
   | `Rozriady` | таблиця розрядів і класів + число словами | `<Rozriady chyslo={123456789} />` |
   | `DribVidChysla` | дріб від числа смужкою з розв'язком | `<DribVidChysla tsile={25} n={2} d={5} />`; число за дробом: `znachennia={12} n={3} d={5}` |
-  | `ChastynaTsile` | рівняння як «частина і ціле»: що невідоме і яку дію робити | `<ChastynaTsile a={5} b={7} nevidome="a" rivniannia="x + 7 = 12" />` |
+  | `ChastynaTsile` | рівняння як «частина і ціле»: що невідоме і яку дію робити; `znak="□"` — віконце замість x (1–2 клас) | `<ChastynaTsile a={5} b={7} nevidome="a" rivniannia="x + 7 = 12" />` |
   | `Perenos` | перенос числа через «=» зі зміною знака | `<Perenos znak="+" a={7} b={12} />` |
   | `Ostachi` | можливі остачі й приклад з перевіркою | `<Ostachi dilnyk={6} dilene={20} />` |
   | `Pryamokutnyk` | прямокутник/квадрат у клітинку, S і P | `<Pryamokutnyk a={5} b={3} />` |
@@ -91,7 +91,7 @@ shablony/tema.mdx          шаблон нової теми (копіюй зві
   | `DilnykNa5i10` | цифра частки через дільник · 5 і · 10 | `<DilnykNa5i10 dilene={47} dilnyk={6} />` |
   | `VidDesiatkyNazad` | цифра частки від десятки назад: дільник · 10 мінус зайві дільники | `<VidDesiatkyNazad dilene={344} dilnyk={43} />` |
   | `Zvedennia` | зведення до одиниці табличкою (одна або дві величини) | `<Zvedennia nazvy={['Корови', 'Дні']} vidomo={[5, 4]} rezultat={100} shukaty={[3, 6]} odynytsia="Сіно, кг" />` |
-  | `Kolo` | коло або круг з центром, радіусом і діаметром; `formuly` — ще довжина кола і площа (π ≈ 3,14) | `<Kolo radius={3} pokazaty="obydva" />` |
+  | `Kolo` | коло або круг з центром, радіусом і діаметром; `formuly` — ще довжина кола і площа (π ≈ 3,14); `dodavanniam` — діаметр як сума двох радіусів, `tochky` — точки на колі, усередині круга і ззовні (2 клас) | `<Kolo radius={3} pokazaty="obydva" />` |
   | `RozhortkaKola` | колесо котиться по прямій: за один оберт — довжина кола, три діаметри і ще ≈ 0,14 d, тож C ≈ 3,14 · d | `<RozhortkaKola />`, `<RozhortkaKola d={50} odynytsi="см" />` |
   | `SumaRiznytsia` | два числа за сумою і різницею: смужки + кроки | `<SumaRiznytsia suma={30} riznytsia={6} imena={['Оля', 'Марко']} />` |
   | `Skorochennia` | скорочення дробу: ланцюжок і одним кроком через НСД | `<Skorochennia chys={24} znam={36} />` |

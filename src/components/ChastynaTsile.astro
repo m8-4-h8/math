@@ -10,12 +10,13 @@ interface Props {
   dija?: '+' | '·';
   nevidome: 'a' | 'b' | 'tsile';
   rivniannia?: string; // як записане рівняння, наприклад «x − 7 = 12»
+  znak?: string; // чим позначено невідоме: «x» (за замовчуванням) або «?» для віконця в 1–2 класі
 }
-const { a, b, dija = '+', nevidome, rivniannia } = Astro.props;
+const { a, b, dija = '+', nevidome, rivniannia, znak = 'x' } = Astro.props;
 
 const tsile = dija === '+' ? a + b : a * b;
 const vidpovid = nevidome === 'tsile' ? tsile : nevidome === 'a' ? a : b;
-const label = (v: 'a' | 'b' | 'tsile', n: number) => (nevidome === v ? 'x' : String(n));
+const label = (v: 'a' | 'b' | 'tsile', n: number) => (nevidome === v ? znak : String(n));
 
 const pad = 8;
 const barW = 420;
@@ -44,7 +45,7 @@ if (dija === '+') {
   }));
 }
 const tsileNevidome = nevidome === 'tsile';
-const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
+const opys = `${rivniannia ?? ''}: ${znak} = ${vidpovid}`;
 ---
 
 <figure class="ill not-content">
@@ -123,7 +124,7 @@ const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
       dija === '+' && tsileNevidome && (
         <li>
           Невідоме — <b class="c4">ціле</b>. Щоб знайти ціле, частини <b>додаємо</b>:{' '}
-          <b class="num">x = {a} + {b} = {tsile}</b>
+          <b class="num">{znak} = {a} + {b} = {tsile}</b>
         </li>
       )
     }
@@ -132,7 +133,7 @@ const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
         <li>
           Невідоме — <b class="c4">частина</b>. Щоб знайти частину, від цілого <b>віднімаємо</b> іншу частину:{' '}
           <b class="num">
-            x = {tsile} − {nevidome === 'a' ? b : a} = {vidpovid}
+            {znak} = {tsile} − {nevidome === 'a' ? b : a} = {vidpovid}
           </b>
         </li>
       )
@@ -141,7 +142,7 @@ const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
       dija === '·' && tsileNevidome && (
         <li>
           Невідоме — <b class="c4">ціле</b>. Щоб знайти ціле, однакові частини <b>множимо</b>:{' '}
-          <b class="num">x = {a} · {b} = {tsile}</b>
+          <b class="num">{znak} = {a} · {b} = {tsile}</b>
         </li>
       )
     }
@@ -149,7 +150,7 @@ const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
       dija === '·' && nevidome === 'a' && (
         <li>
           Невідоме — <b class="c4">одна частина</b>. Ціле <b>ділимо</b> на кількість частин:{' '}
-          <b class="num">x = {tsile} : {b} = {a}</b>
+          <b class="num">{znak} = {tsile} : {b} = {a}</b>
         </li>
       )
     }
@@ -157,7 +158,7 @@ const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
       dija === '·' && nevidome === 'b' && (
         <li>
           Невідоме — <b class="c4">кількість частин</b>. Ціле <b>ділимо</b> на одну частину:{' '}
-          <b class="num">x = {tsile} : {a} = {b}</b>
+          <b class="num">{znak} = {tsile} : {a} = {b}</b>
         </li>
       )
     }
@@ -165,7 +166,7 @@ const opys = `${rivniannia ?? ''}: x = ${vidpovid}`;
   {
     rivniannia && (
       <figcaption class="ill-caption">
-        {rivniannia} &nbsp;→&nbsp; <span class="c4">x = {vidpovid}</span>
+        {rivniannia} &nbsp;→&nbsp; <span class="c4">{znak} = {vidpovid}</span>
       </figcaption>
     )
   }
