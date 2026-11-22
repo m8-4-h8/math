@@ -1,0 +1,102 @@
+---
+// Нерівність зі змінною на числах-клітинках: верхній ряд — значення змінної, нижній — значення виразу.
+// Клітинки, де нерівність істинна, зафарбовані (це розв'язки); межа — розв'язок рівняння — обведена пунктиром.
+// Під малюнком — спосіб зведення до рівняння, як у Скворцової: рівняння → межа → перевірка сусіда → розв'язки.
+//   <RozviazkyNerivnosti vyraz="16 − p" znak=">" chyslo={8} vid={2} do_={12} />
+//   <RozviazkyNerivnosti vyraz="x + 35" znak=">" chyslo={52} vid={12} do_={22} />
+interface Props {
+  vyraz: string; // «16 − p», «p + 37», «a · 3»: число, знак дії (+, −, ·) і буква
+  znak: '<' | '>';
+  chyslo: number; // права частина нерівності
+  vid: number; // з якого значення змінної показувати клітинки
+  do_: number; // до якого (включно)
+  bez_krokiv?: boolean; // лише малюнок, без кроків під ним
+}
+const { vyraz, znak, chyslo, vid, do_, bez_krokiv = false } = Astro.props;
+
+const m = vyraz.replace(/−/g, '-').match(/^\s*(\d+|\p{L})\s*([+\-·])\s*(\d+|\p{L})\s*$/u);
+if (!m) throw new Error(`RozviazkyNerivnosti: не розібрати «${vyraz}»`);
+const [, liva, dia, prava] = m;
+const zminnaZliva = /\p{L}/u.test(liva);
+const zminna = zminnaZliva ? liva : prava;
+const n = Number(zminnaZliva ? prava : liva);
+const f = (x: number) => (dia === '+' ? x + n : dia === '·' ? x * n : zminnaZliva ? x - n : n - x);
+// Без від'ємних чисел: у «x − 5» x не менше 5, у «16 − p» p не більше 16.
+const dopustyme = (x: number) => (dia !== '-' ? true : zminnaZliva ? x >= n : x <= n);
+const istynno = (x: number) => (znak === '<' ? f(x) < chyslo : f(x) > chyslo);
+const zapys = (x: number) => (zminnaZliva ? `${x} ${dia === '-' ? '−' : dia} ${n}` : `${n} ${dia === '-' ? '−' : dia} ${x}`);
+
+const xs = Array.from({ length: do_ - vid + 1 }, (_, i) => vid + i);
+const mezha = xs.find((x) => dopustyme(x) && f(x) === chyslo);
+
+// Розв'язки на всьому проміжку допустимих значень (для запису відповіді).
+const zrostaie = dia === '+' || dia === '·' || zminnaZliva;
+const nyz = dia === '-' && zminnaZliva ? n : 0;
+const verkh = dia === '-' && !zminnaZliva ? n : Infinity;
+let vidpovid = '';
+if (mezha !== undefined) {
+  const menshi = (znak === '<') === zrostaie; // розв'язки — числа менші за межу?
+  if (menshi) {
+    const vsi = Array.from({ length: mezha - nyz }, (_, i) => mezha - 1 - i);
+    vidpovid = vsi.length <= 4 ? vsi.join(', ') : `${vsi.slice(0, 3).join(', ')}, …, ${nyz}`;
+  } else if (verkh === Infinity) {
+    vidpovid = `${mezha + 1}, ${mezha + 2}, ${mezha + 3} і всі більші числа`;
+  } else {
+    const vsi = Array.from({ length: verkh - mezha }, (_, i) => mezha + 1 + i);
+    vidpovid = vsi.length <= 4 ? vsi.join(', ') : `${vsi.slice(0, 3).join(', ')}, …, ${verkh}`;
+  }
+}
+const susid = mezha === undefined ? undefined : mezha - 1 >= nyz ? mezha - 1 : mezha + 1;
+
+const kl = 24;
+const krok = kl + 3;
+const pidpysW = 58;
+const top = 6;
+const W = pidpysW + xs.length * krok + 6;
+const H = top + 2 * (kl + 6) + 20;
+const znakTekst = znak === '<' ? '<' : '>';
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={`${vyraz} ${znakTekst} ${chyslo}: зафарбовано значення ${zminna}, за яких нерівність істинна`}>
+      <text x={pidpysW - 8} y={top + kl / 2} text-anchor="end" dominant-baseline="central" font-size="14" font-weight="700" font-style="italic" fill="var(--ill-ink)">{zminna}</text>
+      <text x={pidpysW - 8} y={top + kl + 6 + kl / 2} text-anchor="end" dominant-baseline="central" font-size="13" fill="var(--ill-ink)">{vyraz}</text>
+      {
+        xs.map((x, i) => {
+          const cx = pidpysW + i * krok;
+          if (!dopustyme(x)) {
+            return <text x={cx + kl / 2} y={top + kl / 2} text-anchor="middle" dominant-baseline="central" font-size="12" fill="var(--ill-muted)" opacity="0.5">{x}</text>;
+          }
+          const tak = istynno(x);
+          const ye = x === mezha;
+          const kol = tak ? 'var(--ill-3)' : 'var(--ill-line)';
+          return (
+            <g>
+              <rect x={cx} y={top} width={kl} height={kl} rx="5" fill={tak ? 'var(--ill-3)' : 'none'} fill-opacity="0.22" stroke={ye ? 'var(--ill-4)' : kol} stroke-width={ye ? 2 : 1.3} stroke-dasharray={ye ? '4 3' : undefined} />
+              <text x={cx + kl / 2} y={top + kl / 2} text-anchor="middle" dominant-baseline="central" font-size="13" font-weight={tak ? 800 : 400} fill={tak ? 'var(--ill-ink)' : 'var(--ill-muted)'}>{x}</text>
+              <rect x={cx} y={top + kl + 6} width={kl} height={kl} rx="5" fill={tak ? 'var(--ill-3)' : 'none'} fill-opacity="0.12" stroke={ye ? 'var(--ill-4)' : kol} stroke-width={ye ? 2 : 1} stroke-dasharray={ye ? '4 3' : undefined} />
+              <text x={cx + kl / 2} y={top + kl + 6 + kl / 2} text-anchor="middle" dominant-baseline="central" font-size="12" fill={tak ? 'var(--ill-ink)' : 'var(--ill-muted)'}>{f(x)}</text>
+              {ye && <text x={cx + kl / 2} y={top + 2 * kl + 6 + 14} text-anchor="middle" font-size="11" font-weight="700" fill="var(--ill-4)">межа</text>}
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  {
+    !bez_krokiv && mezha !== undefined && susid !== undefined && (
+      <ol class="ill-steps">
+        <li>
+          Рівняння: <b class="num">{vyraz} = {chyslo}</b>, звідси <b class="num">{zminna} = {mezha}</b>. Це межа: <b class="num">{zapys(mezha)} = {chyslo}</b>, а <b class="num">{chyslo} {znakTekst} {chyslo}</b> — хибно.
+        </li>
+        <li>
+          Перевіряємо сусіда <b class="num">{susid}</b>: <b class="num">{zapys(susid)} = {f(susid)}</b>, <b class="num">{f(susid)} {znakTekst} {chyslo}</b> — {istynno(susid) ? 'істинно' : 'хибно'}.
+        </li>
+        <li>
+          Розв'язки: <b class="num">{vidpovid}</b>.
+        </li>
+      </ol>
+    )
+  }
+</figure>

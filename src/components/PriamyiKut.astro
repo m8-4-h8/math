@@ -1,0 +1,21 @@
+---
+// Кути для 2 класу — без градусів: два промені з вершиною, назва з вершиною посередині, порівняння з прямим кутом.
+// `model` — до вершини прикладено модель прямого кута з паперу (пунктирний куточок); `bez_nazv` — без підписів
+// «менший від прямого / прямий / більший за прямий» і без квадратика прямого кута (для задач); `chastyny` —
+// підписати вершину і сторони. Малюнок той самий, що в тренажері (src/trenazhery/kutyBezHradusiv.ts).
+//   <PriamyiKut kuty={[50, 90, 130]} model />
+//   <PriamyiKut kuty={[55]} nazvy={['ABC']} chastyny />
+//   <PriamyiKut kuty={[90]} povoroty={[30]} model bez_nazv />
+import { kutyBezHradusiv, type KutyOpts } from '../trenazhery/kutyBezHradusiv.ts';
+
+interface Props extends KutyOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = kutyBezHradusiv(opts);
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

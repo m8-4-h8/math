@@ -70,7 +70,7 @@ const textProps = { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'fo
             {na !== undefined && na < 0 && (
               <>
                 <rect x={xB} y={y2} width={-na * u} height={bh} rx="5" fill="none" stroke="var(--ill-4)" stroke-width="1.5" stroke-dasharray="5 4" />
-                <text x={xB + (-na * u) / 2} y={y2 + bh / 2} {...textProps} fill="var(--ill-4)">−{fmt(-na)}</text>
+                <text x={xB + (-na * u) / 2} y={y2 + bh / 2} {...{ ...textProps, fill: 'var(--ill-4)' }}>−{fmt(-na)}</text>
               </>
             )}
             {shmatok && (
