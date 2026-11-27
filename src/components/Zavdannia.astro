@@ -229,6 +229,13 @@ const maRozviazok = Astro.slots.has('rozviazok');
   .zavd-tekst :global(p) {
     margin: 0;
   }
+  /* На телефоні малюнок в умові займає всю ширину картки, а не вузьку колонку тексту між номером і зірочкою:
+     інакше лінійка, терези чи коло стискаються і підписи стають задрібними. */
+  @media (max-width: 50rem) {
+    .zavd-tekst :global(figure.ill) {
+      margin-inline: -2.75rem -2.35rem;
+    }
+  }
   .zavd-zirka {
     flex: none;
     font-size: 1.6rem;
