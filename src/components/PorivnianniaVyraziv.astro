@@ -1,0 +1,97 @@
+---
+// Чи тотожно рівні два вирази (7 клас): таблиця значень обох виразів при кількох x і рядок «=» / «≠». Стовпчики, де
+// значення різні, — червоні: одного такого x досить, щоб вирази не були тотожними. Якщо всі значення збіглися,
+// під таблицею — нагадування, що таблиця ще не доводить тотожність.
+// Вирази задаємо двічі: як їх показати (`a`, `b` — звичайний текст, наприклад «2(x − 1)») і як многочлени для обчислення
+// (`koefA`, `koefB` — коефіцієнти від молодшого степеня, як у src/trenazhery/alhebra.ts: [-2, 2] — це 2x − 2).
+//   <PorivnianniaVyraziv a="2(x − 1)" koefA={[-2, 2]} b="2x − 2" koefB={[-2, 2]} x={[-2, -1, 0, 1, 2, 3]} />
+//   <PorivnianniaVyraziv a="x + x" koefA={[0, 2]} b="x²" koefB={[0, 0, 1]} x={[0, 1, 2, 3]} />
+import { znachennia } from '../trenazhery/alhebra.ts';
+
+interface Props {
+  a: string;
+  koefA: number[];
+  b: string;
+  koefB: number[];
+  x: number[];
+  zminna?: string;
+  pidpys?: string;
+}
+const { a, koefA, b, koefB, x, zminna = 'x', pidpys } = Astro.props;
+const ch = (v: number) => (v < 0 ? `−${-v}` : `${v}`);
+const stovpchyky = x.map((v) => {
+  const [va, vb] = [znachennia(koefA, v), znachennia(koefB, v)];
+  return { x: v, va, vb, rivni: va === vb };
+});
+const rizni = stovpchyky.filter((s) => !s.rivni);
+const opys = `Таблиця значень виразів ${a} і ${b} при ${zminna} = ${x.map(ch).join(', ')}; ${
+  rizni.length ? `при ${zminna} = ${rizni.map((s) => ch(s.x)).join(', ')} значення різні` : 'усі значення однакові'
+}`;
+---
+
+<figure class="ill not-content" aria-label={opys}>
+  <div class="ill-scroll">
+    <table class="pv-tablytsia">
+      <tr>
+        <th>{zminna}</th>
+        {stovpchyky.map((s) => <td class:list={{ rizni: !s.rivni }}>{ch(s.x)}</td>)}
+      </tr>
+      <tr>
+        <th class="c1">{a}</th>
+        {stovpchyky.map((s) => <td class:list={['c1', { rizni: !s.rivni }]}>{ch(s.va)}</td>)}
+      </tr>
+      <tr>
+        <th class="c2">{b}</th>
+        {stovpchyky.map((s) => <td class:list={['c2', { rizni: !s.rivni }]}>{ch(s.vb)}</td>)}
+      </tr>
+      <tr>
+        <th></th>
+        {stovpchyky.map((s) => (s.rivni ? <td class="c3">=</td> : <td class="rizni c4">≠</td>))}
+      </tr>
+    </table>
+  </div>
+  <ol class="ill-steps">
+    <li>Підставляємо однакове значення {zminna} в обидва вирази й порівнюємо результати.</li>
+    {
+      rizni.length ? (
+        <li>
+          При <b class="c4">{zminna} = {ch(rizni[0].x)}</b> значення різні: <b class="num">{ch(rizni[0].va)} ≠ {ch(rizni[0].vb)}</b>. Одного
+          такого значення досить: вирази <b class="c4">не тотожно рівні</b>
+          {rizni.length < stovpchyky.length && <>, хоч при деяких {zminna} значення й збігаються</>}.
+        </li>
+      ) : (
+        <li>
+          Усі значення <b class="c3">однакові</b>. Але таблиця перевіряє лише кілька чисел — довести, що так буде при будь-якому{' '}
+          {zminna}, можна тільки перетвореннями.
+        </li>
+      )
+    }
+  </ol>
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
+
+<style>
+  .pv-tablytsia {
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .pv-tablytsia th,
+  .pv-tablytsia td {
+    border: 1px solid var(--ill-line);
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    min-width: 2.1rem;
+  }
+  .pv-tablytsia th {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .pv-tablytsia tr:first-child th {
+    font-style: italic;
+  }
+  .pv-tablytsia td.rizni {
+    background: color-mix(in srgb, var(--ill-4) 20%, transparent);
+  }
+</style>
