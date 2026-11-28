@@ -1,0 +1,31 @@
+---
+// Місткість посудини в літрах (1 клас): банки по 1 л, з яких воду вилили в посудину. Скільки банок — стільки літрів.
+// `bez_vidpovidi` — на посудині «? л» і без пояснення. Малюнок той самий, що в тренажері
+// (src/trenazhery/vymiriuvannia.ts).
+//   <Banky kilkist={5} posudyna="каструля" />
+import { banky, type BankyOpts } from '../trenazhery/vymiriuvannia.ts';
+
+interface Props extends BankyOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = banky(opts);
+const n = opts.kilkist;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {
+    !opts.bez_vidpovidi && (
+      <ol class="ill-steps">
+        <li>
+          Кожна банка — <b>1 л</b>. Банок {n}: <b class="num">{Array(n).fill(1).join(' + ')} = {n}</b>.
+        </li>
+        <li>
+          Місткість — <b class="num c1">{n} л</b>.
+        </li>
+      </ol>
+    )
+  }
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

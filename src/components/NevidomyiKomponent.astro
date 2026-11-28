@@ -1,0 +1,236 @@
+---
+// Невідомий компонент додавання чи віднімання (1 клас): рівність з віконцем і назвами чисел, під нею — схема
+// «ціле і частини» з тими самими назвами. Ціле — сума або зменшуване, частини — доданки або різниця й від'ємник.
+// Невідоме позначено віконцем у рівності та «?» на схемі. Під малюнком — як знайти і перевірка.
+//   <NevidomyiKomponent dija="+" a={6} b={2} kruzhechky />             — 6 + 2 = 8: лише назви чисел, без віконця
+//   <NevidomyiKomponent dija="+" a={4} b={3} nevidome="b" />            — 4 + □ = 7
+//   <NevidomyiKomponent dija="−" a={8} b={2} nevidome="a" kruzhechky istoriia={['було', 'залишилося', 'згоріло']} />
+//   <NevidomyiKomponent dija="−" a={67} b={27} nevidome="b" bez_vidpovidi />   — 67 − □ = 40, без розв'язання
+interface Props {
+  dija: '+' | '−';
+  a: number; // перше число рівності: перший доданок або зменшуване
+  b: number; // друге число: другий доданок або від'ємник
+  nevidome?: 'a' | 'b' | 'c'; // c — результат: сума або різниця; без nevidome — лише назви чисел
+  kruzhechky?: boolean; // кружечки в частинах (лише коли ціле до 10)
+  istoriia?: [string, string, string]; // слова задачі: ціле, ліва частина, права частина («було», «залишилося», «згоріло»)
+  bez_vidpovidi?: boolean; // без розв'язання і відповіді — для задач
+  pidpys?: string;
+}
+const { dija, a, b, nevidome, istoriia, pidpys } = Astro.props;
+const bez_vidpovidi = (Astro.props.bez_vidpovidi ?? false) || nevidome === undefined;
+const plus = dija === '+';
+const c = plus ? a + b : a - b;
+if (a < 0 || b < 0 || c < 0) throw new Error(`NevidomyiKomponent: від'ємне число (${a} ${dija} ${b} = ${c})`);
+
+// Ціле і частини: для «+» ціле — сума c, частини a і b; для «−» ціле — зменшуване a, частини — різниця c і від'ємник b.
+type Chlen = 'a' | 'b' | 'c';
+const tsile: Chlen = plus ? 'c' : 'a';
+const chastyny: [Chlen, Chlen] = plus ? ['a', 'b'] : ['c', 'b'];
+const znach: Record<Chlen, number> = { a, b, c };
+const nazva: Record<Chlen, string> = plus
+  ? { a: 'перший доданок', b: 'другий доданок', c: 'сума' }
+  : { a: 'зменшуване', b: 'від’ємник', c: 'різниця' };
+const kruzhechky = (Astro.props.kruzhechky ?? false) && znach[tsile] <= 10;
+const vidpovid = nevidome ? znach[nevidome] : 0;
+
+const W = 340;
+const x0 = 10;
+const barW = W - 2 * x0;
+
+// Рядок 1: рівність. Числа — на 50, 170, 290; знаки — між ними.
+const chleny: { ch: Chlen; x: number }[] = [
+  { ch: 'a', x: 50 },
+  { ch: 'b', x: 170 },
+  { ch: 'c', x: 290 },
+];
+
+// Рядок 2: схема.
+let y = 70;
+const yIstTsile = istoriia ? y + 10 : 0;
+if (istoriia) y += 18;
+const yTsile = y + 12;
+const yDuha = y + 20;
+const top = y + 34;
+const hB = kruzhechky ? 58 : 42;
+const yNazvy = top + hB + 18;
+const yIst = yNazvy + 17;
+const H = (istoriia ? yIst : yNazvy) + 10;
+
+const [lv, pr] = chastyny;
+const sumaCh = znach[lv] + znach[pr];
+const wl = sumaCh === 0 ? barW / 2 : Math.min(barW - 76, Math.max(76, (barW * znach[lv]) / sumaCh));
+const klitynky = [
+  { ch: lv, x: x0, w: wl, kolir: 1, ist: istoriia?.[1] },
+  { ch: pr, x: x0 + wl, w: barW - wl, kolir: 2, ist: istoriia?.[2] },
+];
+const zakresleni = !plus; // від'ємник — те, що забрали: кружечки закреслені
+const r = 7;
+const krok = 17;
+
+const tekst = (ch: Chlen) => (ch === nevidome ? '?' : String(znach[ch]));
+const rivnist = chleny.map((x) => (x.ch === nevidome ? '□' : String(znach[x.ch])));
+const zapys = `${rivnist[0]} ${dija} ${rivnist[1]} = ${rivnist[2]}`;
+const opys =
+  `${zapys}. Ціле — ${nazva[tsile]}, частини — ${nazva[lv]} і ${nazva[pr]}.` +
+  (nevidome ? ` Невідоме — ${nazva[nevidome]}${bez_vidpovidi ? '.' : `: □ = ${vidpovid}.`}` : '');
+
+// Розв'язання: що невідоме (ціле чи частина) і яка дія.
+const tsileNevidome = nevidome === tsile;
+const insha = (ch: Chlen) => (ch === lv ? pr : lv);
+let poiasnennia = '';
+let dia = '';
+if (!nevidome) {
+  // лише назви чисел — розв'язання немає
+} else if (tsileNevidome) {
+  poiasnennia = plus
+    ? 'Невідоме — <b class="c4">ціле</b> (сума). Ціле знаходимо <b>додаванням</b>: додаємо доданки.'
+    : 'Невідоме — <b class="c4">ціле</b> (зменшуване). Щоб знайти невідоме зменшуване, до різниці <b>додаємо</b> від’ємник.';
+  dia = `${znach[lv]} + ${znach[pr]} = ${vidpovid}`;
+} else {
+  const druha = insha(nevidome);
+  poiasnennia = plus
+    ? 'Невідоме — <b class="c4">частина</b> (доданок). Щоб знайти невідомий доданок, від суми <b>віднімаємо</b> відомий доданок.'
+    : nevidome === 'b'
+      ? 'Невідоме — <b class="c4">частина</b> (від’ємник). Щоб знайти невідомий від’ємник, від зменшуваного <b>віднімаємо</b> різницю.'
+      : 'Невідоме — <b class="c4">частина</b> (різниця). Від зменшуваного <b>віднімаємо</b> від’ємник.';
+  dia = `${znach[tsile]} − ${znach[druha]} = ${vidpovid}`;
+}
+const perevirka = `${a} ${dija} ${b} = ${c}`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={opys}>
+      <text x="110" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="var(--ill-ink)">{dija}</text>
+      <text x="230" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="var(--ill-ink)">=</text>
+      {
+        chleny.map(({ ch, x }) =>
+          ch === nevidome ? (
+            <rect x={x - 17} y="6" width="34" height="30" rx="3" fill="none" stroke="var(--ill-4)" stroke-width="2" stroke-dasharray="5 3" />
+          ) : (
+            <text x={x} y="29" text-anchor="middle" font-size="22" font-weight="700" fill="var(--ill-ink)">
+              {znach[ch]}
+            </text>
+          ),
+        )
+      }
+      {
+        chleny.map(({ ch, x }) => (
+          <text x={x} y="54" text-anchor="middle" font-size="12" fill={ch === nevidome ? 'var(--ill-4)' : 'var(--ill-muted)'}>
+            {nazva[ch]}
+          </text>
+        ))
+      }
+
+      {
+        istoriia && (
+          <text x={W / 2} y={yIstTsile} text-anchor="middle" font-size="13" fill="var(--ill-ink)">
+            {istoriia[0]}
+          </text>
+        )
+      }
+      <text
+        x={W / 2}
+        y={yTsile}
+        text-anchor="middle"
+        font-size="14"
+        font-weight="700"
+        fill={tsileNevidome ? 'var(--ill-4)' : 'var(--ill-ink)'}
+      >
+        {nazva[tsile]}: {tekst(tsile)}
+      </text>
+      <path
+        d={`M ${x0} ${yDuha + 8} v -8 h ${barW} v 8`}
+        fill="none"
+        stroke={tsileNevidome ? 'var(--ill-4)' : 'var(--ill-line)'}
+        stroke-width="1.5"
+      />
+      {
+        klitynky.map((k) => {
+          const nev = k.ch === nevidome;
+          const n = znach[k.ch];
+          const cx0 = k.x + k.w / 2 - ((n - 1) * krok) / 2;
+          return (
+            <g>
+              <rect
+                x={k.x}
+                y={top}
+                width={k.w}
+                height={hB}
+                fill={nev ? 'transparent' : `var(--ill-${k.kolir})`}
+                fill-opacity="0.25"
+                stroke={nev ? 'var(--ill-4)' : 'var(--ill-line)'}
+                stroke-dasharray={nev ? '5 4' : undefined}
+                stroke-width={nev ? 2 : 1.5}
+              />
+              <text
+                x={k.x + k.w / 2}
+                y={kruzhechky && !nev ? top + 17 : top + hB / 2}
+                text-anchor="middle"
+                dominant-baseline="central"
+                font-size="16"
+                font-weight="700"
+                fill={nev ? 'var(--ill-4)' : 'var(--ill-ink)'}
+              >
+                {tekst(k.ch)}
+              </text>
+              {kruzhechky &&
+                !nev &&
+                Array.from({ length: n }, (_, i) => {
+                  const cx = cx0 + i * krok;
+                  const cy = top + 40;
+                  const hrest = zakresleni && k.ch === 'b';
+                  return (
+                    <g>
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={r}
+                        fill={hrest ? 'none' : `var(--ill-${k.kolir})`}
+                        stroke={`var(--ill-${k.kolir})`}
+                        stroke-width="2"
+                      />
+                      {hrest && (
+                        <path
+                          d={`M ${cx - 6} ${cy - 6} L ${cx + 6} ${cy + 6} M ${cx + 6} ${cy - 6} L ${cx - 6} ${cy + 6}`}
+                          stroke={`var(--ill-${k.kolir})`}
+                          stroke-width="2"
+                        />
+                      )}
+                    </g>
+                  );
+                })}
+              <text
+                x={k.x + k.w / 2}
+                y={yNazvy}
+                text-anchor="middle"
+                font-size="12"
+                fill={nev ? 'var(--ill-4)' : 'var(--ill-muted)'}
+              >
+                {nazva[k.ch]}
+              </text>
+              {k.ist && (
+                <text x={k.x + k.w / 2} y={yIst} text-anchor="middle" font-size="13" fill="var(--ill-ink)">
+                  {k.ist}
+                </text>
+              )}
+            </g>
+          );
+        })
+      }
+    </svg>
+  </div>
+  {
+    !bez_vidpovidi && (
+      <ol class="ill-steps">
+        <li>
+          <Fragment set:html={poiasnennia} /> <b class="num">{dia}</b>
+        </li>
+        <li>
+          <b>Перевірка:</b> ставимо <b class="num c4">{vidpovid}</b> у віконце: <b class="num">{perevirka}</b> ✓
+        </li>
+      </ol>
+    )
+  }
+  {pidpys && <figcaption class="ill-caption">{pidpys}</figcaption>}
+</figure>

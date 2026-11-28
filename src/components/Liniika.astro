@@ -1,0 +1,48 @@
+---
+// Лінійка з відрізком над нею (1 клас): як виміряти довжину в сантиметрах. Нуль лінійки — на початку відрізка;
+// `pochatok` — відрізок починається не з нуля (тоді довжина — різниця чисел). Під малюнком — як прочитати довжину
+// (без нього, якщо `bez_vidpovidi`). Малюнок той самий, що в тренажері (src/trenazhery/vymiriuvannia.ts).
+//   <Liniika dovzhyna={7} />
+//   <Liniika dovzhyna={5} pochatok={3} bukvy={['C', 'D']} />
+//   <Liniika dovzhyna={8} bukvy={['A', 'C']} tochky={[{ nazva: 'B', cm: 5 }]} bez_vidpovidi />
+//   <Liniika dovzhyna={10} detsymetr />   — дужка під лінійкою «1 дм = 10 см»
+import { liniika, type LiniikaOpts } from '../trenazhery/vymiriuvannia.ts';
+
+interface Props extends LiniikaOpts {
+  bez_vidpovidi?: boolean;
+  pidpys?: string;
+}
+const { bez_vidpovidi = false, pidpys, ...opts } = Astro.props;
+const svg = liniika(opts);
+const p = opts.pochatok ?? 0;
+const d = opts.dovzhyna;
+const [A, B] = opts.bukvy ?? ['A', 'B'];
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {
+    !bez_vidpovidi && (
+      <ol class="ill-steps">
+        {p === 0 ? (
+          <li>
+            Нуль лінійки — точно під точкою {A}. Точка {B} — навпроти числа <b class="num">{d}</b>.
+          </li>
+        ) : (
+          <li>
+            Відрізок починається не з нуля, а з <b class="num">{p}</b>. Кінець — навпроти <b class="num">{p + d}</b>. Від
+            більшого числа віднімаємо менше: <b class="num">{p + d} − {p} = {d}</b>.
+          </li>
+        )}
+        <li>
+          Довжина відрізка{' '}
+          <b class="num c1">
+            {A}{B} = {d} см
+          </b>
+          .
+        </li>
+      </ol>
+    )
+  }
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

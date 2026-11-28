@@ -1,0 +1,64 @@
+---
+// Терези з двома шальками (1 клас): предмети (рядки) і гирі (числа, кг). Важча шалька опускається (`nakhyl`), у
+// рівновазі маси на шальках однакові. Під малюнком — що показують терези і маса предмета, якщо її можна знайти:
+// на одній шальці лише гирі, на другій — один предмет (і, можливо, гирі). Без пояснення, якщо `bez_vidpovidi`.
+// Малюнок той самий, що в тренажері (src/trenazhery/vymiriuvannia.ts).
+//   <Terezy zliva={['кавун']} sprava={[2, 1]} nazva="кавуна" />
+//   <Terezy zliva={['книжка']} sprava={['зошит']} nakhyl="zliva" />
+//   <Terezy zliva={['гарбуз', 1]} sprava={[5]} nazva="гарбуза" bez_vidpovidi />
+import { terezy, type TereziOpts } from '../trenazhery/vymiriuvannia.ts';
+
+interface Props extends TereziOpts {
+  nazva?: string; // предмет у родовому відмінку: «маса кавуна»
+  bez_vidpovidi?: boolean;
+  pidpys?: string;
+}
+const { nazva, bez_vidpovidi = false, pidpys, ...opts } = Astro.props;
+const svg = terezy(opts);
+const nakhyl = opts.nakhyl ?? 'rivno';
+const hyri = (s: (number | string)[]) => s.filter((v): v is number => typeof v === 'number');
+const predmety = (s: (number | string)[]) => s.filter((v): v is string => typeof v === 'string');
+
+// Маса предмета: з одного боку лише гирі, з другого — один предмет і, можливо, гирі.
+let masa = '';
+if (nakhyl === 'rivno') {
+  for (const [z, s] of [
+    [opts.zliva, opts.sprava],
+    [opts.sprava, opts.zliva],
+  ]) {
+    if (predmety(s).length === 0 && predmety(z).length === 1) {
+      const vsi = hyri(s);
+      const svoi = hyri(z);
+      const suma = vsi.reduce((a, b) => a + b, 0);
+      const zapys = vsi.length > 1 ? `${vsi.map((v) => `${v} кг`).join(' + ')} = ${suma} кг` : `${suma} кг`;
+      const p = predmety(z)[0];
+      const hyria = svoi.reduce((a, b) => a + b, 0);
+      masa =
+        svoi.length === 0
+          ? `Маса ${nazva ?? 'предмета'}: ${zapys}.`
+          : `${p.charAt(0).toUpperCase() + p.slice(1)} і ${svoi.length > 1 ? 'гирі' : 'гиря'} ${hyria} кг разом важать ${suma} кг. Маса ${nazva ?? 'предмета'}: ${suma} кг − ${hyria} кг = ${suma - hyria} кг.`;
+    }
+  }
+}
+const vazhche = nakhyl === 'zliva' ? opts.zliva : opts.sprava;
+const nazvy = (s: (number | string)[]) => s.map((v) => (typeof v === 'number' ? `гирею ${v} кг` : v)).join(' і ');
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {
+    !bez_vidpovidi && (
+      <ol class="ill-steps">
+        {nakhyl === 'rivno' ? (
+          <li>Терези в рівновазі — маси на шальках однакові.</li>
+        ) : (
+          <li>
+            Опустилася шалька, де {nazvy(vazhche)}. Там <b>важче</b>.
+          </li>
+        )}
+        {masa && <li>{masa}</li>}
+      </ol>
+    )
+  }
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

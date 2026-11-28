@@ -1,0 +1,46 @@
+---
+// Гроші (1 клас): купюри (20 грн і більше) і монети (1, 2, 5, 10 грн; 10 і 50 к.). Під малюнком — як полічити суму:
+// від найбільших грошей до найменших (без пояснення, якщо `bez_vidpovidi`). Малюнок той самий, що в тренажері
+// (src/trenazhery/vymiriuvannia.ts).
+//   <Hroshi hrn={[20, 10, 5, 2]} />
+//   <Hroshi kop={[50, 50]} />
+//   <Hroshi hrn={[50, 20, 5, 1]} bez_vidpovidi />
+import { hroshi, type HroshiOpts } from '../trenazhery/vymiriuvannia.ts';
+
+interface Props extends HroshiOpts {
+  bez_vidpovidi?: boolean;
+  pidpys?: string;
+}
+const { bez_vidpovidi = false, pidpys, ...opts } = Astro.props;
+const svg = hroshi(opts);
+const hrn = [...(opts.hrn ?? [])].sort((a, b) => b - a);
+const kop = [...(opts.kop ?? [])].sort((a, b) => b - a);
+const sum = (n: number[]) => n.reduce((a, b) => a + b, 0);
+const [H, K] = [sum(hrn), sum(kop)];
+const [g, k] = [H + Math.floor(K / 100), K % 100];
+const razom = g > 0 && k > 0 ? `${g} грн ${k} к.` : g > 0 ? `${g} грн` : `${k} к.`;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {
+    !bez_vidpovidi && (
+      <ol class="ill-steps">
+        {hrn.length > 1 && (
+          <li>
+            Лічимо гривні від найбільших: <b class="num">{hrn.join(' + ')} = {H}</b> (грн).
+          </li>
+        )}
+        {kop.length > 1 && (
+          <li>
+            Копійки: <b class="num">{kop.join(' + ')} = {K}</b> (к.){K >= 100 && <>, а 100 к. = 1 грн</>}.
+          </li>
+        )}
+        <li>
+          Разом — <b class="num c1">{razom}</b>.
+        </li>
+      </ol>
+    )
+  }
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>

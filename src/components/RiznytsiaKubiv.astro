@@ -1,0 +1,118 @@
+---
+// Різниця кубів на малюнку: з куба a × a × a вирізали в куті кубик b × b × b, а залишок розрізали
+// на три бруски однакової товщини a − b: (a − b) · a · a, (a − b) · a · b і (a − b) · b · b.
+// Разом (a − b)(a² + ab + b²) — це і є a³ − b³.
+//   <RiznytsiaKubiv a={5} b={2} />   — 125 − 8 = 3 · (25 + 10 + 4) = 117
+interface Props {
+  a: number;
+  b: number;
+}
+const { a, b } = Astro.props;
+if (!(Number.isInteger(a) && Number.isInteger(b) && a > b && b > 0)) throw new Error('RiznytsiaKubiv: потрібні цілі a > b > 0');
+const d = a - b;
+const k = Math.min(24, 120 / a); // ребро одного кубика
+const c = Math.cos(Math.PI / 6);
+const s = 0.5;
+const pad = 30;
+const ox = pad + a * c * k;
+const oy = pad + a * k;
+const X = (x: number, y: number) => ox + (x - y) * c * k;
+const Y = (x: number, y: number, z: number) => oy + ((x + y) * s - z) * k;
+const t = (x: number, y: number, z: number) => `${X(x, y).toFixed(1)},${Y(x, y, z).toFixed(1)}`;
+const W = 2 * pad + 2 * a * c * k;
+const H = 2 * pad + 2 * a * k;
+
+type Tochka = [number, number, number];
+type Hran = { pts: Tochka[]; liniyi: [Tochka, Tochka][]; prozorist: number };
+const cili = (from: number, to: number) => {
+  const r: number[] = [];
+  for (let i = Math.floor(from) + 1; i < to; i++) r.push(i);
+  return r;
+};
+// Три видимі грані бруска [x0, x1] × [y0, y1] × [z0, z1]: верх (z = z1), права (x = x1), ліва (y = y1).
+const hrani = (x0: number, x1: number, y0: number, y1: number, z0: number, z1: number): Hran[] => [
+  {
+    pts: [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]],
+    liniyi: [
+      ...cili(x0, x1).map((i) => [[i, y0, z1], [i, y1, z1]] as [Tochka, Tochka]),
+      ...cili(y0, y1).map((j) => [[x0, j, z1], [x1, j, z1]] as [Tochka, Tochka]),
+    ],
+    prozorist: 0.5,
+  },
+  {
+    pts: [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]],
+    liniyi: [
+      ...cili(y0, y1).map((j) => [[x1, j, z0], [x1, j, z1]] as [Tochka, Tochka]),
+      ...cili(z0, z1).map((m) => [[x1, y0, m], [x1, y1, m]] as [Tochka, Tochka]),
+    ],
+    prozorist: 0.32,
+  },
+  {
+    pts: [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]],
+    liniyi: [
+      ...cili(x0, x1).map((i) => [[i, y1, z0], [i, y1, z1]] as [Tochka, Tochka]),
+      ...cili(z0, z1).map((m) => [[x0, y1, m], [x1, y1, m]] as [Tochka, Tochka]),
+    ],
+    prozorist: 0.2,
+  },
+];
+// Порядок малювання — від дальнього до ближчого.
+const brusky = [
+  { kolir: 'var(--ill-1)', hrani: hrani(0, d, 0, a, 0, a) },
+  { kolir: 'var(--ill-2)', hrani: hrani(d, a, 0, d, 0, a) },
+  { kolir: 'var(--ill-3)', hrani: hrani(d, a, d, a, 0, d) },
+];
+const vyrizane = hrani(d, a, d, a, d, a);
+const pidpys = (x: number, y: number, z: number, dx: number, dy: number) => ({ x: X(x, y) + dx, y: Y(x, y, z) + dy });
+const pA1 = pidpys(a, a / 2, 0, 12, 14);
+const pA2 = pidpys(a / 2, a, 0, -12, 14);
+const pA3 = pidpys(0, a, a / 2, -14, 0);
+const pB = pidpys(a, d + b / 2, a, 12, -8);
+const opys = `Куб ${a} × ${a} × ${a}, з кута якого вирізано кубик ${b} × ${b} × ${b}. Залишок розрізано на три бруски товщиною ${d}: ${d} × ${a} × ${a}, ${d} × ${a} × ${b} і ${d} × ${b} × ${b}.`;
+---
+
+<figure class="ill not-content rkub">
+  <div class="ill-scroll">
+    <svg viewBox={`0 0 ${W.toFixed(0)} ${H.toFixed(0)}`} width={W.toFixed(0)} height={H.toFixed(0)} role="img" aria-label={opys}>
+      {
+        brusky.map((br) =>
+          br.hrani.map((h) => (
+            <g>
+              <polygon points={h.pts.map((p) => t(...p)).join(' ')} fill="var(--sl-color-bg-nav)" />
+              <polygon points={h.pts.map((p) => t(...p)).join(' ')} fill={br.kolir} fill-opacity={h.prozorist} stroke={br.kolir} stroke-width="2" stroke-linejoin="round" />
+              {h.liniyi.map(([p, q]) => <line x1={X(p[0], p[1])} y1={Y(...p)} x2={X(q[0], q[1])} y2={Y(...q)} stroke={br.kolir} stroke-opacity="0.45" stroke-width="1" />)}
+            </g>
+          ))
+        )
+      }
+      {vyrizane.map((h) => <polygon points={h.pts.map((p) => t(...p)).join(' ')} fill="none" stroke="var(--ill-4)" stroke-width="1.6" stroke-dasharray="5 3" />)}
+      <g font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="central">
+        <text x={pA1.x} y={pA1.y} fill="var(--ill-ink)">{a}</text>
+        <text x={pA2.x} y={pA2.y} fill="var(--ill-ink)">{a}</text>
+        <text x={pA3.x} y={pA3.y} fill="var(--ill-ink)">{a}</text>
+        <text x={pB.x} y={pB.y} fill="var(--ill-4)" stroke="var(--sl-color-bg-nav)" stroke-width="5" paint-order="stroke">{b}</text>
+      </g>
+    </svg>
+  </div>
+  <ol class="ill-steps">
+    <li>Великий куб — <b class="num">{a}³ = {a ** 3}</b> кубиків. З кута вирізали кубик <span class="c4"><b class="num">{b}³ = {b ** 3}</b></span>. Залишилось <b class="num">{a ** 3} − {b ** 3} = {a ** 3 - b ** 3}</b>.</li>
+    <li>Залишок — три бруски однакової товщини <b class="num">{a} − {b} = {d}</b>:
+      <ul>
+        <li><span class="c1">синій</span> <b class="num">{d} · {a} · {a} = {d * a * a}</b>, тобто <i>(a − b) · a²</i>;</li>
+        <li><span class="c2">помаранчевий</span> <b class="num">{d} · {a} · {b} = {d * a * b}</b>, тобто <i>(a − b) · ab</i>;</li>
+        <li><span class="c3">зелений</span> <b class="num">{d} · {b} · {b} = {d * b * b}</b>, тобто <i>(a − b) · b²</i>.</li>
+      </ul>
+    </li>
+    <li>Разом <b class="num">{d} · ({a * a} + {a * b} + {b * b}) = {d} · {a * a + a * b + b * b} = {d * (a * a + a * b + b * b)}</b> ✓ — стільки ж, скільки залишилось.</li>
+  </ol>
+  <p class="ill-caption">
+    <b class="num">{a}³ − {b}³ = ({a} − {b})({a}² + {a} · {b} + {b}²)</b>
+  </p>
+</figure>
+
+<style>
+  .rkub svg {
+    display: block;
+    margin-inline: auto;
+  }
+</style>
