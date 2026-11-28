@@ -1,0 +1,114 @@
+---
+// Ланцюжок міркувань у геометрії: кожен факт спирається на попередні. Колір картки — тип твердження:
+// аксіома (приймаємо без доведення), означення (що означає слово), теорема (доводимо).
+// У `chomu` — на що спирається крок (номери попередніх карток).
+//   <LantsiuhDovedennia kroky={[
+//     { typ: 'aksioma', tekst: 'Розгорнутий кут дорівнює 180°.' },
+//     { typ: 'oznachennia', tekst: 'Суміжні кути — …' },
+//     { typ: 'teorema', tekst: 'Сума суміжних кутів дорівнює 180°.', chomu: [1, 2] },
+//   ]} />
+type Typ = 'aksioma' | 'oznachennia' | 'teorema';
+interface Props {
+  kroky: { typ: Typ; tekst: string; chomu?: number[] }[];
+  pidpys?: string;
+}
+const { kroky, pidpys } = Astro.props;
+const NAZVA: Record<Typ, string> = { aksioma: 'Аксіома', oznachennia: 'Означення', teorema: 'Теорема' };
+const PRO: Record<Typ, string> = { aksioma: 'приймаємо без доведення', oznachennia: 'пояснює слово', teorema: 'доводимо' };
+const KOLIR: Record<Typ, string> = { aksioma: 'var(--ill-1)', oznachennia: 'var(--ill-3)', teorema: 'var(--ill-2)' };
+const typy = (Object.keys(NAZVA) as Typ[]).filter((t) => kroky.some((k) => k.typ === t));
+---
+
+<figure class="ill not-content ld">
+  <p class="ld-lehenda">
+    {typy.map((t) => <span class="ld-myt" style={`--k: ${KOLIR[t]}`}>{NAZVA[t]} — {PRO[t]}</span>)}
+  </p>
+  <ol class="ld-kroky">
+    {
+      kroky.map((k, i) => (
+        <li class="ld-krok" style={`--k: ${KOLIR[k.typ]}`}>
+          <span class="ld-nomer">{i + 1}</span>
+          <span class="ld-typ">{NAZVA[k.typ]}</span>
+          <span class="ld-tekst">{k.tekst}</span>
+          {k.chomu?.length ? <span class="ld-chomu">спирається на {k.chomu.length > 1 ? `${k.chomu.slice(0, -1).join(', ')} і ${k.chomu.at(-1)}` : k.chomu[0]}</span> : null}
+        </li>
+      ))
+    }
+  </ol>
+  {pidpys ? <p class="ill-caption">{pidpys}</p> : null}
+</figure>
+
+<style>
+  .ld-lehenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.9rem;
+    margin: 0 0 0.75rem;
+    font-size: var(--sl-text-xs);
+    color: var(--ill-muted);
+  }
+  .ld-myt::before {
+    content: '';
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-inline-end: 0.35rem;
+    border-radius: 0.2rem;
+    background: var(--k);
+    vertical-align: -0.1rem;
+  }
+  .ld-kroky {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .ld-krok {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.7rem 1fr;
+    column-gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border: 2px solid var(--k);
+    border-radius: 0.6rem;
+    background: color-mix(in srgb, var(--k) 12%, transparent);
+  }
+  .ld-krok + .ld-krok {
+    margin-top: 1.6rem;
+  }
+  .ld-krok + .ld-krok::before {
+    content: '↓';
+    position: absolute;
+    top: -1.55rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.1rem;
+    line-height: 1.5rem;
+    color: var(--ill-muted);
+  }
+  .ld-nomer {
+    grid-row: span 3;
+    align-self: start;
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--k);
+    color: var(--sl-color-black);
+    font-weight: 700;
+  }
+  .ld-typ {
+    font-size: var(--sl-text-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--k);
+  }
+  .ld-tekst {
+    font-size: var(--sl-text-base);
+  }
+  .ld-chomu {
+    font-size: var(--sl-text-xs);
+    color: var(--ill-muted);
+  }
+</style>
