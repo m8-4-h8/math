@@ -1,0 +1,38 @@
+---
+// Метр (1 клас): смужка завдовжки 1 м з десяти дециметрів, під нею — сантиметри 0, 10, …, 100. `vydilyty` — скільки
+// дециметрів від початку зафарбувати (як 3 дм = 30 см). `bez_chysel` — без сантиметрів під смужкою (для задач).
+// Малюнок той самий, що в тренажері (src/trenazhery/vymiriuvannia.ts).
+//   <Metr />
+//   <Metr vydilyty={3} />
+import { metr, type MetrOpts } from '../trenazhery/vymiriuvannia.ts';
+
+interface Props extends MetrOpts {
+  pidpys?: string;
+}
+const { pidpys, ...opts } = Astro.props;
+const svg = metr(opts);
+const v = opts.vydilyty ?? 0;
+---
+
+<figure class="ill not-content">
+  <div class="ill-scroll" set:html={svg} />
+  {
+    !opts.bez_chysel && (
+      <ol class="ill-steps">
+        <li>
+          У метрі <b class="num">10</b> дециметрів, у кожному дециметрі <b class="num">10</b> сантиметрів.
+        </li>
+        {v > 0 && v < 10 ? (
+          <li>
+            Виділено <b class="num">{v} дм</b>: це {v} десятків сантиметрів, <b class="num c1">{v} дм = {v * 10} см</b>.
+          </li>
+        ) : (
+          <li>
+            Десять десятків сантиметрів — сотня: <b class="num c1">1 м = 10 дм = 100 см</b>.
+          </li>
+        )}
+      </ol>
+    )
+  }
+  {pidpys && <p class="ill-caption" set:html={pidpys} />}
+</figure>
